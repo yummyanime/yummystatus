@@ -172,21 +172,47 @@ const Dashboard = () => {
                 const filteredLogs: CityLogs = {};
                 for (const city in cityLogsMap) {
                     const cityLogs = cityLogsMap[city];
-                    const processedLogs = cityLogs.map((log, i) => {
-                        if ((log.total_time ?? 0) > 2000) {
-                            const prev = cityLogs[i - 1];
-                            const next = cityLogs[i + 1];
-                            if (
-                                (prev?.total_time ?? 0) < 2000 &&
-                                (next?.total_time ?? 0) < 2000
-                            ) {
+                    let lastValidLog: Log | null = null;
+
+                    const processedLogs = cityLogs.map((log) => {
+                        const isUnreliable = (log.total_time ?? 0) >= 2000;
+
+                        if (isUnreliable) {
+                            if (lastValidLog) {
+                                return {
+                                    ...log,
+                                    total_time: lastValidLog.total_time,
+                                    download_time: lastValidLog.download_time,
+                                    first_byte_time: lastValidLog.first_byte_time,
+                                    dns_time: lastValidLog.dns_time,
+                                    tls_time: lastValidLog.tls_time,
+                                    tcp_time: lastValidLog.tcp_time,
+                                    unreliable: true,
+                                };
+                            } else {
+                                const firstValid = cityLogs.find(
+                                    (l) => (l.total_time ?? 0) < 2000
+                                );
+                                if (firstValid) {
+                                    return {
+                                        ...log,
+                                        total_time: firstValid.total_time,
+                                        download_time: firstValid.download_time,
+                                        first_byte_time: firstValid.first_byte_time,
+                                        dns_time: firstValid.dns_time,
+                                        tls_time: firstValid.tls_time,
+                                        tcp_time: firstValid.tcp_time,
+                                        unreliable: true,
+                                    };
+                                }
                             }
+                        } else {
+                            lastValidLog = log;
                         }
                         return log;
                     });
-                    filteredLogs[city] = processedLogs.filter(
-                        (log) => (log.total_time ?? 0) < 2000
-                    );
+
+                    filteredLogs[city] = processedLogs;
                 }
                 return filteredLogs;
             };
