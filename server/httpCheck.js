@@ -146,15 +146,14 @@ const checkAndSaveDomain = async (domain, locations) => {
                 for (const location of locations) {
                     const query = `
       INSERT INTO http_logs (
-        probe_id, domain, country, city, asn, network, ip_address, status_code, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        probe_id, domain, country, city, asn, network, status_code, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     `;
                     await pool.query(query, [
                         "api_limit",
                         target,
                         location.country,
                         location.city,
-                        null,
                         null,
                         null,
                         429,
@@ -223,9 +222,11 @@ const checkAndSaveDomain = async (domain, locations) => {
 
             if (result && result.result.status === "finished") {
                 const { probe, result: httpResult } = result;
+                
                 console.log(
-                    `[SUCCESS] HTTP check to ${probe.city}, ${probe.country} for ${target}: Status ${httpResult.statusCode}`
+                    `[SUCCESS] HTTP check to ${probe.city}, ${probe.country} for ${target}: Status ${httpResult.statusCode}. ASN: ${probe.asn}, Network: ${probe.network}`
                 );
+
                 values = [
                     id,
                     target,
@@ -233,7 +234,6 @@ const checkAndSaveDomain = async (domain, locations) => {
                     probe.city,
                     probe.asn,
                     probe.network,
-                    probe.ip,
                     httpResult.statusCode,
                     httpResult.timings.total || null,
                     httpResult.timings.download || null,
@@ -266,14 +266,13 @@ const checkAndSaveDomain = async (domain, locations) => {
                     null,
                     null,
                     null,
-                    null,
                 ];
             }
 
             const query = `
       INSERT INTO http_logs (
-        probe_id, domain, country, city, asn, network, ip_address, status_code, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        probe_id, domain, country, city, asn, network, status_code, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     `;
 
             await pool.query(query, values);
@@ -286,18 +285,17 @@ const checkAndSaveDomain = async (domain, locations) => {
             `Failed to complete HTTP measurement cycle for ${target}:`,
             err.message
         );
-                for (const location of locations) {
+        for (const location of locations) {
             const query = `
       INSERT INTO http_logs (
-        probe_id, domain, country, city, asn, network, ip_address, status_code, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        probe_id, domain, country, city, asn, network, status_code, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     `;
             await pool.query(query, [
                 "failed",
                 target,
                 location.country,
                 location.city,
-                null,
                 null,
                 null,
                 null,

@@ -18,7 +18,6 @@ export const createHttpTable = async () => {
       city VARCHAR(255),
       asn INT,
       network VARCHAR(255),
-      ip_address VARCHAR(45),
       status_code INT,
       total_time FLOAT,
       download_time FLOAT,
@@ -32,13 +31,12 @@ export const createHttpTable = async () => {
         await pool.query(httpLogsQuery);
         console.log('Table "http_logs" created or already exists.');
 
-		// TODO: Delete after push
-        // Add ip_address column if it doesn't exist
+        // Drop ip_address column if it exists
         try {
-            await pool.query('ALTER TABLE http_logs ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45);');
-            console.log('Column "ip_address" added or already exists.');
+            await pool.query('ALTER TABLE http_logs DROP COLUMN IF EXISTS ip_address;');
+            console.log('Column "ip_address" dropped if it existed.');
         } catch (err) {
-            console.error('Error adding ip_address column:', err);
+            console.error('Error dropping ip_address column:', err);
         }
 
         const hourlyLogsQuery = `
