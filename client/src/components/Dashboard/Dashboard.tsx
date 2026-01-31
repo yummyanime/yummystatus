@@ -62,6 +62,7 @@ const Dashboard = () => {
     const [autoRefresh, setAutoRefresh] = useState(
         () => localStorage.getItem("autoRefresh") === "true"
     );
+    const [allLogs, setAllLogs] = useState<Log[]>([]);
 
     const timeRangeOptions = [
 		{ value: "3hour", label: "3 часа" },
@@ -104,6 +105,7 @@ const Dashboard = () => {
         try {
             let logsData: CountryLogs = {};
             let domainLogsData: { [domain: string]: CityLogs } = {};
+            let rawLogs: Log[] = [];
 
             if (domain) {
                 const [logsResponse, locationsResponse] = await Promise.all([
@@ -122,7 +124,21 @@ const Dashboard = () => {
                     );
                 }
 
-                logsData = await logsResponse.json();
+                const data = await logsResponse.json();
+                logsData = data;
+                
+                rawLogs = Object.entries(data).flatMap(
+                    ([country, countryData]: [string, any]) =>
+                        Object.entries(countryData).flatMap(
+                            ([city, cityData]: [string, any]) =>
+                                cityData.map((log: any) => ({
+                                    ...log,
+                                    country,
+                                    city,
+                                }))
+                        )
+                );
+
                 const processedLogsData: CountryLogs = {};
                 for (const countryKey in logsData) {
                     processedLogsData[countryKey] = trimCityLogsByTimeRange(logsData[countryKey]);
@@ -140,6 +156,8 @@ const Dashboard = () => {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data: Log[] = await response.json();
+                rawLogs = data;
+
                 const filteredData = data.filter(
                     (log) =>
                         log.country && allowedCountries.includes(log.country)
@@ -254,6 +272,7 @@ const Dashboard = () => {
                     setDomainLogs(domainLogsData);
                 }
             }
+            setAllLogs(rawLogs);
             setStatus("dashboard", "success");
         } catch (e: any) {
             if (
@@ -289,7 +308,6 @@ const Dashboard = () => {
     }, [hideUnreliable]);
 
     useEffect(() => {
-
         const handleVisibilityChange = () => {
             if (document.visibilityState === "visible") {
                 fetchData();
@@ -334,7 +352,7 @@ const Dashboard = () => {
                         />
                     </div>
                 </div>
-                <Status timeRange={timeRange} autoRefresh={autoRefresh} />
+                <Status allLogs={allLogs} loading={loading} />
                 <div className={styles.chartsGrid}>
                     {loading
                         ? Array.from({ length: domains.length }).map(
@@ -390,7 +408,7 @@ const Dashboard = () => {
                     />
                 </div>
             </div>
-            <Status timeRange={timeRange} domain={domain} autoRefresh={autoRefresh} />
+            <Status allLogs={allLogs} domain={domain} loading={loading} />
             {loading ? (
                 <div className={styles.chartsGrid}>
                     {Array.from({ length: 4 }).map((_, index) => (

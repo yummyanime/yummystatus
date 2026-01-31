@@ -30,126 +30,79 @@ interface DomainLogs {
 }
 
 interface StatusProps {
-    timeRange: string;
     domain?: string;
-    autoRefresh: boolean;
+    allLogs: Log[];
+    loading: boolean;
 }
 
-const Status: React.FC<StatusProps> = ({ timeRange, domain, autoRefresh }) => {
+const Status: React.FC<StatusProps> = ({ domain, allLogs, loading }) => {
     const [domainLogs, setDomainLogs] = useState<DomainLogs>({});
-    const [loading, setLoading] = useState(true);
-    const { setStatus } = useDataStatus();
 
-    const fetchData = async () => {
-        try {
-            const url = domain
-                ? `/http-logs?domain=${domain}&timeRange=${timeRange}`
-                : `/http-logs?timeRange=${timeRange}`;
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
+    useEffect(() => {
+        if (allLogs.length === 0) return;
 
-            let logsArray: Log[] = [];
-            if (domain) {
-                logsArray = Object.entries(data).flatMap(
-                    ([country, countryData]: [string, any]) =>
-                        Object.entries(countryData).flatMap(
-                            ([city, cityData]: [string, any]) =>
-                                cityData.map((log: Log) => ({
-                                    ...log,
-                                    country,
-                                    city,
-                                }))
-                        )
-                );
-            } else {
-                logsArray = Array.isArray(data)
-                    ? data
-                    : Object.values(data).flatMap((domainLogs: any) =>
-                          Object.values(domainLogs).flat()
-                      );
-            }
+        const groupedByDomain = allLogs.reduce(
+            (acc, log) => {
+                const currentDomain = domain || log.domain || "unknown";
+                if (!acc[currentDomain]) {
+                    acc[currentDomain] = [];
+                }
+                acc[currentDomain].push(log);
+                return acc;
+            },
+            {} as Record<string, Log[]>
+        );
 
-            const groupedByDomain = logsArray.reduce(
+        const processedDomainLogs: DomainLogs = {};
+
+        for (const domainName in groupedByDomain) {
+            const logsForDomain = groupedByDomain[domainName];
+            const groupedByTime = logsForDomain.reduce(
                 (acc, log) => {
-                    const currentDomain = domain || log.domain || "unknown";
-                    if (!acc[currentDomain]) {
-                        acc[currentDomain] = [];
+                    const time = log.created_at.substring(0, 16);
+                    if (!acc[time]) {
+                        acc[time] = [];
                     }
-                    acc[currentDomain].push(log);
+                    acc[time].push(log);
                     return acc;
                 },
                 {} as Record<string, Log[]>
             );
 
-            const processedDomainLogs: DomainLogs = {};
-
-            for (const domainName in groupedByDomain) {
-                const logsForDomain = groupedByDomain[domainName];
-                const groupedByTime = logsForDomain.reduce(
-                    (acc, log) => {
-                        const time = log.created_at.substring(0, 16);
-                        if (!acc[time]) {
-                            acc[time] = [];
-                        }
-                        acc[time].push(log);
-                        return acc;
-                    },
-                    {} as Record<string, Log[]>
+            processedDomainLogs[domainName] = Object.entries(groupedByTime)
+                .map(([_, logs]) => {
+                    const total_time_avg =
+                        logs.reduce(
+                            (sum, log) => sum + (log.total_time || 0),
+                            0
+                        ) / logs.length;
+                    return {
+                        created_at: logs[0].created_at,
+                        total_time_avg,
+                        results: logs.map(
+                            ({
+                                city = "Unknown",
+                                country = "Unknown",
+                                status_code = null,
+                                total_time = null,
+                            }) => ({
+                                city: city || "Unknown",
+                                country: country || "Unknown",
+                                status_code,
+                                total_time,
+                            })
+                        ),
+                    };
+                })
+                .sort(
+                    (b, a) =>
+                        new Date(b.created_at).getTime() -
+                        new Date(a.created_at).getTime()
                 );
-
-                processedDomainLogs[domainName] = Object.entries(groupedByTime)
-                    .map(([_, logs]) => {
-                        const total_time_avg =
-                            logs.reduce(
-                                (sum, log) => sum + (log.total_time || 0),
-                                0
-                            ) / logs.length;
-                        return {
-                            created_at: logs[0].created_at,
-                            total_time_avg,
-                            results: logs.map(
-                                ({
-                                    city = "Unknown",
-                                    country = "Unknown",
-                                    status_code = null,
-                                    total_time = null,
-                                }) => ({
-                                    city: city || "Unknown",
-                                    country: country || "Unknown",
-                                    status_code,
-                                    total_time,
-                                })
-                            ),
-                        };
-                    })
-                    .sort(
-                        (b, a) =>
-                            new Date(b.created_at).getTime() -
-                            new Date(a.created_at).getTime()
-                    );
-            }
-
-            setDomainLogs(processedDomainLogs);
-            setStatus("status", "success");
-        } catch (e: any) {
-            if (Object.keys(domainLogs).length > 0) {
-                setStatus("status", "stale");
-            } else {
-                setStatus("status", "error");
-            }
-        } finally {
-            setLoading(false);
         }
-    };
 
-    useEffect(() => {
-        setLoading(true);
-        setStatus("status", "loading");
-        fetchData();
-    }, [domain, timeRange, autoRefresh]);
+        setDomainLogs(processedDomainLogs);
+    }, [allLogs, domain]);
 
     if (loading) return <StatusPlug domain={domain} />;
 
