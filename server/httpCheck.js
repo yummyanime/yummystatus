@@ -35,7 +35,6 @@ export const locationGroups = {
         { country: "NL", city: "Amsterdam" },
         { country: "NL", city: "Utrecht" },
         { country: "GB", city: "London" },
-        { country: "GB", city: "Woking" },
         { country: "MD", city: "Chisinau" },
         { country: "CZ", city: "Prague" },
         { country: "CZ", city: "Brno" },

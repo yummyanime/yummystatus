@@ -47,7 +47,6 @@ export const cityTranslations: { [key: string]: string } = {
     Amsterdam: "Амстердам",
     Utrecht: "Утрехт",
     London: "Лондон",
-    Woking: "Уокинг",
     Chisinau: "Кишинёв",
     Prague: "Прага",
     Brno: "Брно",
