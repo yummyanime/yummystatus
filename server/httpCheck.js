@@ -247,6 +247,11 @@ const checkAndSaveDomain = async (domain, locations) => {
                 const failureReason = result
                     ? result.result.status.toUpperCase()
                     : "UNKNOWN";
+                
+                // Get ASN/Network if available even on failure
+                const probeAsn = result && result.probe ? result.probe.asn : null;
+                const probeNetwork = result && result.probe ? result.probe.network : null;
+
                 console.log(
                     `[FAILURE] HTTP check to ${location.city}, ${
                         location.country
@@ -257,8 +262,8 @@ const checkAndSaveDomain = async (domain, locations) => {
                     target,
                     location.country,
                     location.city,
-                    null,
-                    null,
+                    probeAsn,
+                    probeNetwork,
                     null,
                     9999,
                     null,
