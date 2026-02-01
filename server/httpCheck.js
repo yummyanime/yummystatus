@@ -317,8 +317,7 @@ export const httpCheckAndSave = async (locations) => {
     console.log(
         `--- Starting HTTP check cycle at ${new Date().toISOString()} for ${locations.length} locations across ${domains.length} domains ---`
     );
-    for (const domain of domains) {
-        await checkAndSaveDomain(domain, locations);
-        await new Promise((resolve) => setTimeout(resolve, 10000));
-    }
+    await Promise.all(
+        domains.map((domain) => checkAndSaveDomain(domain, locations))
+    );
 };

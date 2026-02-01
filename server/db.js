@@ -31,14 +31,6 @@ export const createHttpTable = async () => {
         await pool.query(httpLogsQuery);
         console.log('Table "http_logs" created or already exists.');
 
-        // Temporarily drop error_message column if it exists
-        try {
-            await pool.query('ALTER TABLE http_logs DROP COLUMN IF EXISTS error_message;');
-            console.log('Column "error_message" dropped.');
-        } catch (err) {
-            console.error('Error dropping error_message column:', err);
-        }
-
         const hourlyLogsQuery = `
     CREATE TABLE IF NOT EXISTS http_hourly_logs (
       id SERIAL PRIMARY KEY,
