@@ -203,7 +203,8 @@ const checkAndSaveDomain = async (domain, locations) => {
         }
 
         if (!resultData || resultData.status !== "finished") {
-            throw new Error(`Measurement ${id} for ${target} did not complete in 120s.`);
+            console.log(`Measurement ${id} for ${target} did not complete in 120s. Skipping database insertion.`);
+            return;
         }
 
         const resultsByLocation = new Map(
@@ -217,16 +218,15 @@ const checkAndSaveDomain = async (domain, locations) => {
             const result = resultsByLocation.get(
                 `${location.city}-${location.country}`
             );
-            let values;
 
             if (result && result.result.status === "finished") {
                 const { probe, result: httpResult } = result;
-                
+
                 console.log(
                     `[SUCCESS] HTTP check to ${probe.city}, ${probe.country} for ${target}: Status ${httpResult.statusCode}. ASN: ${probe.asn}, Network: ${probe.network}`
                 );
 
-                values = [
+                const values = [
                     id,
                     target,
                     probe.country,
@@ -234,51 +234,29 @@ const checkAndSaveDomain = async (domain, locations) => {
                     probe.asn,
                     probe.network,
                     httpResult.statusCode,
-                    Math.min(httpResult.timings.total || 9999, 9999),
+                    httpResult.timings.total != null ? Math.min(httpResult.timings.total, 9999) : null,
                     httpResult.timings.download || null,
                     httpResult.timings.firstByte || null,
                     httpResult.timings.dns || null,
                     httpResult.timings.tls || null,
                     httpResult.timings.tcp || null,
                 ];
-            } else {
-                const failureReason = result
-                    ? result.result.status.toUpperCase()
-                    : "UNKNOWN";
-                
-                // Get ASN/Network if available even on failure
-                const probeAsn = result && result.probe ? result.probe.asn : null;
-                const probeNetwork = result && result.probe ? result.probe.network : null;
 
-                console.log(
-                    `[FAILURE] HTTP check to ${location.city}, ${
-                        location.country
-                    } for ${target}: Status ${failureReason}`
-                );
-                values = [
-                    id,
-                    target,
-                    location.country,
-                    location.city,
-                    probeAsn,
-                    probeNetwork,
-                    null,
-                    9999,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                ];
-            }
-
-            const query = `
+                const query = `
       INSERT INTO http_logs (
         probe_id, domain, country, city, asn, network, status_code, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     `;
+                await pool.query(query, values);
+            } else {
+                const failureReason = result
+                    ? result.result.status.toUpperCase()
+                    : "UNKNOWN";
 
-            await pool.query(query, values);
+                console.log(
+                    `[FAILURE] HTTP check to ${location.city}, ${location.country} for ${target}: Status ${failureReason}. Skipping database insertion.`
+                );
+            }
         }
         console.log(
             `--- HTTP check cycle for measurement ${id} completed. ---`
@@ -288,28 +266,6 @@ const checkAndSaveDomain = async (domain, locations) => {
             `Failed to complete HTTP measurement cycle for ${target}:`,
             err.message
         );
-        for (const location of locations) {
-            const query = `
-      INSERT INTO http_logs (
-        probe_id, domain, country, city, asn, network, status_code, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-    `;
-            await pool.query(query, [
-                "failed",
-                target,
-                location.country,
-                location.city,
-                null,
-                null,
-                null,
-                9999,
-                null,
-                null,
-                null,
-                null,
-                null,
-            ]);
-        }
     }
 };
 
