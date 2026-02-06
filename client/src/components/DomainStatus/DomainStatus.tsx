@@ -28,8 +28,16 @@ const getStatusColor = (log: GroupedLog) => {
         (r) => Number(r.status_code) === 429
     ).length;
 
+    const captchaCount = log.results.filter(
+        (r) => Number(r.status_code) === 202
+    ).length;
+
     if (quotaExceededCount > 0) {
         return styles.grey;
+    }
+
+    if (captchaCount > 0) {
+        return styles.blue;
     }
 
     const problematicCountriesCount = log.results.filter(
