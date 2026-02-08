@@ -64,9 +64,6 @@ jobs:
                       echo "GLOBALPING_API_KEY2=${{ secrets.GLOBALPING_API_KEY2 }}" >> .env
                       echo "GLOBALPING_API_KEY3=${{ secrets.GLOBALPING_API_KEY3 }}" >> .env
                       echo "GLOBALPING_API_KEY4=${{ secrets.GLOBALPING_API_KEY4 }}" >> .env
-                      # Stop and disable system nginx if it exists
-                      sudo systemctl stop nginx || true
-                      sudo systemctl disable nginx || true
                       # Pull the latest image from Docker Hub
                       # Prune unused Docker components (images, containers, networks) to free disk space
                       sudo docker system prune -a -f || true
