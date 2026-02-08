@@ -52,9 +52,14 @@ jobs:
                       git reset --hard HEAD
                       git pull
                       # Install/Update docker compose plugin
-                      sudo mkdir -p /usr/local/lib/docker/cli-plugins
-                      sudo curl -SL "https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/lib/docker/cli-plugins/docker-compose
-                      sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+                      if [ ! -f /usr/local/lib/docker/cli-plugins/docker-compose ]; then
+                        echo "Installing docker compose plugin v2.24.6"
+                        sudo mkdir -p /usr/local/lib/docker/cli-plugins
+                        sudo curl -SL "https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/lib/docker/cli-plugins/docker-compose
+                        sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+                      else
+                        echo "docker compose plugin already exists, skipping installation"
+                      fi
                       # Create .env file
                       echo "DATABASE_URL=postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}" > .env
                       echo "POSTGRES_USER=${{ secrets.DB_USER }}" >> .env
