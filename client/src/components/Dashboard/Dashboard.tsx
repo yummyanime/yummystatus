@@ -107,8 +107,6 @@ const Dashboard = () => {
             let domainLogsData: { [domain: string]: CityLogs } = {};
             let rawLogs: Log[] = [];
 
-            const pingsByCountryAndTime = new Map<string, Map<string, Log[]>>();
-
             if (domain) {
                 const [logsResponse, locationsResponse] = await Promise.all([
                     fetch(`/http-logs?timeRange=${timeRange}&domain=${domain}`),
@@ -127,36 +125,25 @@ const Dashboard = () => {
                 }
 
                 const data = await logsResponse.json();
-                logsData = data;
                 
-                rawLogs = Object.entries(data).flatMap(
-                    ([country, countryData]: [string, any]) =>
-                        Object.entries(countryData).flatMap(
-                            ([city, cityData]: [string, any]) =>
-                                cityData.map((log: any) => ({
-                                    ...log,
-                                    country,
-                                    city,
-                                }))
+                logsData = Object.entries(data).reduce((acc, [country, countryData]: [string, any]) => {
+                    acc[country] = Object.entries(countryData).reduce((cityAcc, [city, cityData]: [string, any]) => {
+                        cityAcc[city] = cityData.map((log: any) => ({
+                            ...log,
+                            country,
+                            city,
+                        }));
+                        return cityAcc;
+                    }, {} as CityLogs);
+                    return acc;
+                }, {} as CountryLogs);
+                
+                rawLogs = Object.values(logsData).flatMap(
+                    (countryData: any) =>
+                        Object.values(countryData).flatMap(
+                            (cityData: any) => cityData
                         )
                 );
-
-                rawLogs.forEach(log => {
-                    if (log.country && log.created_at) {
-                        const countryKey = log.country;
-                        const timeKey = log.created_at;
-
-                        if (!pingsByCountryAndTime.has(countryKey)) {
-                            pingsByCountryAndTime.set(countryKey, new Map<string, Log[]>());
-                        }
-                        const timeMap = pingsByCountryAndTime.get(countryKey)!;
-
-                        if (!timeMap.has(timeKey)) {
-                            timeMap.set(timeKey, []);
-                        }
-                        timeMap.get(timeKey)!.push(log);
-                    }
-                });
 
                 const processedLogsData: CountryLogs = {};
                 for (const countryKey in logsData) {
@@ -176,23 +163,6 @@ const Dashboard = () => {
                 }
                 const data: Log[] = await response.json();
                 rawLogs = data;
-
-                rawLogs.forEach(log => {
-                    if (log.country && log.created_at) {
-                        const countryKey = log.country;
-                        const timeKey = log.created_at;
-
-                        if (!pingsByCountryAndTime.has(countryKey)) {
-                            pingsByCountryAndTime.set(countryKey, new Map<string, Log[]>());
-                        }
-                        const timeMap = pingsByCountryAndTime.get(countryKey)!;
-
-                        if (!timeMap.has(timeKey)) {
-                            timeMap.set(timeKey, []);
-                        }
-                        timeMap.get(timeKey)!.push(log);
-                    }
-                });
 
                 const filteredData = data.filter(
                     (log) =>
@@ -222,7 +192,7 @@ const Dashboard = () => {
                     domainLogsData[domainKey] = trimCityLogsByTimeRange(logsForDomain);
                 }
             }
-             const processCityLogs = (cityLogsMap: CityLogs, allPingsByCountryAndTime: Map<string, Map<string, Log[]>>): CityLogs => {
+            const processCityLogs = (cityLogsMap: CityLogs): CityLogs => {
                 const filteredLogs: CityLogs = {};
                 for (const city in cityLogsMap) {
                     const cityLogs = cityLogsMap[city];
@@ -242,16 +212,27 @@ const Dashboard = () => {
                                 isUnreliable = true;
                             }
 
-                            if (!isUnreliable && log.country && log.created_at) {
-                                const pingsAtSameTime = allPingsByCountryAndTime.get(log.country)?.get(log.created_at);
+                            // Дополнительная проверка по другим городам страны
+                            if (!isUnreliable) {
+                                const currentLogTime = new Date(log.created_at).getTime();
+                                const twoMinutes = 2 * 60 * 1000;
 
-                                if (pingsAtSameTime) {
-                                    const otherCitiesHaveGoodPing = pingsAtSameTime.some(
-                                        (p) => p.city !== log.city && (p.total_time ?? 0) < 2500
-                                    );
+                                for (const otherCity in cityLogsMap) {
+                                    if (otherCity === city) continue;
 
-                                    if (otherCitiesHaveGoodPing) {
+                                    const otherCityLogs = cityLogsMap[otherCity];
+                                    const hasValidPingNearby = otherCityLogs.some((otherLog) => {
+                                        // Проверяем, что это та же страна
+                                        if (otherLog.country !== log.country) return false;
+
+                                        const otherLogTime = new Date(otherLog.created_at).getTime();
+                                        const isNearby = Math.abs(currentLogTime - otherLogTime) <= twoMinutes;
+                                        return isNearby && (otherLog.total_time ?? 0) < 2500;
+                                    });
+
+                                    if (hasValidPingNearby) {
                                         isUnreliable = true;
+                                        break;
                                     }
                                 }
                             }
@@ -302,20 +283,24 @@ const Dashboard = () => {
                     const filteredCountryLogs: CountryLogs = {};
                     for (const country in logsData) {
                         filteredCountryLogs[country] = processCityLogs(
-                            logsData[country],
-                            pingsByCountryAndTime
+                            logsData[country]
                         );
                     }
                     setHttpLogs(filteredCountryLogs);
+                    rawLogs = Object.values(filteredCountryLogs).flatMap(countryData =>
+                        Object.values(countryData).flatMap(cityData => cityData)
+                    );
                 } else {
                     const filteredDomainLogs: { [domain: string]: CityLogs } = {};
                     for (const domainKey in domainLogsData) {
                         filteredDomainLogs[domainKey] = processCityLogs(
-                            domainLogsData[domainKey],
-                            pingsByCountryAndTime
+                            domainLogsData[domainKey]
                         );
                     }
                     setDomainLogs(filteredDomainLogs);
+                    rawLogs = Object.values(filteredDomainLogs).flatMap(domainData =>
+                        Object.values(domainData).flatMap(cityData => cityData)
+                    );
                 }
             } else {
                 if (domain) {
