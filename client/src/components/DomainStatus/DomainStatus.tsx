@@ -95,7 +95,7 @@ const DomainStatus: React.FC<DomainStatusProps> = ({ domain, logs }) => {
                                 <div className={styles.tooltipBody}>
                                     <div>
                                         Среднее время:{" "}
-                                        {log.total_time_avg.toFixed(2)}ms
+                                        {log.total_time_avg.toFixed(2)}мс
                                     </div>
                                     {log.results.filter(
                                         (r) =>
@@ -136,7 +136,7 @@ const DomainStatus: React.FC<DomainStatusProps> = ({ domain, logs }) => {
                                                             ? `Статус: ${r.status_code}`
                                                             : "неизвестный статус"}
                                                         {r.total_time !== null
-                                                            ? `; Время: ${r.total_time}ms`
+                                                            ? `; Время: ${r.total_time}мс`
                                                             : ""}
                                                     </div>
                                                 ))}
