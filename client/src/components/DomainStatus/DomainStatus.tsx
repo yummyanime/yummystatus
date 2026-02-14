@@ -63,7 +63,7 @@ const getStatusColor = (log: GroupedLog) => {
     return styles.green;
 };
 
-const DomainStatus: React.FC<DomainStatusProps> = ({ domain, logs, timeRange }) => {
+const DomainStatus: React.FC<DomainStatusProps> = ({ domain, logs }) => {
     const requestsRef = useRef<HTMLDivElement>(null);
     const width = useResize(requestsRef);
 
