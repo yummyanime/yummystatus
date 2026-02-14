@@ -82,67 +82,69 @@ const DomainStatus: React.FC<DomainStatusProps> = ({ domain, logs, timeRange }) 
                         key={`${log.created_at}-${index}`}
                         content={
                             <div>
-                                <div>
-                                    Время:{" "}
-                                    {new Date(log.created_at).toLocaleString("ru-RU", {
-                                        ...(timeRange === "week" || timeRange === "month"
-                                            ? { day: "2-digit", month: "2-digit" }
-                                            : {}),
+                                <div className={styles.tooltipHeader}>
+                                    {new Date(log.created_at).toLocaleDateString("ru-RU", {
+                                        weekday: "long",
+                                        day: "numeric",
+                                        month: "long",
+                                    })} в {new Date(log.created_at).toLocaleTimeString("ru-RU", {
                                         hour: "2-digit",
                                         minute: "2-digit",
                                     })}
                                 </div>
-                                <div>
-                                    Среднее время:{" "}
-                                    {log.total_time_avg.toFixed(2)}ms
-                                </div>
-                                {log.results.filter(
-                                    (r) =>
-                                        r.status_code !== 200 ||
-                                        r.total_time === null ||
-                                        (r.total_time && r.total_time > 2500) ||
-                                        Number(r.status_code) === 429
-                                ).length > 0 ? (
+                                <div className={styles.tooltipBody}>
                                     <div>
-                                        <div>Проблемные города:</div>
-                                        {log.results
-                                            .filter(
-                                                (r) =>
-                                                    r.status_code !== 200 ||
-                                                    r.total_time === null ||
-                                                    (r.total_time &&
-                                                        r.total_time > 2500) ||
-                                                    Number(r.status_code) ===
-                                                        429
-                                            )
-                                            .map((r, i) => (
-                                                <div key={i}>
-                                                    -{" "}
-                                                    <ReactCountryFlag
-                                                        countryCode={
-                                                            r.country || "US"
-                                                        }
-                                                        svg
-                                                        style={{
-                                                            marginRight: "5px",
-                                                        }}
-                                                    />{" "}
-                                                    {cityTranslations[r.city] ||
-                                                        r.city ||
-                                                        "Неизвестный город"}
-                                                    :{" "}
-                                                    {r.status_code !== null
-                                                        ? `Статус: ${r.status_code}`
-                                                        : "неизвестный статус"}
-                                                    {r.total_time !== null
-                                                        ? `; Время: ${r.total_time}ms`
-                                                        : ""}
-                                                </div>
-                                            ))}
+                                        Среднее время:{" "}
+                                        {log.total_time_avg.toFixed(2)}ms
                                     </div>
-                                ) : (
-                                    <div>Все города в норме</div>
-                                )}
+                                    {log.results.filter(
+                                        (r) =>
+                                            r.status_code !== 200 ||
+                                            r.total_time === null ||
+                                            (r.total_time && r.total_time > 2500) ||
+                                            Number(r.status_code) === 429
+                                    ).length > 0 ? (
+                                        <div>
+                                            <div>Проблемные города:</div>
+                                            {log.results
+                                                .filter(
+                                                    (r) =>
+                                                        r.status_code !== 200 ||
+                                                        r.total_time === null ||
+                                                        (r.total_time &&
+                                                            r.total_time > 2500) ||
+                                                        Number(r.status_code) ===
+                                                            429
+                                                )
+                                                .map((r, i) => (
+                                                    <div key={i}>
+                                                        -{" "}
+                                                        <ReactCountryFlag
+                                                            countryCode={
+                                                                r.country || "US"
+                                                            }
+                                                            svg
+                                                            style={{
+                                                                marginRight: "5px",
+                                                            }}
+                                                        />{" "}
+                                                        {cityTranslations[r.city] ||
+                                                            r.city ||
+                                                            "Неизвестный город"}
+                                                        :{" "}
+                                                        {r.status_code !== null
+                                                            ? `Статус: ${r.status_code}`
+                                                            : "неизвестный статус"}
+                                                        {r.total_time !== null
+                                                            ? `; Время: ${r.total_time}ms`
+                                                            : ""}
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    ) : (
+                                        <div>Все города в норме</div>
+                                    )}
+                                </div>
                             </div>
                         }
                     >
