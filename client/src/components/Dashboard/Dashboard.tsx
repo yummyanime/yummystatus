@@ -287,9 +287,6 @@ const Dashboard = () => {
                         );
                     }
                     setHttpLogs(filteredCountryLogs);
-                    rawLogs = Object.values(filteredCountryLogs).flatMap(countryData =>
-                        Object.values(countryData).flatMap(cityData => cityData)
-                    );
                 } else {
                     const filteredDomainLogs: { [domain: string]: CityLogs } = {};
                     for (const domainKey in domainLogsData) {
@@ -298,9 +295,6 @@ const Dashboard = () => {
                         );
                     }
                     setDomainLogs(filteredDomainLogs);
-                    rawLogs = Object.values(filteredDomainLogs).flatMap(domainData =>
-                        Object.values(domainData).flatMap(cityData => cityData)
-                    );
                 }
             } else {
                 if (domain) {
@@ -308,6 +302,15 @@ const Dashboard = () => {
                 } else {
                     setDomainLogs(domainLogsData);
                 }
+            }
+            if (domain) {
+                rawLogs = Object.values(logsData).flatMap(countryData =>
+                    Object.values(countryData).flatMap(cityData => cityData)
+                );
+            } else {
+                rawLogs = Object.values(domainLogsData).flatMap(domainData =>
+                    Object.values(domainData).flatMap(cityData => cityData)
+                );
             }
             setAllLogs(rawLogs);
             setStatus("dashboard", "success");
