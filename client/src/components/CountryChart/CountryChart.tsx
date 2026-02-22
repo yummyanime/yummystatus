@@ -64,10 +64,24 @@ const CountryChart = ({
     const [width, setWidth] = useState(window.innerWidth);
 
     useEffect(() => {
+        console.log("CountryChart mounted");
+        return () => console.log("CountryChart unmounted");
+    }, []);
+
+    useEffect(() => {
+        console.log("isChartLoading changed:", isChartLoading);
+    }, [isChartLoading]);
+
+    useEffect(() => {
         const handleResize = () => setWidth(window.innerWidth);
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, []);
+
+    useEffect(() => {
+        console.log("cityLogs prop changed:", cityLogs);
+        console.log("cities prop changed:", cities);
+    }, [cityLogs, cities]);
     type ChartData = {
         x: number;
         y: number | null;
@@ -103,6 +117,7 @@ const CountryChart = ({
     }, []);
 
     const datasets = cities.map((city, index) => {
+        console.log(`Generating dataset for city: ${city}`);
         const logs = cityLogs[city] || [];
         const colorIndex = index % CHART_COLORS.length;
         const color = CHART_COLORS[colorIndex] || "#c9cbcf";
@@ -150,6 +165,7 @@ const CountryChart = ({
             };
         });
 
+        console.log(`Dataset for city ${city}:`, data);
         return {
             label: cityTranslations[city] || city,
             data: data,
