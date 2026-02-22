@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
+import path from "path";
 import { createHttpTable } from "./db.js";
 import apiRoutes from "./routes.js";
 import {
@@ -10,15 +11,15 @@ import {
     cleanupOldLogs,
 } from "./httpCheck.js";
 
+const __dirname = path.resolve();
+
 const app = express();
 const port = 3000;
 
 app.use(express.json());
-import path from "path";
-
-const __dirname = path.resolve();
-
+console.log("Applying API routes...");
 app.use(apiRoutes);
+console.log("Applying static file serving...");
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'client/dist')));
