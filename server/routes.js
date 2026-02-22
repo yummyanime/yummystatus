@@ -87,4 +87,21 @@ router.get("/locations", (req, res) => {
     res.json(locationGroups);
 });
 
+router.get("/probes", async (req, res) => {
+    try {
+        const response = await fetch("https://api.globalping.io/v1/probes");
+        if (!response.ok) {
+            throw new Error(`Globalping API error: ${response.status}`);
+        }
+        const data = await response.json();
+        res.json({
+            all: data,
+            active: locationGroups
+        });
+    } catch (err) {
+        console.error("Error fetching probes:", err);
+        res.status(500).json({ error: "Failed to fetch probes" });
+    }
+});
+
 export default router;
