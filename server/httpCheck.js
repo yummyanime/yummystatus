@@ -179,10 +179,9 @@ const checkAndSaveDomain = async (domain, locations) => {
         const { id } = await createMeasurementResponse.json();
         console.log(`[HTTP] Measurement created for ${target} with ID: ${id}`);
 
-        // Step 2 & 3: Poll for the measurement result until it's finished
         let resultData;
         const startTime = Date.now();
-        const timeout = 120000; // 120 seconds timeout
+        const timeout = 6000;
 
         while (Date.now() - startTime < timeout) {
             const getResultResponse = await fetch(
@@ -242,7 +241,7 @@ const checkAndSaveDomain = async (domain, locations) => {
                     probe.asn,
                     probe.network,
                     httpResult.statusCode,
-                    Math.min(httpResult.timings.total || 9999, 9999),
+                    Math.min(httpResult.timings.total || 4000, 4000),
                     httpResult.timings.download || null,
                     httpResult.timings.firstByte || null,
                     httpResult.timings.dns || null,
@@ -271,7 +270,7 @@ const checkAndSaveDomain = async (domain, locations) => {
                     probeAsn,
                     probeNetwork,
                     null,
-                    9999,
+                    4000,
                     null,
                     null,
                     null,
@@ -310,7 +309,7 @@ const checkAndSaveDomain = async (domain, locations) => {
                 null,
                 null,
                 null,
-                9999,
+                4000,
                 null,
                 null,
                 null,
