@@ -161,33 +161,49 @@ const checkAndSaveDomainWS = (domain, locations) => {
             reconnection: false
         });
 
+        // Прямое логирование внутренних событий socket.io
+        socket.on("api:error", (err) => {
+            console.error(`[WS DEBUG] API ERROR for ${target}:`, JSON.stringify(err, null, 2));
+        });
+
+        socket.on("connect_error", (err) => {
+            console.error(`[WS DEBUG] Connection error for ${target}:`, err.message, err.data);
+            socket.disconnect();
+            resolve();
+        });
+
         let measurementId = null;
         const resultsReceived = new Set();
 
         socket.on("connect", () => {
             console.log(`[WS DEBUG] Connected event triggered for ${target}, Socket ID: ${socket.id}`);
-            socket.emit("measurement:create", {
+            
+            const payload = {
                 target: target,
                 type: "http",
                 locations: locations.map((location) => ({
                     ...location,
                     limit: 1,
                 })),
-                measurementOptions: {
+                query: {
                     protocol: "HTTPS",
                     ...(secretKey && {
-                        request: {
-                            headers: {
-                                "X-Secret-Key": secretKey,
-                            },
+                        headers: {
+                            "X-Secret-Key": secretKey,
                         },
                     }),
                 },
-            }, (response) => {
-                console.log(`[WS DEBUG] Ack response for ${target}:`, JSON.stringify(response, null, 2));
+            };
+            
+            console.log(`[WS DEBUG] Sending payload for ${target}:`, JSON.stringify(payload, null, 2));
+
+            socket.emit("measurement:create", payload, (response) => {
+                console.log(`[WS DEBUG] Ack response received for ${target}:`, JSON.stringify(response, null, 2));
                 if (response && response.id) {
                     measurementId = response.id;
                     console.log(`[WS DEBUG] Measurement ID set from Ack for ${target}: ${measurementId}`);
+                } else if (response && response.error) {
+                    console.error(`[WS DEBUG] ERROR in Ack for ${target}:`, response.error);
                 }
             });
         });
