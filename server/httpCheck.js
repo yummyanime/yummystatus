@@ -157,14 +157,15 @@ const checkAndSaveDomainWS = (domain, locations) => {
 
         const socket = io("https://api.globalping.io", {
             transports: ["websocket"],
-            auth: { token: apiKey }
+            auth: { token: apiKey },
+            reconnection: false
         });
 
         let measurementId = null;
         const resultsReceived = new Set();
 
         socket.on("connect", () => {
-            console.log(`[WS DEBUG] Connected event triggered for ${target}`);
+            console.log(`[WS DEBUG] Connected event triggered for ${target}, Socket ID: ${socket.id}`);
             socket.emit("measurement:create", {
                 target: target,
                 type: "http",
@@ -182,7 +183,18 @@ const checkAndSaveDomainWS = (domain, locations) => {
                         },
                     }),
                 },
+            }, (response) => {
+                console.log(`[WS DEBUG] Ack response for ${target}:`, JSON.stringify(response, null, 2));
+                if (response && response.id) {
+                    measurementId = response.id;
+                    console.log(`[WS DEBUG] Measurement ID set from Ack for ${target}: ${measurementId}`);
+                }
             });
+        });
+
+        // Слушаем ВСЕ события для отладки
+        socket.onAny((eventName, ...args) => {
+            console.log(`[WS DEBUG ANY] Event: ${eventName} for ${target}`, JSON.stringify(args, null, 2));
         });
 
         socket.on("api:error", (err) => {
