@@ -97,7 +97,39 @@ export const aggregateHourlyData = async () => {
 };
 
 // Хелпер для сохранения результата в БД
-const saveResultToDb = async (id, target, country, city, asn, network, statusCode, totalTime, downloadTime, firstByteTime, dnsTime, tlsTime, tcpTime) => {
+const saveResultToDb = async (id, target, country, city, asn, network, statusCode, totalTime, downloadTime, firstByteTime, dns_time, tls_time, tcp_time) => {
+    let finalTotalTime = totalTime;
+
+    // Если данных о времени нет (ошибка)
+    if (finalTotalTime === null) {
+        // Для ошибок типа "сбой пробы/сети" (код 599) или отсутствующих данных (финальная очистка)
+        // мы берем время из последнего успешного замера, чтобы не портить график.
+        // Для реальных таймаутов (408) или DNS (503) мы оставим 4000.
+        if (statusCode === 599 || statusCode === null) {
+            try {
+                const lastLogQuery = `
+                    SELECT total_time 
+                    FROM http_logs 
+                    WHERE domain = $1 AND country = $2 AND city = $3 AND total_time IS NOT NULL AND status_code = 200
+                    ORDER BY created_at DESC 
+                    LIMIT 1
+                `;
+                const lastLogResult = await pool.query(lastLogQuery, [target, country, city]);
+                if (lastLogResult.rows.length > 0) {
+                    finalTotalTime = lastLogResult.rows[0].total_time;
+                } else {
+                    finalTotalTime = 4000;
+                }
+            } catch (err) {
+                console.error('Error fetching last log for fallback time:', err);
+                finalTotalTime = 4000;
+            }
+        } else {
+            // Для 408 (Timeout) и 503 (DNS) ставим жесткие 4000
+            finalTotalTime = 4000;
+        }
+    }
+
     const query = `
       INSERT INTO http_logs (
         probe_id, domain, country, city, asn, network, status_code, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time
@@ -105,8 +137,8 @@ const saveResultToDb = async (id, target, country, city, asn, network, statusCod
     `;
     const values = [
         id, target, country, city, asn, network, statusCode,
-        totalTime !== null ? Math.min(totalTime, 4000) : 4000,
-        downloadTime, firstByteTime, dnsTime, tlsTime, tcpTime
+        finalTotalTime !== null ? Math.min(finalTotalTime, 4000) : 4000,
+        downloadTime, firstByteTime, dns_time, tls_time, tcp_time
     ];
     await pool.query(query, values);
 };
@@ -129,7 +161,6 @@ const checkAndSaveDomainWS = (domain, locations) => {
         });
 
         let measurementId = null;
-        const locationsMap = new Map(locations.map(l => [`${l.city}-${l.country}`, l]));
         const resultsReceived = new Set();
 
         socket.on("connect", () => {
@@ -181,9 +212,16 @@ const checkAndSaveDomainWS = (domain, locations) => {
                 );
             } else {
                 console.log(`[WS FAILURE] ${probe.city}, ${probe.country} for ${target}: Status ${httpResult.status}`);
+                
+                // Превращаем текстовый статус в цифровой код для базы данных
+                let errorCode = 0; // Default error
+                if (httpResult.status === "failed") errorCode = 599; // Общая ошибка выполнения
+                if (httpResult.status === "timed-out") errorCode = 408; // Request Timeout
+                if (httpResult.status === "dns-error") errorCode = 503; // Service Unavailable (как аналог DNS проблем)
+
                 await saveResultToDb(
                     measurementId, target, probe.country, probe.city, probe.asn, probe.network,
-                    null, 4000, null, null, null, null, null
+                    errorCode, null, null, null, null, null, null
                 );
             }
         });
@@ -195,7 +233,7 @@ const checkAndSaveDomainWS = (domain, locations) => {
             const remainingLocations = locations.filter(l => !resultsReceived.has(`${l.city}-${l.country}`));
             const cleanup = async () => {
                 for (const loc of remainingLocations) {
-                    await saveResultToDb(measurementId, target, loc.country, loc.city, null, null, null, 4000, null, null, null, null, null);
+                    await saveResultToDb(measurementId, target, loc.country, loc.city, null, null, null, null, null, null, null, null, null);
                 }
                 socket.disconnect();
                 resolve();
@@ -203,14 +241,13 @@ const checkAndSaveDomainWS = (domain, locations) => {
             cleanup();
         });
 
-        // Таймаут безопасности на случай, если Globalping не пришлет 'finished'
         setTimeout(() => {
             if (socket.connected) {
                 console.log(`[WS] Safety timeout for ${target} (${measurementId})`);
                 socket.disconnect();
                 resolve();
             }
-        }, 120000);
+        }, 60000);
     });
 };
 
