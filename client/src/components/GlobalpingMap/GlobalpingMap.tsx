@@ -47,9 +47,14 @@ const GlobalpingMap = () => {
                 const response = await fetch("/probes");
                 console.log("Probes fetch response status:", response.status, response.statusText);
                 if (response.ok) {
-                    const probesData = await response.json();
-                    console.log("Probes data:", probesData);
-                    setData(probesData);
+                    try {
+                        const probesData = await response.json();
+                        console.log("Probes data:", probesData);
+                        setData(probesData);
+                    } catch (jsonError) {
+                        const errorText = await response.text();
+                        console.error("Failed to parse probes JSON, raw response:", errorText, jsonError);
+                    }
                 } else {
                     const errorText = await response.text();
                     console.error("Probes fetch error response body:", errorText);
