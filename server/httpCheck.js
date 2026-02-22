@@ -185,6 +185,14 @@ const checkAndSaveDomainWS = (domain, locations) => {
             });
         });
 
+        socket.on("error", (err) => {
+            console.error(`[WS ERROR] Globalping error for ${target}:`, err);
+        });
+
+        socket.on("api:error", (err) => {
+            console.error(`[WS API ERROR] Globalping API error for ${target}:`, err);
+        });
+
         socket.on("connect_error", (err) => {
             console.error(`[WS] Connection error for ${target}:`, err.message);
             socket.disconnect();
