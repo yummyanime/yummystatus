@@ -22,10 +22,10 @@ export const locationGroups = {
     ],
     "6min": [
         { country: "DE", city: "Berlin" },
-        { country: "DE", city: "Dusseldorf" },
+        { country: "DE", city: "Dusseldorf" }, 
         { country: "KG", city: "Bishkek" },
-        { country: "PL", city: "Warsaw" },
-        { country: "PL", city: "Krakow" },
+        { country: "PL", city: "Warsaw" }, 
+        { country: "PL", city: "Krakow" }, 
         { country: "LV", city: "Riga" },
         { country: "LT", city: "Vilnius" },
         { country: "LT", city: "Siauliai" },
@@ -97,7 +97,7 @@ export const aggregateHourlyData = async () => {
 };
 
 // Хелпер для сохранения результата в БД
-const saveResultToDb = async (id, target, country, city, asn, network, statusCode, totalTime, downloadTime, firstByteTime, dns_time, tls_time, tcp_time) => {
+const saveResultToDb = async (id, target, country, city, asn, network, statusCode, totalTime, downloadTime, firstByteTime, dnsTime, tlsTime, tcpTime) => {
     let finalTotalTime = totalTime;
 
     // Если данных о времени нет (ошибка)
@@ -137,12 +137,12 @@ const saveResultToDb = async (id, target, country, city, asn, network, statusCod
     const values = [
         id, target, country, city, asn, network, statusCode,
         finalTotalTime !== null ? Math.min(finalTotalTime, 4000) : 4000,
-        downloadTime, firstByteTime, dns_time, tls_time, tcp_time
+        downloadTime, firstByteTime, dnsTime, tlsTime, tcpTime
     ];
     await pool.query(query, values);
 };
 
-// Функция для выполнения проверки HTTP (Long Polling)
+// Функция для выполнения проверки HTTP и сохранения результатов для одного домена
 const checkAndSaveDomain = async (domain, locations) => {
     const target = domain.name;
     const apiKey = process.env[domain.apiKeyEnv];
@@ -153,8 +153,13 @@ const checkAndSaveDomain = async (domain, locations) => {
         return;
     }
 
+    if (!target) {
+        console.error("Target is not defined");
+        return;
+    }
+
     try {
-        // Используем ?wait=true для получения результатов в одном запросе
+        // Step 1: Create the measurement
         const requestOptions = {
             method: "POST",
             headers: {
@@ -163,11 +168,11 @@ const checkAndSaveDomain = async (domain, locations) => {
             },
             body: JSON.stringify({
                 target: target,
-                type: "http",
                 locations: locations.map((location) => ({
                     ...location,
                     limit: 1,
                 })),
+                type: "http",
                 measurementOptions: {
                     protocol: "HTTPS",
                     ...(secretKey && {
@@ -180,60 +185,116 @@ const checkAndSaveDomain = async (domain, locations) => {
                 },
             }),
         };
-
-        console.log(`[HTTP] Creating measurement for ${target} with wait=true...`);
-        const response = await fetch(
-            "https://api.globalping.io/v1/measurements?wait=true",
+        const createMeasurementResponse = await fetch(
+            "https://api.globalping.io/v1/measurements",
             requestOptions
         );
 
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error(`[HTTP ERROR] ${target}: ${response.status}. Body: ${errorBody}`);
-            
-            // Если лимит запросов (429), помечаем все локации
-            if (response.status === 429) {
-                for (const loc of locations) {
-                    await saveResultToDb("api_limit", target, loc.country, loc.city, null, null, 429, null, null, null, null, null, null);
+        if (!createMeasurementResponse.ok) {
+            const errorBody = await createMeasurementResponse.text();
+            console.error(
+                `Failed to create measurement for ${target}: ${createMeasurementResponse.status} ${createMeasurementResponse.statusText}. Body: ${errorBody}`
+            );
+            if (createMeasurementResponse.status === 429) {
+                for (const location of locations) {
+                    await saveResultToDb("api_limit", target, location.country, location.city, null, null, 429, null, null, null, null, null, null);
                 }
             } else {
-                for (const loc of locations) {
-                    await saveResultToDb("failed", target, loc.country, loc.city, null, null, 599, null, null, null, null, null, null);
+                for (const location of locations) {
+                    await saveResultToDb("failed", target, location.country, location.city, null, null, 599, null, null, null, null, null, null);
                 }
             }
             return;
         }
 
-        const data = await response.json();
-        const measurementId = data.id;
-        console.log(`[HTTP SUCCESS] Measurement completed for ${target}, ID: ${measurementId}`);
+        const { id } = await createMeasurementResponse.json();
+        console.log(`[HTTP] Measurement created for ${target} with ID: ${id}`);
 
-        for (const resultEntry of data.results) {
-            const { probe, result: httpResult } = resultEntry;
-            
-            if (httpResult.status === "finished") {
-                console.log(`[HTTP] ${probe.city}, ${probe.country} for ${target}: ${httpResult.statusCode}`);
+        // Step 2 & 3: Poll for the measurement result until it's finished
+        let resultData;
+        const startTime = Date.now();
+        const timeout = 120000; // 120 seconds timeout
+
+        while (Date.now() - startTime < timeout) {
+            const getResultResponse = await fetch(
+                `https://api.globalping.io/v1/measurements/${id}`
+            );
+
+            if (!getResultResponse.ok) {
+                if (getResultResponse.status >= 500) {
+                    await new Promise((resolve) =>
+                        setTimeout(resolve, 2000)
+                    );
+                    continue;
+                }
+                throw new Error(
+                    `HTTP error! status: ${getResultResponse.status}`
+                );
+            }
+
+            resultData = await getResultResponse.json();
+
+            if (resultData.status === "finished") {
+                break;
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+
+        if (!resultData || resultData.status !== "finished") {
+            throw new Error(`Measurement ${id} for ${target} did not complete in 120s.`);
+        }
+
+        const resultsByLocation = new Map(
+            resultData.results.map((r) => [
+                `${r.probe.city}-${r.probe.country}`,
+                r,
+            ])
+        );
+
+        for (const location of locations) {
+            const result = resultsByLocation.get(
+                `${location.city}-${location.country}`
+            );
+
+            if (result && result.result.status === "finished") {
+                const { probe, result: httpResult } = result;
+                
+                console.log(
+                    `[SUCCESS] HTTP check to ${probe.city}, ${probe.country} for ${target}: Status ${httpResult.statusCode}. ASN: ${probe.asn}, Network: ${probe.network}`
+                );
+
                 await saveResultToDb(
-                    measurementId, target, probe.country, probe.city, probe.asn, probe.network,
+                    id, target, probe.country, probe.city, probe.asn, probe.network,
                     httpResult.statusCode, httpResult.timings.total, httpResult.timings.download,
                     httpResult.timings.firstByte, httpResult.timings.dns, httpResult.timings.tls, httpResult.timings.tcp
                 );
             } else {
-                console.log(`[HTTP FAILURE] ${probe.city}, ${probe.country} for ${target}: ${httpResult.status}`);
+                const { probe } = result || {};
+                const failureReason = result ? result.result.status : "unknown";
+                
+                console.log(`[FAILURE] HTTP check to ${location.city}, ${location.country} for ${target}: Status ${failureReason}`);
+                
                 let errorCode = 599;
-                if (httpResult.status === "timed-out") errorCode = 408;
-                if (httpResult.status === "dns-error") errorCode = 503;
+                if (failureReason === "timed-out") errorCode = 408;
+                if (failureReason === "dns-error") errorCode = 503;
 
                 await saveResultToDb(
-                    measurementId, target, probe.country, probe.city, probe.asn, probe.network,
+                    id, target, location.country, location.city, probe?.asn || null, probe?.network || null,
                     errorCode, null, null, null, null, null, null
                 );
             }
         }
+        console.log(
+            `--- HTTP check cycle for measurement ${id} completed. ---`
+        );
     } catch (err) {
-        console.error(`[HTTP FATAL] ${target}:`, err.message);
-        for (const loc of locations) {
-            await saveResultToDb("fatal_error", target, loc.country, loc.city, null, null, 599, null, null, null, null, null, null);
+        console.error(
+            `Failed to complete HTTP measurement cycle for ${target}:`,
+            err.message
+        );
+        for (const location of locations) {
+            await saveResultToDb("failed", target, location.country, location.city, null, null, 599, null, null, null, null, null, null);
         }
     }
 };
@@ -242,11 +303,7 @@ export const httpCheckAndSave = async (locations) => {
     console.log(
         `--- Starting HTTP check cycle at ${new Date().toISOString()} for ${locations.length} locations across ${domains.length} domains ---`
     );
-    
-    // Запускаем проверки параллельно
     await Promise.all(
         domains.map((domain) => checkAndSaveDomain(domain, locations))
     );
-    
-    console.log(`--- All HTTP check cycles completed at ${new Date().toISOString()} ---`);
 };
