@@ -109,10 +109,16 @@ const Dashboard = () => {
             let rawLogs: Log[] = [];
 
             if (domain) {
+                console.log(`Fetching http-logs for domain ${domain} with time range ${timeRange}`);
+                console.log("Fetching locations");
+
                 const [logsResponse, locationsResponse] = await Promise.all([
                     fetch(`/http-logs?timeRange=${timeRange}&domain=${domain}`),
                     fetch("/locations"),
                 ]);
+
+                console.log("http-logs response status:", logsResponse.status, logsResponse.statusText);
+                console.log("locations response status:", locationsResponse.status, locationsResponse.statusText);
 
                 if (!logsResponse.ok) {
                     throw new Error(
@@ -156,9 +162,11 @@ const Dashboard = () => {
                     await locationsResponse.json();
                 setLocationGroups(locationsData);
             } else {
+                console.log(`Fetching http-logs for all domains with time range ${timeRange}`);
                 const response = await fetch(
                     `/http-logs?timeRange=${timeRange}`
                 );
+                console.log("http-logs response status (all domains):", response.status, response.statusText);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -316,6 +324,7 @@ const Dashboard = () => {
             setAllLogs(rawLogs);
             setStatus("dashboard", "success");
         } catch (e: any) {
+            console.error("Error fetching data:", e);
             if (
                 Object.keys(httpLogs).length > 0 ||
                 Object.keys(domainLogs).length > 0
