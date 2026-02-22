@@ -164,7 +164,7 @@ const checkAndSaveDomainWS = (domain, locations) => {
         const resultsReceived = new Set();
 
         socket.on("connect", () => {
-            console.log(`[WS] Connected to Globalping for ${target}`);
+            console.log(`[WS DEBUG] Connected event triggered for ${target}`);
             socket.emit("measurement:create", {
                 target: target,
                 type: "http",
@@ -185,27 +185,27 @@ const checkAndSaveDomainWS = (domain, locations) => {
             });
         });
 
-        socket.on("error", (err) => {
-            console.error(`[WS ERROR] Globalping error for ${target}:`, err);
-        });
-
         socket.on("api:error", (err) => {
-            console.error(`[WS API ERROR] Globalping API error for ${target}:`, err);
+            console.error(`[WS DEBUG] API ERROR for ${target}:`, JSON.stringify(err, null, 2));
         });
 
         socket.on("connect_error", (err) => {
-            console.error(`[WS] Connection error for ${target}:`, err.message);
+            console.error(`[WS DEBUG] Connection error for ${target}:`, err.message, err.data);
             socket.disconnect();
             resolve();
         });
 
         socket.on("measurement:created", (data) => {
             measurementId = data.id;
-            console.log(`[WS] Measurement created for ${target} with ID: ${measurementId}`);
+            console.log(`[WS DEBUG] measurement:created for ${target}: ID = ${measurementId}`);
         });
 
         socket.on("measurement:result", async (data) => {
-            if (data.id !== measurementId) return;
+            console.log(`[WS DEBUG] measurement:result received for ${target}, measurementId: ${data.id}`);
+            if (data.id !== measurementId) {
+                console.warn(`[WS DEBUG] ID MISMATCH: expected ${measurementId}, got ${data.id}`);
+                return;
+            }
 
             const { probe, result: httpResult } = data.result;
             const locationKey = `${probe.city}-${probe.country}`;
