@@ -1,0 +1,44 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    height: 100%;
+}
+
+.chartWrapper {
+    flex: 1;
+    min-height: 150px;
+}
+
+.avgWrapper {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.avgLabel {
+    font-size: 0.9rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.avgValue {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+
+    small {
+        font-size: 1rem;
+        color: #888;
+        margin-left: 5px;
+    }
+}
+
+@media (max-width: 768px) {
+    .avgValue {
+        font-size: 2.2rem;
+    }
+}

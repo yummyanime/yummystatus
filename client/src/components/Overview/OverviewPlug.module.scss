@@ -1,0 +1,98 @@
+.overviewContainer {
+    display: flex;
+    background-color: var(--color-dark-bg-1);
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    overflow: hidden;
+    min-height: 250px;
+    position: relative;
+
+    &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -150%;
+        width: 150%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+        animation: shimmer 1.5s infinite;
+    }
+}
+
+@keyframes shimmer {
+    100% {
+        left: 150%;
+    }
+}
+
+.leftPart {
+    flex: 1;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+
+    .container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        height: 100%;
+    }
+
+    .statusBadge {
+        width: 250px;
+        height: 50px;
+        background-color: var(--color-bg);
+        border-radius: var(--border-radius);
+    }
+}
+
+.rightPart {
+    flex: 1.5;
+
+    .container {
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        height: 100%;
+    }
+
+    .chartWrapper {
+        flex: 1;
+        min-height: 150px;
+        background-color: var(--color-bg);
+        border-radius: var(--border-radius);
+    }
+
+    .avgWrapper {
+        margin-top: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .avgLabel {
+        width: 100px;
+        height: 15px;
+        background-color: var(--color-bg);
+        margin-bottom: 5px;
+        border-radius: var(--border-radius);
+    }
+
+    .avgValue {
+        width: 80px;
+        height: 45px;
+        background-color: var(--color-bg);
+        border-radius: var(--border-radius);
+    }
+}
+
+@media (max-width: 992px) {
+    .overviewContainer {
+        flex-direction: column;
+        min-height: auto;
+    }
+
+    .leftPart {
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+}

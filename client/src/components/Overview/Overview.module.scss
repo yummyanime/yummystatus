@@ -1,0 +1,30 @@
+.overviewContainer {
+    display: flex;
+    background-color: var(--color-dark-bg-1);
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    overflow: hidden;
+    min-height: 250px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.leftPart {
+    flex: 1;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.rightPart {
+    flex: 1.5;
+}
+
+@media (max-width: 992px) {
+    .overviewContainer {
+        flex-direction: column;
+        min-height: auto;
+    }
+
+    .leftPart {
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+}

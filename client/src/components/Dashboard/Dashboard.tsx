@@ -7,6 +7,7 @@ import ReactCountryFlag from "react-country-flag";
 import { countries, domains } from "../../data/constants.ts";
 import ButtonGroup from "../ButtonGroup/ButtonGroup.tsx";
 import Status from "../Status/Status.tsx";
+import Overview from "../Overview/Overview.tsx";
 import { useDataStatus } from "../../context/DataStatusContext.tsx";
 import ToggleSwitch from "../ToggleSwitch/ToggleSwitch.tsx";
 
@@ -374,6 +375,7 @@ const Dashboard = () => {
                         />
                     </div>
                 </div>
+                <Overview allLogs={allLogs} loading={loading} timeRange={timeRange} />
                 <Status allLogs={allLogs} loading={loading} timeRange={timeRange} />
 
                 <div className={styles.chartsGrid}>
@@ -434,6 +436,7 @@ const Dashboard = () => {
                     />
                 </div>
             </div>
+            <Overview allLogs={allLogs} loading={loading} timeRange={timeRange} />
             <Status allLogs={allLogs} domain={domain} loading={loading} timeRange={timeRange} />
             {loading ? (
                 <div className={styles.chartsGrid}>

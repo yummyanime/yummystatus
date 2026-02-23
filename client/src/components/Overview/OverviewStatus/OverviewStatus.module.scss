@@ -1,0 +1,35 @@
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    height: 100%;
+}
+
+.statusBadge {
+    font-size: 2.5rem;
+    font-weight: 700;
+    padding: 15px 30px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stable {
+    color: #4caf50;
+}
+
+.warning {
+    color: #ff9800;
+}
+
+.critical {
+    color: #f44336;
+}
+
+@media (max-width: 768px) {
+    .statusBadge {
+        font-size: 1.8rem;
+        padding: 10px 20px;
+    }
+}
