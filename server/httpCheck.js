@@ -104,7 +104,7 @@ const saveResultToDb = async (id, target, country, city, asn, network, statusCod
     if (finalTotalTime === null) {
         // Для ошибок типа "сбой пробы/сети" (код 599) или отсутствующих данных
         // мы берем время из последнего успешного замера, чтобы не портить график.
-        if (statusCode === 599 || statusCode === null) {
+        if (statusCode === 599 || statusCode === null|| statusCode === 429) {
             try {
                 const lastLogQuery = `
                     SELECT total_time 
