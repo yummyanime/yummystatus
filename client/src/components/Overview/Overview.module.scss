@@ -1,11 +1,11 @@
 .overviewContainer {
     display: flex;
     background-color: var(--color-dark-bg-1);
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-md);
     margin-bottom: 20px;
     overflow: hidden;
-    min-height: 250px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    height: 250px;
+    box-shadow: var(--box-shadow);
 }
 
 .leftPart {
@@ -20,7 +20,7 @@
 @media (max-width: 992px) {
     .overviewContainer {
         flex-direction: column;
-        min-height: auto;
+        height: auto;
     }
 
     .leftPart {

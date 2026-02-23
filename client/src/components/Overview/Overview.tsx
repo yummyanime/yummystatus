@@ -1,8 +1,8 @@
 import React from "react";
 import OverviewStatus from "./OverviewStatus/OverviewStatus.tsx";
 import OverviewChart from "./OverviewChart/OverviewChart.tsx";
-import OverviewPlug from "./OverviewPlug.tsx";
 import styles from "./Overview.module.scss";
+import OverviewPlug from "./OverviewPlug.tsx";
 
 interface Log {
     created_at: string;

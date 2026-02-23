@@ -1,55 +1,47 @@
 .container {
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    gap: 15px;
+    box-sizing: border-box;
     height: 100%;
 }
 
 .chartWrapper {
     flex: 1;
     min-height: 150px;
+    position: relative;
 }
 
 .avgWrapper {
-    margin-top: 15px;
-    display: flex;
-    flex-direction: column;
+	display: flex;
+    flex-direction: row;
     align-items: center;
+    gap: 10px;
+	justify-content: center;
 }
 
 .avgLabel {
-    font-size: 0.9rem;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    font-size: 20px;
+    font-weight: 600;
 }
 
 .avgValue {
-    font-size: 3rem;
+    color: var(--color-text);
+    font-size: 30px;
     font-weight: 700;
-    color: #fff;
     line-height: 1;
 
     small {
         font-size: 1rem;
-        color: #888;
+        font-weight: 400;
         margin-left: 5px;
+        color: var(--color-text-muted);
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 500px) {
     .avgValue {
-        font-size: 2.2rem;
+        font-size: 2rem;
     }
-}
-
-.chartError {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(255, 0, 0, 0.05);
-    color: #f44336;
-    border-radius: var(--border-radius);
-    font-size: 0.9rem;
 }

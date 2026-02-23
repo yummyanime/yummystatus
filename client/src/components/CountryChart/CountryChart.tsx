@@ -18,7 +18,15 @@ import { ru } from "date-fns/locale";
 import CrosshairPlugin from "chartjs-plugin-crosshair";
 import { cityTranslations, CHART_COLORS } from "../../data/constants.ts";
 
+const crosshairInitPatch = {
+    id: "crosshairInitPatch",
+    beforeInit(chart: ChartJS) {
+        (chart as any).crosshair = { enabled: false };
+    },
+};
+
 ChartJS.register(
+    crosshairInitPatch,
     LinearScale,
     PointElement,
     LineElement,
@@ -53,6 +61,7 @@ interface CountryChartProps {
     cities: string[];
     timeRange: string;
     isChartLoading: boolean;
+    hideLegend?: boolean;
 }
 
 const CountryChart = ({
@@ -60,6 +69,7 @@ const CountryChart = ({
     cities,
     timeRange,
     isChartLoading,
+    hideLegend = false,
 }: CountryChartProps) => {
     const [width, setWidth] = useState(window.innerWidth);
 
@@ -124,7 +134,7 @@ const CountryChart = ({
             {} as { [key: number]: Log[] }
         );
 
-        const data = Object.entries(groupedLogs).map(([key, group]) => {
+        const data = Object.entries(groupedLogs).sort(([a], [b]) => Number(a) - Number(b)).map(([key, group]) => {
             const avgValue =
                 group.reduce(
                     (sum: number, log: Log) => sum + (log.total_time || 0),
@@ -240,6 +250,7 @@ const CountryChart = ({
             maintainAspectRatio: false,
             plugins: {
                 legend: {
+                    display: !hideLegend,
                     position: "bottom" as const,
                     labels: {
                         color: "#d4d4d4",
