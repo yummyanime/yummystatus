@@ -48,7 +48,7 @@ const getStatusColor = (log: GroupedLog) => {
         (r) =>
             r.status_code !== 200 ||
             r.total_time === null ||
-            (r.total_time && r.total_time > 2500)
+            (r.total_time && r.total_time > 1500)
     ).length;
 
     if (relevantResults.length > 0 && problematicCountriesCount === relevantResults.length) {
@@ -104,7 +104,7 @@ const DomainStatus: React.FC<DomainStatusProps> = ({ domain, logs }) => {
                                         (r) =>
                                             r.status_code !== 200 ||
                                             r.total_time === null ||
-                                            (r.total_time && r.total_time > 2500) ||
+                                            (r.total_time && r.total_time > 1500) ||
                                             Number(r.status_code) === 429
                                     ).length > 0 ? (
                                         <div>
@@ -115,7 +115,7 @@ const DomainStatus: React.FC<DomainStatusProps> = ({ domain, logs }) => {
                                                         r.status_code !== 200 ||
                                                         r.total_time === null ||
                                                         (r.total_time &&
-                                                            r.total_time > 2500) ||
+                                                            r.total_time > 1500) ||
                                                         Number(r.status_code) ===
                                                             429
                                                 )
