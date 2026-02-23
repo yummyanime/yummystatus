@@ -43,8 +43,10 @@ const getStatusColor = (log: GroupedLog) => {
 
     const problematicCountriesCount = log.results.filter(
         (r) =>
-            (r.status_code !== 200 && r.status_code !== 429) ||
-            r.total_time === null ||
+            (r.status_code !== 200 &&
+                r.status_code !== 429 &&
+                r.status_code !== 599) ||
+            (r.total_time === null && r.status_code !== 599) ||
             (r.total_time && r.total_time > 2500)
     ).length;
 

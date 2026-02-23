@@ -212,37 +212,10 @@ const Dashboard = () => {
 
                         if (isHighPing) {
                             const prev = cityLogs[i - 1];
-                            const next = cityLogs[i + 1];
                             const isPrevHigh = (prev?.total_time ?? 0) >= 2500;
-                            const isNextHigh = (next?.total_time ?? 0) >= 2500;
 
-                            if (!isPrevHigh && !isNextHigh) {
+                            if (!isPrevHigh) {
                                 isUnreliable = true;
-                            }
-
-                            // Дополнительная проверка по другим городам страны
-                            if (!isUnreliable) {
-                                const currentLogTime = new Date(log.created_at).getTime();
-                                const twoMinutes = 2 * 60 * 1000;
-
-                                for (const otherCity in cityLogsMap) {
-                                    if (otherCity === city) continue;
-
-                                    const otherCityLogs = cityLogsMap[otherCity];
-                                    const hasValidPingNearby = otherCityLogs.some((otherLog) => {
-                                        // Проверяем, что это та же страна
-                                        if (otherLog.country !== log.country) return false;
-
-                                        const otherLogTime = new Date(otherLog.created_at).getTime();
-                                        const isNearby = Math.abs(currentLogTime - otherLogTime) <= twoMinutes;
-                                        return isNearby && (otherLog.total_time ?? 0) < 2500;
-                                    });
-
-                                    if (hasValidPingNearby) {
-                                        isUnreliable = true;
-                                        break;
-                                    }
-                                }
                             }
                         }
 
