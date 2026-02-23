@@ -24,33 +24,34 @@ interface DomainStatusProps {
 }
 
 const getStatusColor = (log: GroupedLog) => {
-    const totalCountries = log.results.length;
+    const relevantResults = log.results.filter(
+        (r) => Number(r.status_code) !== 599 && Number(r.status_code) !== 429
+    );
+
     const quotaExceededCount = log.results.filter(
         (r) => Number(r.status_code) === 429
     ).length;
 
-    const captchaCount = log.results.filter(
-        (r) => Number(r.status_code) === 202
-    ).length;
-
-    if (quotaExceededCount > 0) {
+    if (quotaExceededCount > 0 && relevantResults.length === 0) {
         return styles.grey;
     }
+
+    const captchaCount = relevantResults.filter(
+        (r) => Number(r.status_code) === 202
+    ).length;
 
     if (captchaCount > 0) {
         return styles.blue;
     }
 
-    const problematicCountriesCount = log.results.filter(
+    const problematicCountriesCount = relevantResults.filter(
         (r) =>
-            (r.status_code !== 200 &&
-                r.status_code !== 429 &&
-                r.status_code !== 599) ||
-            (r.total_time === null && r.status_code !== 599) ||
+            r.status_code !== 200 ||
+            r.total_time === null ||
             (r.total_time && r.total_time > 2500)
     ).length;
 
-    if (problematicCountriesCount === totalCountries) {
+    if (relevantResults.length > 0 && problematicCountriesCount === relevantResults.length) {
         return styles.red;
     }
     if (problematicCountriesCount >= 3) {
