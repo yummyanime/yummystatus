@@ -62,6 +62,7 @@ interface CountryChartProps {
     timeRange: string;
     isChartLoading: boolean;
     hideLegend?: boolean;
+    isPing?: boolean;
 }
 
 const CountryChart = ({
@@ -70,6 +71,7 @@ const CountryChart = ({
     timeRange,
     isChartLoading,
     hideLegend = false,
+    isPing = false,
 }: CountryChartProps) => {
     const [width, setWidth] = useState(window.innerWidth);
 
@@ -89,6 +91,8 @@ const CountryChart = ({
         first_byte_time: number | undefined;
         download_time: number | undefined;
         unreliable: boolean | undefined;
+        rtt_min: number | undefined;
+        rtt_max: number | undefined;
     };
 
     const chartRef = useRef<ChartJS<"line", ChartData[]>>(null);
@@ -158,6 +162,8 @@ const CountryChart = ({
                 first_byte_time: representativeLog.first_byte_time,
                 download_time: representativeLog.download_time,
                 unreliable: representativeLog.unreliable,
+                rtt_min: (representativeLog as any).rtt_min,
+                rtt_max: (representativeLog as any).rtt_max,
             };
         });
 
@@ -418,6 +424,17 @@ const CountryChart = ({
                             const log = context.raw;
 
                             if (!log) return "";
+
+                            if (isPing) {
+                                const tooltipLines = [
+                                    city,
+                                    `Среднее: ${context.parsed.y !== null ? context.parsed.y.toFixed(1) : "N/A"}мс`,
+                                    `Мин: ${log.rtt_min !== undefined ? Number(log.rtt_min).toFixed(1) : "N/A"}мс`,
+                                    `Макс: ${log.rtt_max !== undefined ? Number(log.rtt_max).toFixed(1) : "N/A"}мс`,
+                                    `Потери: ${log.packet_loss !== undefined ? Number(log.packet_loss).toFixed(0) : "N/A"}%`,
+                                ];
+                                return tooltipLines.join(" | ");
+                            }
 
                             const tooltipLines = [
                                 city,

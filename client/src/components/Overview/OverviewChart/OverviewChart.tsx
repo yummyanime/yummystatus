@@ -34,7 +34,15 @@ interface OverviewChartProps {
 }
 
 const OverviewChart: React.FC<OverviewChartProps> = ({ allLogs, pingLogs, timeRange, domain }) => {
-    const [activeTab, setActiveTab] = useState<"loadTime" | "ping">("loadTime");
+    const [activeTab, setActiveTab] = useState<"loadTime" | "ping">(
+        () => (localStorage.getItem("overviewTab") as "loadTime" | "ping") || "loadTime"
+    );
+
+    const handleTabChange = (value: string) => {
+        const tab = value as "loadTime" | "ping";
+        setActiveTab(tab);
+        localStorage.setItem("overviewTab", tab);
+    };
 
     const processedLoadTime = useMemo(() => {
         if (!allLogs || allLogs.length === 0) return { cityLogs: {} as Record<string, Log[]>, avgTotal: 0 };
@@ -122,7 +130,7 @@ const OverviewChart: React.FC<OverviewChartProps> = ({ allLogs, pingLogs, timeRa
                         { value: "ping", label: "Ping" },
                     ]}
                     value={activeTab}
-                    onChange={(v) => setActiveTab(v as "loadTime" | "ping")}
+                    onChange={handleTabChange}
                 />
             </div>
             <div className={styles.chartWrapper}>
@@ -132,6 +140,7 @@ const OverviewChart: React.FC<OverviewChartProps> = ({ allLogs, pingLogs, timeRa
                     timeRange={timeRange === "3hour" ? "hour" : timeRange}
                     isChartLoading={false}
                     hideLegend={true}
+                    isPing={!isLoadTime}
                 />
             </div>
             <div className={styles.avgWrapper}>
