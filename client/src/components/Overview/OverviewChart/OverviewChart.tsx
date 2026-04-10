@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import CountryChart from "../../CountryChart/CountryChart.tsx";
+import ButtonGroup from "../../ButtonGroup/ButtonGroup.tsx";
 import styles from "./OverviewChart.module.scss";
 
 interface Log {
@@ -115,18 +116,14 @@ const OverviewChart: React.FC<OverviewChartProps> = ({ allLogs, pingLogs, timeRa
     return (
         <div className={styles.container}>
             <div className={styles.tabsWrapper}>
-                <button
-                    className={`${styles.tab} ${activeTab === "loadTime" ? styles.tabActive : ""}`}
-                    onClick={() => setActiveTab("loadTime")}
-                >
-                    Время загрузки
-                </button>
-                <button
-                    className={`${styles.tab} ${activeTab === "ping" ? styles.tabActive : ""}`}
-                    onClick={() => setActiveTab("ping")}
-                >
-                    Ping
-                </button>
+                <ButtonGroup
+                    options={[
+                        { value: "loadTime", label: "Время загрузки" },
+                        { value: "ping", label: "Ping" },
+                    ]}
+                    value={activeTab}
+                    onChange={(v) => setActiveTab(v as "loadTime" | "ping")}
+                />
             </div>
             <div className={styles.chartWrapper}>
                 <CountryChart
