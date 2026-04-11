@@ -10,6 +10,28 @@ const domains = [
 
 const pingLocation = { country: "RU", city: "Moscow" };
 
+const toNonNegativeNumberOrNull = (value) => {
+    if (value === null || value === undefined) {
+        return null;
+    }
+
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue) || numericValue < 0) {
+        return null;
+    }
+
+    return numericValue;
+};
+
+const toPacketLossOrNull = (value) => {
+    const numericValue = toNonNegativeNumberOrNull(value);
+    if (numericValue === null) {
+        return null;
+    }
+
+    return Math.min(numericValue, 100);
+};
+
 export const cleanupOldPingLogs = async () => {
     console.log(`--- Starting ping log cleanup at ${new Date().toISOString()} ---`);
     try {
@@ -38,10 +60,10 @@ export const aggregateHourlyPingData = async () => {
                 domain,
                 country,
                 city,
-                ROUND(AVG(rtt_min)::numeric, 2) AS rtt_min,
-                ROUND(AVG(rtt_avg)::numeric, 2) AS rtt_avg,
-                ROUND(AVG(rtt_max)::numeric, 2) AS rtt_max,
-                ROUND(AVG(packet_loss)::numeric, 2) AS packet_loss,
+                ROUND(AVG(CASE WHEN rtt_min >= 0 THEN rtt_min END)::numeric, 2) AS rtt_min,
+                ROUND(AVG(CASE WHEN rtt_avg >= 0 THEN rtt_avg END)::numeric, 2) AS rtt_avg,
+                ROUND(AVG(CASE WHEN rtt_max >= 0 THEN rtt_max END)::numeric, 2) AS rtt_max,
+                ROUND(AVG(CASE WHEN packet_loss >= 0 THEN LEAST(packet_loss, 100) END)::numeric, 2) AS packet_loss,
                 date_trunc('hour', NOW()) AS created_at
             FROM ping_logs
             WHERE created_at >= NOW() - INTERVAL '1 hour'
@@ -60,7 +82,18 @@ const savePingResultToDb = async (probeId, domain, country, city, asn, network, 
         probe_id, domain, country, city, asn, network, rtt_min, rtt_avg, rtt_max, packet_loss
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `;
-    const values = [probeId, domain, country, city, asn, network, rttMin, rttAvg, rttMax, packetLoss];
+    const values = [
+        probeId,
+        domain,
+        country,
+        city,
+        asn,
+        network,
+        toNonNegativeNumberOrNull(rttMin),
+        toNonNegativeNumberOrNull(rttAvg),
+        toNonNegativeNumberOrNull(rttMax),
+        toPacketLossOrNull(packetLoss),
+    ];
     await pool.query(query, values);
 };
 

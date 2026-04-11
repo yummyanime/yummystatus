@@ -8,6 +8,28 @@ const domains = [
     { name: "site.yummy-ani.me", apiKeyEnv: "GLOBALPING_API_KEY4" },
 ];
 
+const toNonNegativeNumberOrNull = (value) => {
+    if (value === null || value === undefined) {
+        return null;
+    }
+
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue) || numericValue < 0) {
+        return null;
+    }
+
+    return numericValue;
+};
+
+const toStatusCodeOrNull = (value) => {
+    const numericValue = toNonNegativeNumberOrNull(value);
+    if (numericValue === null) {
+        return null;
+    }
+
+    return Math.trunc(numericValue);
+};
+
 export const locationGroups = {
     "2min": [
         { country: "RU", city: "Moscow" },
@@ -76,13 +98,13 @@ export const aggregateHourlyData = async () => {
                 domain,
                 country,
                 city,
-                MODE() WITHIN GROUP (ORDER BY status_code) AS status_code,
-                ROUND(AVG(total_time)::numeric, 2) AS total_time,
-                ROUND(AVG(download_time)::numeric, 2) AS download_time,
-                ROUND(AVG(first_byte_time)::numeric, 2) AS first_byte_time,
-                ROUND(AVG(dns_time)::numeric, 2) AS dns_time,
-                ROUND(AVG(tls_time)::numeric, 2) AS tls_time,
-                ROUND(AVG(tcp_time)::numeric, 2) AS tcp_time,
+                MODE() WITHIN GROUP (ORDER BY status_code) FILTER (WHERE status_code >= 0) AS status_code,
+                ROUND(AVG(CASE WHEN total_time >= 0 THEN total_time END)::numeric, 2) AS total_time,
+                ROUND(AVG(CASE WHEN download_time >= 0 THEN download_time END)::numeric, 2) AS download_time,
+                ROUND(AVG(CASE WHEN first_byte_time >= 0 THEN first_byte_time END)::numeric, 2) AS first_byte_time,
+                ROUND(AVG(CASE WHEN dns_time >= 0 THEN dns_time END)::numeric, 2) AS dns_time,
+                ROUND(AVG(CASE WHEN tls_time >= 0 THEN tls_time END)::numeric, 2) AS tls_time,
+                ROUND(AVG(CASE WHEN tcp_time >= 0 THEN tcp_time END)::numeric, 2) AS tcp_time,
                 date_trunc('hour', NOW()) AS created_at
             FROM http_logs
             WHERE created_at >= NOW() - INTERVAL '1 hour'
@@ -134,10 +156,21 @@ const saveResultToDb = async (id, target, country, city, asn, network, statusCod
         probe_id, domain, country, city, asn, network, status_code, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     `;
+    const safeTotalTime = toNonNegativeNumberOrNull(finalTotalTime);
     const values = [
-        id, target, country, city, asn, network, statusCode,
-        finalTotalTime !== null ? Math.min(finalTotalTime, 4000) : 4000,
-        downloadTime, firstByteTime, dnsTime, tlsTime, tcpTime
+        id,
+        target,
+        country,
+        city,
+        asn,
+        network,
+        toStatusCodeOrNull(statusCode),
+        safeTotalTime !== null ? Math.min(safeTotalTime, 4000) : 4000,
+        toNonNegativeNumberOrNull(downloadTime),
+        toNonNegativeNumberOrNull(firstByteTime),
+        toNonNegativeNumberOrNull(dnsTime),
+        toNonNegativeNumberOrNull(tlsTime),
+        toNonNegativeNumberOrNull(tcpTime),
     ];
     await pool.query(query, values);
 };
