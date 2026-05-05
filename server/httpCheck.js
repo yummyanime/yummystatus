@@ -119,14 +119,29 @@ export const aggregateHourlyData = async () => {
 };
 
 // Хелпер для сохранения результата в БД
-const saveResultToDb = async (id, target, country, city, asn, network, statusCode, totalTime, downloadTime, firstByteTime, dnsTime, tlsTime, tcpTime) => {
+const saveResultToDb = async (
+    id,
+    target,
+    country,
+    city,
+    asn,
+    network,
+    statusCode,
+    totalTime,
+    downloadTime,
+    firstByteTime,
+    dnsTime,
+    tlsTime,
+    tcpTime,
+    shouldIgnore599 = true
+) => {
     let finalTotalTime = totalTime;
 
     // Если данных о времени нет (ошибка)
     if (finalTotalTime === null) {
         // Для ошибок типа "сбой пробы/сети" (код 599) или отсутствующих данных
         // мы берем время из последнего успешного замера, чтобы не портить график.
-        if (statusCode === 599 || statusCode === null|| statusCode === 429) {
+        if ((statusCode === 599 && shouldIgnore599) || statusCode === null || statusCode === 429) {
             try {
                 const lastLogQuery = `
                     SELECT total_time 
@@ -234,7 +249,7 @@ const checkAndSaveDomain = async (domain, locations) => {
                 }
             } else {
                 for (const location of locations) {
-                    await saveResultToDb("failed", target, location.country, location.city, null, null, 599, null, null, null, null, null, null);
+                    await saveResultToDb("failed", target, location.country, location.city, null, null, 599, null, null, null, null, null, null, false);
                 }
             }
             return;
@@ -285,38 +300,77 @@ const checkAndSaveDomain = async (domain, locations) => {
             ])
         );
 
-        for (const location of locations) {
+        const resultsToSave = locations.map((location) => {
             const result = resultsByLocation.get(
                 `${location.city}-${location.country}`
             );
 
             if (result && result.result.status === "finished") {
                 const { probe, result: httpResult } = result;
-                
-                console.log(
-                    `[SUCCESS] HTTP check to ${probe.city}, ${probe.country} for ${target}: Status ${httpResult.statusCode}. ASN: ${probe.asn}, Network: ${probe.network}`
-                );
 
-                await saveResultToDb(
-                    id, target, probe.country, probe.city, probe.asn, probe.network,
-                    httpResult.statusCode, httpResult.timings.total, httpResult.timings.download,
-                    httpResult.timings.firstByte, httpResult.timings.dns, httpResult.timings.tls, httpResult.timings.tcp
+                return {
+                    location,
+                    probe,
+                    statusCode: httpResult.statusCode,
+                    totalTime: httpResult.timings.total,
+                    downloadTime: httpResult.timings.download,
+                    firstByteTime: httpResult.timings.firstByte,
+                    dnsTime: httpResult.timings.dns,
+                    tlsTime: httpResult.timings.tls,
+                    tcpTime: httpResult.timings.tcp,
+                    isSuccess: true,
+                };
+            }
+
+            const { probe } = result || {};
+            const failureReason = result ? result.result.status : "unknown";
+
+            let errorCode = 599;
+            if (failureReason === "timed-out") errorCode = 408;
+            if (failureReason === "dns-error") errorCode = 503;
+
+            return {
+                location,
+                probe,
+                statusCode: errorCode,
+                totalTime: null,
+                downloadTime: null,
+                firstByteTime: null,
+                dnsTime: null,
+                tlsTime: null,
+                tcpTime: null,
+                failureReason,
+                isSuccess: false,
+            };
+        });
+
+        const shouldIgnore599 = resultsToSave.some((result) => result.statusCode !== 599);
+
+        for (const result of resultsToSave) {
+            if (result.isSuccess) {
+                console.log(
+                    `[SUCCESS] HTTP check to ${result.probe.city}, ${result.probe.country} for ${target}: Status ${result.statusCode}. ASN: ${result.probe.asn}, Network: ${result.probe.network}`
                 );
             } else {
-                const { probe } = result || {};
-                const failureReason = result ? result.result.status : "unknown";
-                
-                console.log(`[FAILURE] HTTP check to ${location.city}, ${location.country} for ${target}: Status ${failureReason}`);
-                
-                let errorCode = 599;
-                if (failureReason === "timed-out") errorCode = 408;
-                if (failureReason === "dns-error") errorCode = 503;
-
-                await saveResultToDb(
-                    id, target, location.country, location.city, probe?.asn || null, probe?.network || null,
-                    errorCode, null, null, null, null, null, null
-                );
+                console.log(`[FAILURE] HTTP check to ${result.location.city}, ${result.location.country} for ${target}: Status ${result.failureReason}`);
             }
+
+            await saveResultToDb(
+                id,
+                target,
+                result.probe?.country || result.location.country,
+                result.probe?.city || result.location.city,
+                result.probe?.asn || null,
+                result.probe?.network || null,
+                result.statusCode,
+                result.totalTime,
+                result.downloadTime,
+                result.firstByteTime,
+                result.dnsTime,
+                result.tlsTime,
+                result.tcpTime,
+                shouldIgnore599
+            );
         }
         console.log(
             `--- HTTP check cycle for measurement ${id} completed. ---`
@@ -327,7 +381,7 @@ const checkAndSaveDomain = async (domain, locations) => {
             err.message
         );
         for (const location of locations) {
-            await saveResultToDb("failed", target, location.country, location.city, null, null, 599, null, null, null, null, null, null);
+            await saveResultToDb("failed", target, location.country, location.city, null, null, 599, null, null, null, null, null, null, false);
         }
     }
 };

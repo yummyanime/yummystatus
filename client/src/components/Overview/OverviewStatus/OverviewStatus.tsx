@@ -23,10 +23,41 @@ const OverviewStatus: React.FC<OverviewStatusProps> = ({ allLogs }) => {
     const analyzeLogs = (logs: Log[]) => {
         if (logs.length === 0) return "Все работает стабильно";
 
-        const ignoredCodes = [202, 599, 429];
+        const ignoredCodes = [202, 429];
+        const allUnavailableTimes = new Set<string>();
+        const logsByMinute = logs.reduce(
+            (acc, log) => {
+                const time = log.created_at.substring(0, 16);
+                if (!acc[time]) {
+                    acc[time] = [];
+                }
+                acc[time].push(log);
+                return acc;
+            },
+            {} as Record<string, Log[]>
+        );
+
+        for (const [time, logsAtTime] of Object.entries(logsByMinute)) {
+            const statusLogs = logsAtTime.filter(
+                (log) =>
+                    log.status_code !== undefined &&
+                    !ignoredCodes.includes(log.status_code)
+            );
+
+            if (
+                statusLogs.length > 0 &&
+                statusLogs.every((log) => log.status_code === 599)
+            ) {
+                allUnavailableTimes.add(time);
+            }
+        }
 
         const relevantLogs = logs.filter(
-            (log) => log.status_code !== undefined && !ignoredCodes.includes(log.status_code)
+            (log) =>
+                log.status_code !== undefined &&
+                !ignoredCodes.includes(log.status_code) &&
+                (log.status_code !== 599 ||
+                    allUnavailableTimes.has(log.created_at.substring(0, 16)))
         );
 
         if (relevantLogs.length === 0) return "Все работает стабильно";

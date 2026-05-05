@@ -24,8 +24,14 @@ interface DomainStatusProps {
 }
 
 const getStatusColor = (log: GroupedLog) => {
+    const allCountriesUnavailable =
+        log.results.length > 0 &&
+        log.results.every((r) => Number(r.status_code) === 599);
+
     const relevantResults = log.results.filter(
-        (r) => Number(r.status_code) !== 599 && Number(r.status_code) !== 429
+        (r) =>
+            (allCountriesUnavailable || Number(r.status_code) !== 599) &&
+            Number(r.status_code) !== 429
     );
 
     const quotaExceededCount = log.results.filter(
