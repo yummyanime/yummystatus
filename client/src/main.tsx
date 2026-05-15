@@ -4,12 +4,15 @@ import { BrowserRouter } from "react-router-dom";
 import "./main.scss";
 import App from "./App.tsx";
 import { DataStatusProvider } from "./context/DataStatusContext.tsx";
+import { DashboardSettingsProvider } from "./context/DashboardSettingsContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <BrowserRouter>
             <DataStatusProvider>
-                <App />
+                <DashboardSettingsProvider>
+                    <App />
+                </DashboardSettingsProvider>
             </DataStatusProvider>
         </BrowserRouter>
     </StrictMode>

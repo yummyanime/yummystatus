@@ -52,6 +52,7 @@ const DomainDropdown: React.FC = () => {
     return (
         <div className={styles.dropdownContainer} ref={dropdownRef}>
             <button
+                type="button"
                 className={styles.dropdownHeader}
                 onClick={() => setIsOpen(!isOpen)}
             >

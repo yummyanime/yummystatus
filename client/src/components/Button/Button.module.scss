@@ -1,0 +1,36 @@
+.button {
+    height: 38px;
+    padding: 0 15px;
+    border-radius: var(--border-radius-lg);
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: var(--color-button-bg);
+    cursor: pointer;
+    outline: none;
+    transition:
+        background-color 0.3s,
+        color 0.3s;
+    color: #fff;
+
+    &:hover {
+        background-color: var(--color-button-hover-bg);
+    }
+
+    &:active {
+        background-color: var(--color-button-active-bg);
+    }
+}
+
+.active {
+    background-color: var(--color-primary);
+
+    &:hover {
+        background-color: var(--color-primary);
+    }
+
+    &:active {
+        background-color: var(--color-primary);
+    }
+}

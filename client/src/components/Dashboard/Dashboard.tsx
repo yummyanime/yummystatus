@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styles from "./Dashboard.module.scss";
-import ButtonGroup from "../ButtonGroup/ButtonGroup.tsx";
+import Menu from "../Menu/Menu.tsx";
 import Status from "../Status/Status.tsx";
 import Overview from "../Overview/Overview.tsx";
 import { useDataStatus } from "../../context/DataStatusContext.tsx";
-import ToggleSwitch from "../ToggleSwitch/ToggleSwitch.tsx";
+import { useDashboardSettings } from "../../context/DashboardSettingsContext.tsx";
 import CountryChart from "./CountryChart/CountryChart.tsx";
 
 interface Log {
@@ -51,25 +51,10 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [isChartLoading, setChartLoading] = useState(false);
     const { setStatus } = useDataStatus();
-    const [timeRange, setTimeRange] = useState(
-        () => localStorage.getItem("timeRange") || "3hour"
-    );
+    const { timeRange, autoRefresh, hideUnreliable } = useDashboardSettings();
     const { domain } = useParams<{ domain: string }>();
-    const [hideUnreliable, setHideUnreliable] = useState(
-        () => localStorage.getItem("hideUnreliable") === "true"
-    );
-    const [autoRefresh, setAutoRefresh] = useState(
-        () => localStorage.getItem("autoRefresh") === "true"
-    );
     const [allLogs, setAllLogs] = useState<Log[]>([]);
     const [pingLogs, setPingLogs] = useState<any[]>([]);
-
-    const timeRangeOptions = [
-		{ value: "3hour", label: "3 часа" },
-		{ value: "day", label: "День" },
-		{ value: "week", label: "Неделя" },
-        { value: "month", label: "Месяц" },
-    ];
 
     const trimCityLogsByTimeRange = (cityLogsMap: CityLogs) => {
         let minTime = Infinity;
@@ -328,14 +313,6 @@ const Dashboard = () => {
     }, [timeRange, hideUnreliable]);
 
     useEffect(() => {
-        localStorage.setItem("autoRefresh", autoRefresh.toString());
-    }, [autoRefresh]);
-
-    useEffect(() => {
-        localStorage.setItem("hideUnreliable", hideUnreliable.toString());
-    }, [hideUnreliable]);
-
-    useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.visibilityState === "visible") {
                 fetchData();
@@ -354,29 +331,9 @@ const Dashboard = () => {
         };
     }, [domain, timeRange, autoRefresh, hideUnreliable]);
 
-    useEffect(() => {
-        localStorage.setItem("timeRange", timeRange);
-    }, [timeRange]);
-
     const controls = (
-        <div className={styles.header}>
-            <div className={styles.controls}>
-                <ButtonGroup
-                    options={timeRangeOptions}
-                    value={timeRange}
-                    onChange={setTimeRange}
-                />
-                <ToggleSwitch
-                    label="Автообновление"
-                    checked={autoRefresh}
-                    onChange={setAutoRefresh}
-                />
-                <ToggleSwitch
-                    label="Скрывать недостоверные данные"
-                    checked={hideUnreliable}
-                    onChange={setHideUnreliable}
-                />
-            </div>
+        <div className={styles.controls}>
+            <Menu />
         </div>
     );
 

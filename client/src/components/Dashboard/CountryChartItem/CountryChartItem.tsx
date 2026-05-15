@@ -1,6 +1,7 @@
 import ReactCountryFlag from "react-country-flag";
 import { NavLink } from "react-router-dom";
 import Chart from "../../Chart/Chart.tsx";
+import Button from "../../Button/Button.tsx";
 import { httpRequestTimePreset } from "../../Chart/chartPresets.ts";
 import styles from "./CountryChartItem.module.scss";
 
@@ -75,7 +76,7 @@ const DomainItemHeader = ({ domainName }: { domainName: string }) => (
     <>
         <p className={styles.itemName}>{domainName}</p>
         <NavLink to={`${domainName}`}>
-            <button>Подробнее</button>
+            <Button>Подробнее</Button>
         </NavLink>
     </>
 );

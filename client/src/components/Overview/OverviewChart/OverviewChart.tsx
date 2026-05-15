@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from "react";
 import Chart from "../../Chart/Chart.tsx";
+import Button from "../../Button/Button.tsx";
 import {
     backendMetricPreset,
     httpRequestTimePreset,
     pingPreset,
 } from "../../Chart/chartPresets.ts";
-import ButtonGroup from "../../ButtonGroup/ButtonGroup.tsx";
 import styles from "./OverviewChart.module.scss";
 
 interface Log {
@@ -205,20 +205,26 @@ const OverviewChart: React.FC<OverviewChartProps> = ({ allLogs, pingLogs, timeRa
             ? Object.keys(processedBackend.cityLogs)
             : Object.keys(processedPing.cityLogs);
 
-    const tabOptions = [
+    const tabOptions: { value: OverviewTab; label: string }[] = [
         { value: "loadTime", label: "Время загрузки" },
         { value: "ping", label: "Ping" },
-        ...(hasBackendData ? [{ value: "backend", label: "Backend" }] : []),
+        ...(hasBackendData
+            ? [{ value: "backend" as OverviewTab, label: "Backend" }]
+            : []),
     ];
 
     return (
         <div className={styles.container}>
             <div className={styles.tabsWrapper}>
-                <ButtonGroup
-                    options={tabOptions}
-                    value={activeTab}
-                    onChange={handleTabChange}
-                />
+                {tabOptions.map((option) => (
+                    <Button
+                        key={option.value}
+                        active={activeTab === option.value}
+                        onClick={() => handleTabChange(option.value)}
+                    >
+                        {option.label}
+                    </Button>
+                ))}
             </div>
             <div className={styles.chartWrapper}>
                 {isPingTab ? (

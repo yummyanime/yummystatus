@@ -7,19 +7,26 @@
 .dropdownHeader {
     background-color: var(--color-dark-bg-1);
     color: var(--color-text);
-	height: 40px;
-	border: 2px solid var(--color-secondary);
+    height: 40px;
+    border: 2px solid var(--color-secondary);
     border-radius: var(--border-radius-md);
+    padding: 0 15px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 220px; /* Adjust as needed */
+    width: 220px;
     font-size: 18px;
+    font-family: inherit;
+    outline: none;
     transition: background-color 0.2s ease;
-	line-height: 1;
+    line-height: 1;
 
     &:hover {
+        background-color: var(--color-dark-bg-2);
+    }
+
+    &:active {
         background-color: var(--color-dark-bg-2);
     }
 }

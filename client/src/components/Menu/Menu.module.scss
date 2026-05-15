@@ -1,0 +1,21 @@
+.menu {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    row-gap: 15px;
+    column-gap: 30px;
+    justify-content: center;
+
+    @media (max-width: 350px) {
+        column-gap: 0px;
+    }
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 10px;
+
+    @media (max-width: 830px) {
+        gap: 5px;
+    }
+}

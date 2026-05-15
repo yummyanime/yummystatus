@@ -10,6 +10,11 @@
 .tabsWrapper {
     display: flex;
     justify-content: center;
+    gap: 10px;
+
+    @media (max-width: 830px) {
+        gap: 5px;
+    }
 }
 
 .chartWrapper {
