@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { domains } from "../../data/constants.ts";
 import DomainStatus from "../DomainStatus/DomainStatus.tsx";
-import StatusPlug from "./StatusPlug.tsx";
+import StatusPlug from "./_plug/StatusPlug.tsx";
 import styles from "./Status.module.scss";
 
 interface Log {

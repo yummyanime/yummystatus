@@ -6,7 +6,7 @@ import Status from "../Status/Status.tsx";
 import Overview from "../Overview/Overview.tsx";
 import { useDataStatus } from "../../context/DataStatusContext.tsx";
 import { useDashboardSettings } from "../../context/DashboardSettingsContext.tsx";
-import CountryChart from "./CountryChart/CountryChart.tsx";
+import CountryChart from "../CountryChart/CountryChart.tsx";
 
 interface Log {
     created_at: string;

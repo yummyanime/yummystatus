@@ -1,6 +1,6 @@
-import { countries, domains as domainList } from "../../../data/constants.ts";
-import ChartPlug from "../../Chart/ChartPlug.tsx";
-import CountryChartItem from "../CountryChartItem/CountryChartItem.tsx";
+import { countries, domains as domainList } from "../../data/constants.ts";
+import ChartPlug from "../Chart/_plug/ChartPlug.tsx";
+import CountryChartItem from "./CountryChartItem/CountryChartItem.tsx";
 import styles from "./CountryChart.module.scss";
 
 interface Log {

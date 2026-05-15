@@ -1,6 +1,6 @@
 import React from "react";
 import styles from "./OverviewStatus.module.scss";
-import { domains as domainOrder } from "../../../data/constants.ts";
+import { domains as domainOrder } from "../../../../data/constants.ts";
 
 interface Log {
     created_at: string;

@@ -1,6 +1,6 @@
 import React from "react";
 import styles from "./Header.module.scss";
-import DomainDropdown from "../DomainDropDown/DomainDropdown.tsx";
+import DomainDropdown from "./DomainDropDown/DomainDropdown.tsx";
 import logo from "../../images/Status-logo.svg";
 import { Link } from "react-router-dom";
 

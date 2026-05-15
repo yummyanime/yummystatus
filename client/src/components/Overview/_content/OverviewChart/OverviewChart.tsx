@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from "react";
-import Chart from "../../Chart/Chart.tsx";
-import Button from "../../Button/Button.tsx";
+import Chart from "../../../Chart/Chart.tsx";
+import Button from "../../../Button/Button.tsx";
 import {
     backendMetricPreset,
     httpRequestTimePreset,
     pingPreset,
-} from "../../Chart/chartPresets.ts";
+} from "../../../Chart/chartPresets.ts";
 import styles from "./OverviewChart.module.scss";
 
 interface Log {
