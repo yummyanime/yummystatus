@@ -9,6 +9,7 @@ interface Log {
     domain?: string;
     status_code?: number;
     total_time?: number;
+    server_timing?: Record<string, number> | null;
 }
 
 interface PingLog {

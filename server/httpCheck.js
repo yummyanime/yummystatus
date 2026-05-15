@@ -30,6 +30,60 @@ const toStatusCodeOrNull = (value) => {
     return Math.trunc(numericValue);
 };
 
+const pickHeaderCaseInsensitive = (headers, name) => {
+    if (!headers || typeof headers !== "object") return null;
+    const lower = name.toLowerCase();
+    for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === lower) return headers[key];
+    }
+    return null;
+};
+
+// Парсим Server-Timing: "db;desc=\"Database\";dur=38.28, app;dur=12" -> { db: 38.28, app: 12 }
+export const parseServerTiming = (rawHeader) => {
+    if (!rawHeader) return null;
+    const headerStr = Array.isArray(rawHeader) ? rawHeader.join(",") : rawHeader;
+    if (typeof headerStr !== "string" || !headerStr.trim()) return null;
+
+    const result = {};
+    let inQuotes = false;
+    let buf = "";
+    const entries = [];
+    for (const ch of headerStr) {
+        if (ch === '"') inQuotes = !inQuotes;
+        if (ch === "," && !inQuotes) {
+            entries.push(buf);
+            buf = "";
+        } else {
+            buf += ch;
+        }
+    }
+    if (buf.trim()) entries.push(buf);
+
+    for (const entry of entries) {
+        const parts = entry.split(";").map((p) => p.trim()).filter(Boolean);
+        if (!parts.length) continue;
+        const name = parts[0];
+        if (!name) continue;
+        let dur = null;
+        for (const p of parts.slice(1)) {
+            const eq = p.indexOf("=");
+            if (eq === -1) continue;
+            const k = p.slice(0, eq).trim().toLowerCase();
+            let v = p.slice(eq + 1).trim();
+            if (v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1);
+            if (k === "dur") {
+                const n = Number(v);
+                if (Number.isFinite(n) && n >= 0) dur = n;
+            }
+        }
+        if (dur !== null) {
+            result[name] = Math.round(dur * 100) / 100;
+        }
+    }
+    return Object.keys(result).length > 0 ? result : null;
+};
+
 export const locationGroups = {
     "2min": [
         { country: "RU", city: "Moscow" },
@@ -112,6 +166,38 @@ export const aggregateHourlyData = async () => {
         `;
 
         await pool.query(query);
+
+        // Aggregate JSONB server_timing per (domain, country, city) for this hour
+        // by averaging each metric key across all logs in the last hour.
+        const serverTimingQuery = `
+            WITH per_metric AS (
+                SELECT
+                    l.domain, l.country, l.city,
+                    j.key,
+                    AVG((j.value)::numeric) AS avg_val
+                FROM http_logs l
+                CROSS JOIN LATERAL jsonb_each_text(l.server_timing) j
+                WHERE l.created_at >= NOW() - INTERVAL '1 hour'
+                  AND l.server_timing IS NOT NULL
+                GROUP BY l.domain, l.country, l.city, j.key
+            ),
+            timing_agg AS (
+                SELECT
+                    domain, country, city,
+                    jsonb_object_agg(key, ROUND(avg_val, 2)) AS server_timing
+                FROM per_metric
+                GROUP BY domain, country, city
+            )
+            UPDATE http_hourly_logs h
+            SET server_timing = ta.server_timing
+            FROM timing_agg ta
+            WHERE h.domain = ta.domain
+              AND h.country = ta.country
+              AND h.city = ta.city
+              AND h.created_at = date_trunc('hour', NOW());
+        `;
+        await pool.query(serverTimingQuery);
+
         console.log('Hourly aggregation completed successfully.');
     } catch (err) {
         console.error('Error during hourly aggregation:', err);
@@ -133,7 +219,8 @@ const saveResultToDb = async (
     dnsTime,
     tlsTime,
     tcpTime,
-    shouldIgnore599 = true
+    shouldIgnore599 = true,
+    serverTiming = null
 ) => {
     let finalTotalTime = totalTime;
 
@@ -168,8 +255,8 @@ const saveResultToDb = async (
 
     const query = `
       INSERT INTO http_logs (
-        probe_id, domain, country, city, asn, network, status_code, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        probe_id, domain, country, city, asn, network, status_code, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time, server_timing
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
     `;
     const safeTotalTime = toNonNegativeNumberOrNull(finalTotalTime);
     const values = [
@@ -186,6 +273,7 @@ const saveResultToDb = async (
         toNonNegativeNumberOrNull(dnsTime),
         toNonNegativeNumberOrNull(tlsTime),
         toNonNegativeNumberOrNull(tcpTime),
+        serverTiming ? JSON.stringify(serverTiming) : null,
     ];
     await pool.query(query, values);
 };
@@ -307,6 +395,10 @@ const checkAndSaveDomain = async (domain, locations) => {
 
             if (result && result.result.status === "finished") {
                 const { probe, result: httpResult } = result;
+                const serverTimingHeader = pickHeaderCaseInsensitive(
+                    httpResult.headers,
+                    "server-timing"
+                );
 
                 return {
                     location,
@@ -318,6 +410,7 @@ const checkAndSaveDomain = async (domain, locations) => {
                     dnsTime: httpResult.timings.dns,
                     tlsTime: httpResult.timings.tls,
                     tcpTime: httpResult.timings.tcp,
+                    serverTiming: parseServerTiming(serverTimingHeader),
                     isSuccess: true,
                 };
             }
@@ -339,6 +432,7 @@ const checkAndSaveDomain = async (domain, locations) => {
                 dnsTime: null,
                 tlsTime: null,
                 tcpTime: null,
+                serverTiming: null,
                 failureReason,
                 isSuccess: false,
             };
@@ -369,7 +463,8 @@ const checkAndSaveDomain = async (domain, locations) => {
                 result.dnsTime,
                 result.tlsTime,
                 result.tcpTime,
-                shouldIgnore599
+                shouldIgnore599,
+                result.serverTiming
             );
         }
         console.log(

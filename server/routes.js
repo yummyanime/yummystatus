@@ -37,7 +37,7 @@ router.get("/http-logs", async (req, res) => {
         let params;
 
         // Columns required for the response
-        const columns = `country, city, status_code, created_at, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time`;
+        const columns = `country, city, status_code, created_at, total_time, download_time, first_byte_time, dns_time, tls_time, tcp_time, server_timing`;
 
         if (domain) {
             query = `

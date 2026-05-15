@@ -24,6 +24,7 @@ interface Log {
     tls_time?: number;
     tcp_time?: number;
     unreliable?: boolean;
+    server_timing?: Record<string, number> | null;
 }
 
 interface CityLogs {
