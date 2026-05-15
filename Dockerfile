@@ -1,16 +1,16 @@
-FROM node:20-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
+COPY package.json bun.lock* bun.lockb* package-lock.json* ./
 
-RUN npm install
+RUN bun install --frozen-lockfile || bun install
 
 COPY client/ ./client
 COPY server/ ./server
 
-RUN npm run build
+RUN bun run build
 
-FROM node:20-alpine
+FROM oven/bun:1-alpine
 RUN apk add --no-cache nginx
 WORKDIR /app
 
@@ -21,4 +21,4 @@ COPY package.json .
 
 COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
 
-CMD sh -c "nginx -g 'daemon off;' & npm run start:server"
+CMD sh -c "nginx -g 'daemon off;' & bun run start:server"

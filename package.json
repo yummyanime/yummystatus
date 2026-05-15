@@ -5,14 +5,14 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "start": "npm run start:server",
-        "start:server": "node server/index.js",
-        "start:client": "vite client --config client/vite.config.ts",
-        "dev": "concurrently \"npm:start:client\" \"npm:start:server\"",
-        "build": "tsc -b client && vite build client --config client/vite.config.ts",
-        "lint": "eslint .",
-        "format": "prettier --write .",
-        "preview": "vite preview --config client/vite.config.ts"
+        "start": "bun run start:server",
+        "start:server": "bun server/index.js",
+        "start:client": "bunx vite client --config client/vite.config.ts",
+        "dev": "concurrently \"bun run start:client\" \"bun run start:server\"",
+        "build": "tsc -b client && bunx vite build client --config client/vite.config.ts",
+        "lint": "bunx eslint .",
+        "format": "bunx prettier --write .",
+        "preview": "bunx vite preview --config client/vite.config.ts"
     },
     "dependencies": {
         "@tippyjs/react": "^4.2.6",
