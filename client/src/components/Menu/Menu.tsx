@@ -1,6 +1,7 @@
 import styles from "./Menu.module.scss";
 import ToggleSwitch from "../ToggleSwitch/ToggleSwitch.tsx";
 import Button from "../Button/Button.tsx";
+import DateRangePicker from "../DateRangePicker/DateRangePicker.tsx";
 import {
     useDashboardSettings,
     timeRangeOptions,
@@ -14,6 +15,7 @@ const Menu = () => {
         setAutoRefresh,
         hideUnreliable,
         setHideUnreliable,
+        dateRange,
     } = useDashboardSettings();
 
     return (
@@ -22,13 +24,14 @@ const Menu = () => {
                 {timeRangeOptions.map((option) => (
                     <Button
                         key={option.value}
-                        active={timeRange === option.value}
+                        active={!dateRange && timeRange === option.value}
                         onClick={() => setTimeRange(option.value)}
                     >
                         {option.label}
                     </Button>
                 ))}
             </div>
+            <DateRangePicker />
             <ToggleSwitch
                 label="Автообновление"
                 checked={autoRefresh}

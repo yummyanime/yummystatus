@@ -51,7 +51,13 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [isChartLoading, setChartLoading] = useState(false);
     const { setStatus } = useDataStatus();
-    const { timeRange, autoRefresh, hideUnreliable } = useDashboardSettings();
+    const {
+        timeRange,
+        autoRefresh,
+        hideUnreliable,
+        dateRange,
+        effectiveTimeRange,
+    } = useDashboardSettings();
     const { domain } = useParams<{ domain: string }>();
     const [allLogs, setAllLogs] = useState<Log[]>([]);
     const [pingLogs, setPingLogs] = useState<any[]>([]);
@@ -86,6 +92,18 @@ const Dashboard = () => {
         return trimmedLogs;
     };
 
+    const buildQuery = (extra: Record<string, string> = {}) => {
+        const params = new URLSearchParams();
+        if (dateRange) {
+            params.set("dateFrom", dateRange.from);
+            params.set("dateTo", dateRange.to);
+        } else {
+            params.set("timeRange", timeRange);
+        }
+        for (const [k, v] of Object.entries(extra)) params.set(k, v);
+        return params.toString();
+    };
+
     const fetchData = async () => {
         try {
             let logsData: CountryLogs = {};
@@ -94,7 +112,7 @@ const Dashboard = () => {
 
             if (domain) {
                 const [logsResponse, locationsResponse] = await Promise.all([
-                    fetch(`/http-logs?timeRange=${timeRange}&domain=${domain}`),
+                    fetch(`/http-logs?${buildQuery({ domain })}`),
                     fetch("/locations"),
                 ]);
 
@@ -140,9 +158,7 @@ const Dashboard = () => {
                     await locationsResponse.json();
                 setLocationGroups(locationsData);
             } else {
-                const response = await fetch(
-                    `/http-logs?timeRange=${timeRange}`
-                );
+                const response = await fetch(`/http-logs?${buildQuery()}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -276,8 +292,8 @@ const Dashboard = () => {
 
             try {
                 const pingUrl = domain
-                    ? `/ping-logs?timeRange=${timeRange}&domain=${domain}`
-                    : `/ping-logs?timeRange=${timeRange}`;
+                    ? `/ping-logs?${buildQuery({ domain })}`
+                    : `/ping-logs?${buildQuery()}`;
                 const pingResponse = await fetch(pingUrl);
                 if (pingResponse.ok) {
                     const pingData = await pingResponse.json();
@@ -312,7 +328,7 @@ const Dashboard = () => {
     useEffect(() => {
         setChartLoading(true);
         fetchData().finally(() => setChartLoading(false));
-    }, [timeRange, hideUnreliable]);
+    }, [timeRange, hideUnreliable, dateRange?.from, dateRange?.to]);
 
     useEffect(() => {
         const handleVisibilityChange = () => {
@@ -331,7 +347,7 @@ const Dashboard = () => {
                 handleVisibilityChange
             );
         };
-    }, [domain, timeRange, autoRefresh, hideUnreliable]);
+    }, [domain, timeRange, autoRefresh, hideUnreliable, dateRange?.from, dateRange?.to]);
 
     const controls = (
         <div className={styles.controls}>
@@ -347,14 +363,18 @@ const Dashboard = () => {
                     allLogs={allLogs}
                     pingLogs={pingLogs}
                     loading={loading}
-                    timeRange={timeRange}
+                    timeRange={effectiveTimeRange}
                     domain={domain}
                 />
-                <Status allLogs={allLogs} loading={loading} timeRange={timeRange} />
+                <Status
+                    allLogs={allLogs}
+                    loading={loading}
+                    timeRange={effectiveTimeRange}
+                />
                 <CountryChart
                     type="domain"
                     domainLogs={domainLogs}
-                    timeRange={timeRange}
+                    timeRange={effectiveTimeRange}
                     isChartLoading={isChartLoading}
                     loading={loading}
                 />
@@ -369,20 +389,20 @@ const Dashboard = () => {
                 allLogs={allLogs}
                 pingLogs={pingLogs}
                 loading={loading}
-                timeRange={timeRange}
+                timeRange={effectiveTimeRange}
                 domain={domain}
             />
             <Status
                 allLogs={allLogs}
                 domain={domain}
                 loading={loading}
-                timeRange={timeRange}
+                timeRange={effectiveTimeRange}
             />
             <CountryChart
                 type="country"
                 locationGroups={locationGroups}
                 httpLogs={httpLogs}
-                timeRange={timeRange}
+                timeRange={effectiveTimeRange}
                 isChartLoading={isChartLoading}
                 loading={loading}
             />

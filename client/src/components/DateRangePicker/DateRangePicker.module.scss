@@ -1,0 +1,321 @@
+.container {
+    position: relative;
+    display: inline-block;
+}
+
+.trigger {
+    height: 38px;
+    padding: 0 14px;
+    border-radius: var(--border-radius-lg);
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: var(--color-button-bg);
+    color: #fff;
+    cursor: pointer;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.3s, color 0.3s;
+    max-width: 100%;
+
+    &:hover {
+        background-color: var(--color-button-hover-bg);
+    }
+}
+
+.triggerActive {
+    background-color: var(--color-primary);
+    color: #fff;
+
+    &:hover {
+        background-color: var(--color-primary);
+    }
+}
+
+.triggerLabel {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 240px;
+}
+
+.clearIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.25);
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    flex: 0 0 18px;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+    svg {
+        display: block;
+    }
+}
+
+.popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 320px;
+    max-width: calc(100vw - 20px);
+    background-color: var(--color-dark-bg-1);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 12px;
+    z-index: 50;
+    color: #fff;
+    user-select: none;
+
+    @media (max-width: 480px) {
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(320px, calc(100vw - 20px));
+    }
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.navButton {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--border-radius-sm);
+    font-size: 20px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background-color: var(--color-button-bg);
+    }
+}
+
+.monthLabel {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: capitalize;
+    color: #fff;
+}
+
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 4px;
+}
+
+.weekday {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    padding: 4px 0;
+}
+
+.daysGrid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.day {
+    aspect-ratio: 1 / 1;
+    background: transparent;
+    border: none;
+    color: #d4d4d4;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--border-radius-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
+    position: relative;
+
+    &:hover:not(:disabled) {
+        background-color: var(--color-button-bg);
+    }
+}
+
+.dayOutside {
+    color: #555;
+}
+
+.dayToday {
+    box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
+.dayInRange {
+    background-color: rgba(255, 102, 102, 0.18);
+    color: #fff;
+    border-radius: 0;
+
+    &:hover {
+        background-color: rgba(255, 102, 102, 0.28);
+    }
+}
+
+.daySelected {
+    background-color: var(--color-primary);
+    color: #fff;
+
+    &:hover {
+        background-color: var(--color-primary);
+    }
+}
+
+.dayRangeStart {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.dayRangeEnd {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.dayRangeStart.dayRangeEnd {
+    border-radius: var(--border-radius-sm);
+}
+
+.dayDisabled {
+    color: #444;
+    cursor: not-allowed;
+
+    &:hover {
+        background-color: transparent;
+    }
+}
+
+.timeRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.timeField {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.timeLabel {
+    font-size: 12px;
+    color: #aaa;
+    font-weight: 500;
+}
+
+.timeBox {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--color-dark-bg-2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--border-radius-sm);
+    padding: 4px 6px;
+    transition: border-color 0.2s ease;
+    flex: 1;
+    min-width: 0;
+
+    &:focus-within {
+        border-color: var(--color-primary);
+    }
+}
+
+.timePart {
+    width: 22px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    text-align: center;
+    padding: 2px 0;
+    font-variant-numeric: tabular-nums;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+}
+
+.timeColon {
+    color: #d4d4d4;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 0 2px;
+    user-select: none;
+}
+
+.footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    gap: 10px;
+}
+
+.footerHint {
+    font-size: 12px;
+    color: #aaa;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.resetButton {
+    background: transparent;
+    border: none;
+    color: var(--color-primary);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background-color: rgba(255, 102, 102, 0.12);
+    }
+}

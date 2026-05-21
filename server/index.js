@@ -1,3 +1,5 @@
+process.env.TZ = "UTC";
+
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
