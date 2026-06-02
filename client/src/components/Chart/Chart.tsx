@@ -144,20 +144,16 @@ function Chart<TLog extends ChartLog>({
 
     useEffect(() => {
         const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
-            if (!isPinnedRef.current) return;
+            const tooltipEl = document.getElementById(tooltipIdRef.current);
+            if (!tooltipEl || tooltipEl.style.visibility === "hidden") return;
             const target = e.target as Element | null;
             if (!target) return;
-            // Click on any chart canvas or any chart tooltip → не закрываем,
-            // чтобы другие графики могли работать параллельно с этим запиненным.
             if (target.closest?.("[data-chart-canvas]")) return;
             if (target.closest?.('[id^="chartjs-tooltip-"]')) return;
             isPinnedRef.current = false;
-            const tooltipEl = document.getElementById(tooltipIdRef.current);
-            if (tooltipEl) {
-                tooltipEl.style.opacity = "0";
-                tooltipEl.style.visibility = "hidden";
-                tooltipEl.style.pointerEvents = "none";
-            }
+            tooltipEl.style.opacity = "0";
+            tooltipEl.style.visibility = "hidden";
+            tooltipEl.style.pointerEvents = "none";
         };
         document.addEventListener("mousedown", handleOutsideClick);
         document.addEventListener("touchstart", handleOutsideClick);
