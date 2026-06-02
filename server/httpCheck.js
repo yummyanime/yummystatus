@@ -1,6 +1,27 @@
 import pool from "./db.js";
 import fetch from "node-fetch";
 
+export const INTERNAL_STATUS = {
+    PROBE_FAIL: 901,
+    TIMEOUT: 902,
+    DNS_ERROR: 903,
+    API_LIMIT: 904,
+    PROBE_OFFLINE: 905,
+    CONN_REFUSED: 906,
+    TLS_ERROR: 907,
+};
+
+const classifyProbeFailure = (rawOutput) => {
+    if (typeof rawOutput !== "string" || !rawOutput) {
+        return INTERNAL_STATUS.PROBE_FAIL;
+    }
+    if (/ETIMEDOUT|timed?\s*out/i.test(rawOutput)) return INTERNAL_STATUS.TIMEOUT;
+    if (/ENOTFOUND|EAI_AGAIN|getaddrinfo|queryA?\b/i.test(rawOutput)) return INTERNAL_STATUS.DNS_ERROR;
+    if (/ECONNREFUSED|ECONNRESET|EPIPE/i.test(rawOutput)) return INTERNAL_STATUS.CONN_REFUSED;
+    if (/cert|tls|ssl|self.signed|ERR_TLS|DEPTH_ZERO/i.test(rawOutput)) return INTERNAL_STATUS.TLS_ERROR;
+    return INTERNAL_STATUS.PROBE_FAIL;
+};
+
 const domains = [
     { name: "old.yummyani.me", apiKeyEnv: "GLOBALPING_API_KEY" },
     { name: "ru.yummyani.me", apiKeyEnv: "GLOBALPING_API_KEY2" },
@@ -39,7 +60,6 @@ const pickHeaderCaseInsensitive = (headers, name) => {
     return null;
 };
 
-// Парсим Server-Timing: "db;desc=\"Database\";dur=38.28, app;dur=12" -> { db: 38.28, app: 12 }
 export const parseServerTiming = (rawHeader) => {
     if (!rawHeader) return null;
     const headerStr = Array.isArray(rawHeader) ? rawHeader.join(",") : rawHeader;
@@ -204,7 +224,6 @@ export const aggregateHourlyData = async () => {
     }
 };
 
-// Хелпер для сохранения результата в БД
 const saveResultToDb = async (
     id,
     target,
@@ -224,11 +243,11 @@ const saveResultToDb = async (
 ) => {
     let finalTotalTime = totalTime;
 
-    // Если данных о времени нет (ошибка)
     if (finalTotalTime === null) {
-        // Для ошибок типа "сбой пробы/сети" (код 599) или отсутствующих данных
-        // мы берем время из последнего успешного замера, чтобы не портить график.
-        if ((statusCode === 599 && shouldIgnore599) || statusCode === null || statusCode === 429) {
+        const isProbeInfraFailure =
+            statusCode === INTERNAL_STATUS.PROBE_FAIL ||
+            statusCode === INTERNAL_STATUS.PROBE_OFFLINE;
+        if ((isProbeInfraFailure && shouldIgnore599) || statusCode === null || statusCode === INTERNAL_STATUS.API_LIMIT) {
             try {
                 const lastLogQuery = `
                     SELECT total_time 
@@ -248,7 +267,6 @@ const saveResultToDb = async (
                 finalTotalTime = 4000;
             }
         } else {
-            // Для 408 (Timeout) и 503 (DNS) ставим жесткие 4000
             finalTotalTime = 4000;
         }
     }
@@ -278,7 +296,6 @@ const saveResultToDb = async (
     await pool.query(query, values);
 };
 
-// Функция для выполнения проверки HTTP и сохранения результатов для одного домена
 const checkAndSaveDomain = async (domain, locations) => {
     const target = domain.name;
     const apiKey = process.env[domain.apiKeyEnv];
@@ -333,11 +350,11 @@ const checkAndSaveDomain = async (domain, locations) => {
             );
             if (createMeasurementResponse.status === 429) {
                 for (const location of locations) {
-                    await saveResultToDb("api_limit", target, location.country, location.city, null, null, 429, null, null, null, null, null, null);
+                    await saveResultToDb("api_limit", target, location.country, location.city, null, null, INTERNAL_STATUS.API_LIMIT, null, null, null, null, null, null);
                 }
             } else {
                 for (const location of locations) {
-                    await saveResultToDb("failed", target, location.country, location.city, null, null, 599, null, null, null, null, null, null, false);
+                    await saveResultToDb("failed", target, location.country, location.city, null, null, INTERNAL_STATUS.PROBE_FAIL, null, null, null, null, null, null, false);
                 }
             }
             return;
@@ -416,11 +433,18 @@ const checkAndSaveDomain = async (domain, locations) => {
             }
 
             const { probe } = result || {};
-            const failureReason = result ? result.result.status : "unknown";
+            const probeStatus = result ? result.result.status : "unknown";
+            const rawOutput = result ? result.result.rawOutput : null;
 
-            let errorCode = 599;
-            if (failureReason === "timed-out") errorCode = 408;
-            if (failureReason === "dns-error") errorCode = 503;
+            let errorCode;
+            if (probeStatus === "offline") {
+                errorCode = INTERNAL_STATUS.PROBE_OFFLINE;
+            } else {
+                errorCode = classifyProbeFailure(rawOutput);
+            }
+            const failureReason = rawOutput
+                ? `${probeStatus}: ${String(rawOutput).slice(0, 120)}`
+                : probeStatus;
 
             return {
                 location,
@@ -438,7 +462,11 @@ const checkAndSaveDomain = async (domain, locations) => {
             };
         });
 
-        const shouldIgnore599 = resultsToSave.some((result) => result.statusCode !== 599);
+        const shouldIgnore599 = resultsToSave.some(
+            (result) =>
+                result.statusCode !== INTERNAL_STATUS.PROBE_FAIL &&
+                result.statusCode !== INTERNAL_STATUS.PROBE_OFFLINE
+        );
 
         for (const result of resultsToSave) {
             if (result.isSuccess) {
@@ -476,7 +504,7 @@ const checkAndSaveDomain = async (domain, locations) => {
             err.message
         );
         for (const location of locations) {
-            await saveResultToDb("failed", target, location.country, location.city, null, null, 599, null, null, null, null, null, null, false);
+            await saveResultToDb("failed", target, location.country, location.city, null, null, INTERNAL_STATUS.PROBE_FAIL, null, null, null, null, null, null, false);
         }
     }
 };

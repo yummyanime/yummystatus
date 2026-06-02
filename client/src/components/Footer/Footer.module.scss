@@ -1,8 +1,8 @@
 .footer {
     background-color: var(--color-dark-bg-1);
-    padding: 1rem;
+    padding: 1.5rem 1rem;
     text-align: center;
-    border-top: 1px solid var(--color-medium-gray);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 
     position: relative;
     bottom: 0;
@@ -13,28 +13,93 @@
     box-sizing: border-box;
     z-index: 1000;
 
-    .links {
-        margin-bottom: 10px;
-        display: flex;
-        row-gap: 5px;
-        column-gap: 10px;
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: center;
+    .inner {
+        max-width: 1290px;
+        margin: 0 auto;
+        width: 100%;
+    }
 
-        a {
-            color: var(--color-primary);
-            text-decoration: none;
+    .codes {
+        margin-bottom: 18px;
+
+        .codesTitle {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .codesList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .codeItem {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px 5px 5px;
+            background-color: var(--color-dark-bg-2);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            font-size: 13px;
+            transition: border-color 0.15s ease, background-color 0.15s ease;
 
             &:hover {
-                text-decoration: underline;
+                border-color: var(--color-primary);
+                background-color: var(--color-bg);
+            }
+        }
+
+        .codeBadge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 38px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background-color: var(--color-primary);
+            color: #fff;
+            font-weight: 700;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .codeLabel {
+            color: #cfd3dc;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 500px) {
+            .codeItem {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .codeLabel {
+                white-space: normal;
+                text-align: left;
             }
         }
     }
 
-    .text {
-        font-size: 16px;
-        font-weight: 500;
+    .copyright {
+        margin: 0 -1rem -1.5rem;
+        padding: 14px 1rem;
+        background-color: var(--color-bg);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+        .text {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 500;
+        }
     }
 }

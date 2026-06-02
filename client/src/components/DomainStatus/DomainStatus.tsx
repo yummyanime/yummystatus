@@ -23,22 +23,24 @@ interface DomainStatusProps {
     timeRange?: string;
 }
 
-const getStatusColor = (log: GroupedLog) => {
-    const allCountriesUnavailable =
-        log.results.length > 0 &&
-        log.results.every((r) => Number(r.status_code) === 599);
+type LogResult = GroupedLog["results"][number];
 
+const isProblematicResult = (r: LogResult): boolean =>
+    Number(r.status_code) < 900 &&
+    (r.status_code !== 200 ||
+        r.total_time === null ||
+        (r.total_time !== null && r.total_time > 1500));
+
+const getStatusColor = (log: GroupedLog) => {
     const relevantResults = log.results.filter(
-        (r) =>
-            (allCountriesUnavailable || Number(r.status_code) !== 599) &&
-            Number(r.status_code) !== 429
+        (r) => Number(r.status_code) < 900
     );
 
-    const quotaExceededCount = log.results.filter(
-        (r) => Number(r.status_code) === 429
+    const probeErrorCount = log.results.filter(
+        (r) => Number(r.status_code) >= 900
     ).length;
 
-    if (quotaExceededCount > 0 && relevantResults.length === 0) {
+    if (probeErrorCount > 0 && relevantResults.length === 0) {
         return styles.grey;
     }
 
@@ -50,12 +52,8 @@ const getStatusColor = (log: GroupedLog) => {
         return styles.blue;
     }
 
-    const problematicCountriesCount = relevantResults.filter(
-        (r) =>
-            r.status_code !== 200 ||
-            r.total_time === null ||
-            (r.total_time && r.total_time > 1500)
-    ).length;
+    const problematicCountriesCount =
+        relevantResults.filter(isProblematicResult).length;
 
     if (relevantResults.length > 0 && problematicCountriesCount === relevantResults.length) {
         return styles.red;
@@ -106,25 +104,11 @@ const DomainStatus: React.FC<DomainStatusProps> = ({ domain, logs }) => {
                                         Среднее время:{" "}
                                         {log.total_time_avg.toFixed(2)}мс
                                     </div>
-                                    {log.results.filter(
-                                        (r) =>
-                                            r.status_code !== 200 ||
-                                            r.total_time === null ||
-                                            (r.total_time && r.total_time > 1500) ||
-                                            Number(r.status_code) === 429
-                                    ).length > 0 ? (
+                                    {log.results.filter(isProblematicResult).length > 0 ? (
                                         <div>
                                             <div>Проблемные города:</div>
                                             {log.results
-                                                .filter(
-                                                    (r) =>
-                                                        r.status_code !== 200 ||
-                                                        r.total_time === null ||
-                                                        (r.total_time &&
-                                                            r.total_time > 1500) ||
-                                                        Number(r.status_code) ===
-                                                            429
-                                                )
+                                                .filter(isProblematicResult)
                                                 .map((r, i) => (
                                                     <div key={i}>
                                                         -{" "}

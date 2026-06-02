@@ -23,48 +23,20 @@ const OverviewStatus: React.FC<OverviewStatusProps> = ({ allLogs }) => {
     const analyzeLogs = (logs: Log[]) => {
         if (logs.length === 0) return "Все работает стабильно";
 
-        const ignoredCodes = [202, 429];
-        const allUnavailableTimes = new Set<string>();
-        const logsByMinute = logs.reduce(
-            (acc, log) => {
-                const time = log.created_at.substring(0, 16);
-                if (!acc[time]) {
-                    acc[time] = [];
-                }
-                acc[time].push(log);
-                return acc;
-            },
-            {} as Record<string, Log[]>
-        );
-
-        for (const [time, logsAtTime] of Object.entries(logsByMinute)) {
-            const statusLogs = logsAtTime.filter(
-                (log) =>
-                    log.status_code !== undefined &&
-                    !ignoredCodes.includes(log.status_code)
-            );
-
-            if (
-                statusLogs.length > 0 &&
-                statusLogs.every((log) => log.status_code === 599)
-            ) {
-                allUnavailableTimes.add(time);
-            }
-        }
+        const okCodes = [200, 202];
+        const isErrorLog = (log: Log) =>
+            !okCodes.includes(log.status_code as number) ||
+            Boolean(log.total_time && log.total_time > 1500);
 
         const relevantLogs = logs.filter(
             (log) =>
                 log.status_code !== undefined &&
-                !ignoredCodes.includes(log.status_code) &&
-                (log.status_code !== 599 ||
-                    allUnavailableTimes.has(log.created_at.substring(0, 16)))
+                Number(log.status_code) < 900
         );
 
         if (relevantLogs.length === 0) return "Все работает стабильно";
 
-        const errorLogs = relevantLogs.filter(
-            (log) => log.status_code !== 200 || (log.total_time && log.total_time > 1500)
-        );
+        const errorLogs = relevantLogs.filter(isErrorLog);
 
         const errorRate = (errorLogs.length / relevantLogs.length) * 100;
 
@@ -73,8 +45,8 @@ const OverviewStatus: React.FC<OverviewStatusProps> = ({ allLogs }) => {
         );
 
         const lastLogs = sortedLogs.slice(-4);
-        const last4Errors = lastLogs.length >= 4 && lastLogs.every(log => log.status_code !== 200 || (log.total_time && log.total_time > 1500));
-        const last2Errors = lastLogs.length >= 2 && lastLogs.slice(-2).every(log => log.status_code !== 200 || (log.total_time && log.total_time > 1500));
+        const last4Errors = lastLogs.length >= 4 && lastLogs.every(isErrorLog);
+        const last2Errors = lastLogs.length >= 2 && lastLogs.slice(-2).every(isErrorLog);
 
         if (errorRate >= 20 || last4Errors) {
             return "Возникли неполадки";
