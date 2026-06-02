@@ -533,6 +533,13 @@ function Chart<TLog extends ChartLog>({
 
                         const chart = context.chart;
                         const position = chart.canvas.getBoundingClientRect();
+                        const chartBottom = chart.chartArea?.bottom ?? 0;
+                        const tooltipOffsetFromBottom = 30;
+                        const tooltipTop =
+                            position.top +
+                            window.pageYOffset +
+                            chartBottom +
+                            tooltipOffsetFromBottom;
 
                         tooltipEl.style.opacity = "1";
                         tooltipEl.style.visibility = "visible";
@@ -555,8 +562,7 @@ function Chart<TLog extends ChartLog>({
                             tooltipEl.style.width = position.width + "px";
                             tooltipEl.style.maxWidth = position.width + "px";
                             tooltipEl.style.left = position.left + "px";
-                            tooltipEl.style.top =
-                                position.top + window.pageYOffset + 225 + "px";
+                            tooltipEl.style.top = tooltipTop + "px";
                         } else {
                             tooltipEl.style.width = "";
                             tooltipEl.style.maxWidth =
@@ -565,7 +571,7 @@ function Chart<TLog extends ChartLog>({
                                 position.left +
                                 window.pageXOffset +
                                 tooltipModel.caretX;
-                            let top = position.top + window.pageYOffset + 225;
+                            let top = tooltipTop;
 
                             left -= tooltipEl.offsetWidth / 2;
 
@@ -619,7 +625,7 @@ function Chart<TLog extends ChartLog>({
                 intersect: false,
             },
             events: (isMobile
-                ? ["click", "touchstart"]
+                ? ["click"]
                 : ["mousemove", "mouseout", "click", "touchstart"]) as any,
             onClick: (event: any, elements: any[]) => {
                 if (elements && elements.length > 0) {
