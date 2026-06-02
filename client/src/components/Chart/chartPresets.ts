@@ -14,6 +14,22 @@ const msCell = (label: string, value: number | null | undefined, digits = 0): Ch
             : Number(value).toFixed(digits),
 });
 
+const avgOf = <TLog>(
+    logs: TLog[],
+    getField: (log: TLog) => number | null | undefined
+): number | null => {
+    let sum = 0;
+    let count = 0;
+    for (const log of logs) {
+        const v = getField(log);
+        if (v !== null && v !== undefined && Number.isFinite(Number(v))) {
+            sum += Number(v);
+            count += 1;
+        }
+    }
+    return count > 0 ? sum / count : null;
+};
+
 export interface HttpLog extends ChartLog {
     total_time?: number;
     status_code?: number;
@@ -76,6 +92,7 @@ export const httpRequestTimePreset: ChartConfig<HttpLog> = {
     isUnreliable: (log) => Boolean(log.unreliable),
     renderTooltip: ({ point }: ChartTooltipContext<HttpLog>): ChartTooltipCell[] => {
         const log = point.representative;
+        const logs = point.logs;
         const cells: ChartTooltipCell[] = [
             {
                 label: "Статус",
@@ -83,16 +100,27 @@ export const httpRequestTimePreset: ChartConfig<HttpLog> = {
                 bold: true,
             },
             msCell("Общее", point.y),
-            msCell("DNS", log.dns_time),
-            msCell("TCP", log.tcp_time),
-            msCell("TLS", log.tls_time),
-            msCell("TTFB", log.first_byte_time),
-            msCell("Загрузка", log.download_time),
+            msCell("DNS", avgOf(logs, (l) => l.dns_time)),
+            msCell("TCP", avgOf(logs, (l) => l.tcp_time)),
+            msCell("TLS", avgOf(logs, (l) => l.tls_time)),
+            msCell("TTFB", avgOf(logs, (l) => l.first_byte_time)),
+            msCell("Загрузка", avgOf(logs, (l) => l.download_time)),
         ];
-        if (log.server_timing && typeof log.server_timing === "object") {
-            for (const [metric, value] of Object.entries(log.server_timing)) {
-                cells.push(msCell(serverTimingLabel(metric), value));
+        const serverTimingMetrics = new Set<string>();
+        for (const l of logs) {
+            if (l.server_timing && typeof l.server_timing === "object") {
+                for (const metric of Object.keys(l.server_timing)) {
+                    serverTimingMetrics.add(metric);
+                }
             }
+        }
+        for (const metric of serverTimingMetrics) {
+            const avg = avgOf(logs, (l) =>
+                l.server_timing && typeof l.server_timing === "object"
+                    ? l.server_timing[metric]
+                    : undefined
+            );
+            cells.push(msCell(serverTimingLabel(metric), avg));
         }
         return cells;
     },
