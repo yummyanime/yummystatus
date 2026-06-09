@@ -92,7 +92,7 @@ export const formatMetric = (
         return "—";
     }
     if (metric.unit === "score") return String(Math.round(value));
-    if (metric.unit === "unitless") return value.toFixed(3);
+    if (metric.unit === "unitless") return value.toFixed(2);
     // ms
     if (value >= 1000) return `${(value / 1000).toFixed(2)} с`;
     return `${Math.round(value)} мс`;

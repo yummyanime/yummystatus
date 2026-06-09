@@ -21,8 +21,15 @@ interface LhSummaryProps {
     screenshot: ScreenshotData | null;
 }
 
-// Метрики, выносимые в карточки сводки (по приоритету для пользователя).
-const SUMMARY_KEYS: LighthouseMetricKey[] = ["perf_score", "lcp", "cls", "ttfb"];
+// Порядок карточек совпадает с порядком кнопок графика.
+const SUMMARY_KEYS: LighthouseMetricKey[] = [
+    "lcp",
+    "ttfb",
+    "cls",
+    "tbt",
+    "fcp",
+    "perf_score",
+];
 
 const avgOf = (
     logs: LighthouseLog[],
@@ -51,31 +58,6 @@ const latestOf = (
     return null;
 };
 
-// Тренд: среднее второй половины периода против первой.
-const trendOf = (
-    logs: LighthouseLog[],
-    key: keyof LighthouseLog
-): number | null => {
-    if (logs.length < 4) return null;
-    const mid = Math.floor(logs.length / 2);
-    const first = avgOf(logs.slice(0, mid), key);
-    const second = avgOf(logs.slice(mid), key);
-    if (first === null || second === null || first === 0) return null;
-    return ((second - first) / Math.abs(first)) * 100;
-};
-
-const formatBytes = (v: number | null | undefined): string => {
-    if (v === null || v === undefined || !Number.isFinite(v)) return "—";
-    if (v >= 1024 * 1024) return `${(v / (1024 * 1024)).toFixed(1)} МБ`;
-    if (v >= 1024) return `${(v / 1024).toFixed(0)} КБ`;
-    return `${Math.round(v)} Б`;
-};
-
-const formatMs = (v: number | null | undefined): string =>
-    v === null || v === undefined || !Number.isFinite(v)
-        ? "—"
-        : `${Math.round(v)} мс`;
-
 const LhSummary: React.FC<LhSummaryProps> = ({ logs, strategy, screenshot }) => {
     const cards = useMemo(
         () =>
@@ -83,25 +65,17 @@ const LhSummary: React.FC<LhSummaryProps> = ({ logs, strategy, screenshot }) => 
                 const metric = getMetric(key);
                 const avg = avgOf(logs, metric.key);
                 const p75 = metric.fieldKey ? latestOf(logs, metric.fieldKey) : null;
-                const trend = trendOf(logs, metric.key);
-                const rating = rate(metric, avg);
-                // «улучшение» зависит от направления метрики
-                let improving: boolean | null = null;
-                if (trend !== null && Math.abs(trend) >= 1) {
-                    improving = metric.higherIsBetter ? trend > 0 : trend < 0;
-                }
-                return { metric, avg, p75, trend, rating, improving };
+                return {
+                    metric,
+                    avg,
+                    p75,
+                    rating: rate(metric, avg),
+                    p75Rating: rate(metric, p75),
+                    hasField: Boolean(metric.fieldKey),
+                };
             }),
         [logs]
     );
-
-    const diagnostics = useMemo<Record<string, number> | null>(() => {
-        for (let i = logs.length - 1; i >= 0; i--) {
-            const d = logs[i].diagnostics;
-            if (d && typeof d === "object") return d;
-        }
-        return null;
-    }, [logs]);
 
     const updatedLabel = screenshot?.updated_at
         ? new Date(screenshot.updated_at).toLocaleString("ru-RU", {
@@ -114,73 +88,38 @@ const LhSummary: React.FC<LhSummaryProps> = ({ logs, strategy, screenshot }) => 
 
     return (
         <div className={styles.summary}>
-            <div className={styles.left}>
-                <div className={styles.cards}>
-                    {cards.map(({ metric, avg, p75, trend, rating, improving }) => (
-                        <div key={metric.key} className={styles.card}>
-                            <div className={styles.cardHead}>
-                                <span className={styles.cardLabel}>{metric.label}</span>
-                                <span
-                                    className={styles.dot}
-                                    style={{ backgroundColor: RATING_COLORS[rating] }}
-                                />
-                            </div>
+            <div className={styles.cards}>
+                {cards.map(({ metric, avg, p75, rating, p75Rating, hasField }) => (
+                    <div key={metric.key} className={styles.card}>
+                        <div className={styles.cardHead}>
+                            <span className={styles.cardLabel}>{metric.label}</span>
                             <span
-                                className={styles.cardValue}
-                                style={{ color: RATING_COLORS[rating] }}
-                            >
-                                {formatMetric(metric, avg)}
-                            </span>
-                            {p75 !== null ? (
-                                <span className={styles.cardP75}>
-                                    p75 {formatMetric(metric, p75)}
-                                </span>
-                            ) : (
-                                <span className={styles.cardP75muted}>поле n/a</span>
-                            )}
-                            {improving !== null && trend !== null ? (
-                                <span
-                                    className={styles.cardTrend}
-                                    style={{
-                                        color: improving
-                                            ? RATING_COLORS.good
-                                            : RATING_COLORS.poor,
-                                    }}
-                                >
-                                    {trend > 0 ? "▲" : "▼"} {Math.abs(trend).toFixed(0)}%
-                                </span>
-                            ) : (
-                                <span className={styles.cardTrendMuted}>—</span>
-                            )}
+                                className={styles.dot}
+                                style={{ backgroundColor: RATING_COLORS[rating] }}
+                            />
                         </div>
-                    ))}
-                </div>
-
-                {diagnostics ? (
-                    <div className={styles.diagnostics}>
-                        <span className={styles.diagItem}>
-                            JS <b>{formatMs(diagnostics.bootup_time)}</b>
+                        <span
+                            className={styles.cardValue}
+                            style={{ color: RATING_COLORS[rating] }}
+                        >
+                            {formatMetric(metric, avg)}
                         </span>
-                        <span className={styles.diagItem}>
-                            Main-thread <b>{formatMs(diagnostics.mainthread_work)}</b>
-                        </span>
-                        <span className={styles.diagItem}>
-                            Вес <b>{formatBytes(diagnostics.total_byte_weight)}</b>
-                        </span>
-                        <span className={styles.diagItem}>
-                            DOM <b>{diagnostics.dom_size ?? "—"}</b>
-                        </span>
-                        <span className={styles.diagItem}>
-                            A11y <b>{diagnostics.accessibility ?? "—"}</b>
-                        </span>
-                        <span className={styles.diagItem}>
-                            SEO <b>{diagnostics.seo ?? "—"}</b>
-                        </span>
-                        <span className={styles.diagItem}>
-                            BP <b>{diagnostics.best_practices ?? "—"}</b>
-                        </span>
+                        {hasField ? (
+                            <>
+                                <div className={styles.cardDivider} />
+                                <div className={styles.p75Row}>
+                                    <span className={styles.p75Label}>p75</span>
+                                    <span
+                                        className={styles.p75Value}
+                                        style={{ color: RATING_COLORS[p75Rating] }}
+                                    >
+                                        {formatMetric(metric, p75)}
+                                    </span>
+                                </div>
+                            </>
+                        ) : null}
                     </div>
-                ) : null}
+                ))}
             </div>
 
             <div className={styles.screenshot}>
@@ -188,7 +127,7 @@ const LhSummary: React.FC<LhSummaryProps> = ({ logs, strategy, screenshot }) => 
                     <>
                         <img src={screenshot.image} alt="Скриншот страницы" />
                         <span className={styles.shotMeta}>
-                            {strategy === "desktop" ? "🖥" : "📱"} {strategy}
+                            {strategy === "desktop" ? "ПК" : "Телефон"}
                             {updatedLabel ? ` · ${updatedLabel}` : ""}
                         </span>
                     </>

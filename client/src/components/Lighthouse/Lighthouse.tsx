@@ -77,9 +77,6 @@ const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
         };
     }, [buildQuery, domain, strategy]);
 
-    const urlPath =
-        logs[0]?.url_path || screenshot?.url_path || "—";
-
     // Пока ни одного замера не пришло — блок не показываем, чтобы не мозолил глаза.
     if (!loading && !hasData && logs.length === 0) {
         return null;
@@ -88,22 +85,18 @@ const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
     return (
         <div className={styles.lighthouse}>
             <div className={styles.header}>
-                <div className={styles.titleBlock}>
-                    <span className={styles.title}>Lighthouse / Web Vitals</span>
-                    <span className={styles.path}>{urlPath}</span>
-                </div>
                 <div className={styles.strategySwitch}>
-                    <Button
-                        active={strategy === "mobile"}
-                        onClick={() => handleStrategy("mobile")}
-                    >
-                        📱 Mobile
-                    </Button>
                     <Button
                         active={strategy === "desktop"}
                         onClick={() => handleStrategy("desktop")}
                     >
-                        🖥 Desktop
+                        ПК
+                    </Button>
+                    <Button
+                        active={strategy === "mobile"}
+                        onClick={() => handleStrategy("mobile")}
+                    >
+                        Телефон
                     </Button>
                 </div>
             </div>

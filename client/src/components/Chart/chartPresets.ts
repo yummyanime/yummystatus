@@ -164,12 +164,14 @@ export interface LighthousePoint extends ChartLog {
 }
 
 // digits=3 для безразмерного CLS, иначе целые миллисекунды/баллы.
+// valueLabel — общий заголовок колонки (имя метрики), чтобы Lab и CrUX
+// p75 стояли в одном столбце, а их подписи (Lab/CrUX) — в строках.
 export const makeLighthousePreset = (
     digits: number,
     valueLabel = "Значение"
 ): ChartConfig<LighthousePoint> => ({
     getValue: (log) => log.value,
-    renderTooltip: ({ series, point }: ChartTooltipContext<LighthousePoint>): ChartTooltipCell[] => [
-        msCell(series || valueLabel, point.y, digits),
+    renderTooltip: ({ point }: ChartTooltipContext<LighthousePoint>): ChartTooltipCell[] => [
+        msCell(valueLabel, point.y, digits),
     ],
 });

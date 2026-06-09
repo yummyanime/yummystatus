@@ -100,7 +100,11 @@ const parsePsiResponse = (data) => {
             cls: auditValue(audits, "cumulative-layout-shift"),
             field_lcp: fieldPercentile(data, "LARGEST_CONTENTFUL_PAINT_MS"),
             field_inp: fieldPercentile(data, "INTERACTION_TO_NEXT_PAINT"),
-            field_cls: fieldPercentile(data, "CUMULATIVE_LAYOUT_SHIFT_SCORE"),
+            // CrUX отдаёт CLS-перцентиль как целое ×100 (36 → реальный CLS 0.36).
+            field_cls: (() => {
+                const raw = fieldPercentile(data, "CUMULATIVE_LAYOUT_SHIFT_SCORE");
+                return raw === null ? null : raw / 100;
+            })(),
             field_fcp: fieldPercentile(data, "FIRST_CONTENTFUL_PAINT_MS"),
             field_ttfb: fieldPercentile(data, "EXPERIMENTAL_TIME_TO_FIRST_BYTE"),
         },

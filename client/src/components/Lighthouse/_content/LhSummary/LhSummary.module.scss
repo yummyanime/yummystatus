@@ -9,22 +9,13 @@
     }
 }
 
-.left {
+.cards {
     flex: 1 1 0;
     min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.cards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 10px;
-
-    @media (max-width: 600px) {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    align-content: start;
 }
 
 .card {
@@ -33,7 +24,7 @@
     padding: 10px 12px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 }
 
 .cardHead {
@@ -62,43 +53,29 @@
     font-variant-numeric: tabular-nums;
 }
 
-.cardP75 {
-    font-size: 12px;
-    color: var(--color-text-muted);
+.cardDivider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.08);
+    margin: 4px 0 2px;
 }
 
-.cardP75muted {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.25);
-}
-
-.cardTrend {
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.cardTrendMuted {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.25);
-}
-
-.diagnostics {
+.p75Row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px 16px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    align-items: baseline;
+    gap: 6px;
 }
 
-.diagItem {
-    font-size: 12px;
+.p75Label {
+    font-size: 11px;
+    font-weight: 500;
     color: var(--color-text-muted);
+}
 
-    b {
-        color: var(--color-text);
-        font-weight: 600;
-        margin-left: 2px;
-    }
+.p75Value {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
 }
 
 .screenshot {

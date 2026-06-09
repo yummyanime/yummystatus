@@ -39,7 +39,7 @@ const LhChart: React.FC<LhChartProps> = ({ logs, timeRange, isChartLoading }) =>
     };
 
     const metric = getMetric(activeMetric);
-    const digits = metric.unit === "unitless" ? 3 : 0;
+    const digits = metric.unit === "unitless" ? 2 : 0;
 
     const { cityLogs, cities, avg } = useMemo(() => {
         const labPoints: LighthousePoint[] = [];
@@ -105,7 +105,8 @@ const LhChart: React.FC<LhChartProps> = ({ logs, timeRange, isChartLoading }) =>
                 />
             </div>
             <div className={styles.avgWrapper}>
-                <span className={styles.avgLabel}>Среднее {metric.label} за период</span>
+                <span className={styles.avgLabel}>Среднее {metric.label}</span>
+
                 <span
                     className={styles.avgValue}
                     style={{ color: RATING_COLORS[avgRating] }}

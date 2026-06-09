@@ -9,31 +9,8 @@
 .header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem 1rem 0.75rem;
-    flex-wrap: wrap;
-}
-
-.titleBlock {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-
-.title {
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.path {
-    font-size: 13px;
-    color: var(--color-text-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 60vw;
+    justify-content: flex-end;
+    padding: 1rem 1rem 0.5rem;
 }
 
 .strategySwitch {
