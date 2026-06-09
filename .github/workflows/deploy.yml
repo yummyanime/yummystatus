@@ -24,13 +24,6 @@ jobs:
                   context: .
                   push: true
                   tags: ${{ secrets.DOCKER_USERNAME }}/uptime-checker:latest
-                  build-args: |
-                      DATABASE_URL=postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}
-                      GLOBALPING_API_KEY=${{ secrets.GLOBALPING_API_KEY }}
-                      GLOBALPING_API_KEY2=${{ secrets.GLOBALPING_API_KEY2 }}
-                      GLOBALPING_API_KEY3=${{ secrets.GLOBALPING_API_KEY3 }}
-                      GLOBALPING_API_KEY4=${{ secrets.GLOBALPING_API_KEY4 }}
-                      GLOBALPING_API_KEY5=${{ secrets.GLOBALPING_API_KEY5 }}
 
     deploy:
         needs: build-and-push
