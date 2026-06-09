@@ -64,9 +64,9 @@ app.listen(port, async () => {
     );
 
     // Scheduled runs
-    setInterval(() => runChecks(locationGroups["2min"]), 3 * 60 * 1000);
+    setInterval(() => runChecks(locationGroups["2min"]), 2 * 60 * 1000);
     setInterval(() => runChecks(locationGroups["6min"]), 6 * 60 * 1000);
-    setInterval(() => pingCheckAndSave().catch((err) => console.error("Ping check failed:", err)), 3 * 60 * 1000);
+    setInterval(() => pingCheckAndSave().catch((err) => console.error("Ping check failed:", err)), 2 * 60 * 1000);
     setInterval(aggregateHourlyData, 60 * 60 * 1000);
     setInterval(aggregateHourlyPingData, 60 * 60 * 1000);
     setInterval(cleanupOldLogs, 60 * 60 * 1000);
