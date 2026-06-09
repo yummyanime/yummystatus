@@ -164,6 +164,84 @@ router.get("/locations", (req, res) => {
     res.json(locationGroups);
 });
 
+const buildLighthouseTimeFilter = ({ timeRange, dateFrom, dateTo }) => {
+    const from = parseDate(dateFrom);
+    const to = parseDate(dateTo);
+
+    if (from && to && from < to) {
+        const spanMs = to.getTime() - from.getTime();
+        const useHourly = spanMs >= HOURLY_THRESHOLD_MS;
+        return {
+            tableName: useHourly ? "lighthouse_hourly_logs" : "lighthouse_logs",
+            whereSql: "created_at >= $1 AND created_at <= $2",
+            params: [from.toISOString(), to.toISOString()],
+        };
+    }
+
+    const cfg = TIME_RANGE_CONFIG[timeRange] ?? TIME_RANGE_CONFIG["3hour"];
+    const useHourly = cfg.spanMs >= HOURLY_THRESHOLD_MS;
+    return {
+        tableName: useHourly ? "lighthouse_hourly_logs" : "lighthouse_logs",
+        whereSql: "created_at >= NOW() - $1::interval",
+        params: [cfg.interval],
+    };
+};
+
+router.get("/lighthouse-logs", async (req, res) => {
+    try {
+        const { timeRange, domain, strategy, dateFrom, dateTo } = req.query;
+
+        const { tableName, whereSql, params } = buildLighthouseTimeFilter({
+            timeRange,
+            dateFrom,
+            dateTo,
+        });
+
+        const columns = `domain, url_path, strategy, perf_score, ttfb, lcp, fcp, speed_index, tbt, tti, cls, field_lcp, field_inp, field_cls, field_fcp, field_ttfb, diagnostics, created_at`;
+
+        const conditions = [whereSql];
+        const queryParams = [...params];
+        if (domain) {
+            queryParams.push(domain);
+            conditions.push(`domain = $${queryParams.length}`);
+        }
+        if (strategy) {
+            queryParams.push(strategy);
+            conditions.push(`strategy = $${queryParams.length}`);
+        }
+
+        const query = `
+            SELECT ${columns}
+            FROM ${tableName}
+            WHERE ${conditions.join(" AND ")}
+            ORDER BY created_at ASC;
+        `;
+
+        const { rows } = await pool.query(query, queryParams);
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server Error");
+    }
+});
+
+router.get("/lighthouse-screenshot", async (req, res) => {
+    try {
+        const { domain, strategy } = req.query;
+        if (!domain || !strategy) {
+            return res.status(400).json({ error: "domain and strategy are required" });
+        }
+        const { rows } = await pool.query(
+            `SELECT image, url_path, updated_at FROM lighthouse_screenshots WHERE domain = $1 AND strategy = $2`,
+            [domain, strategy]
+        );
+        res.json(rows[0] ?? null);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server Error");
+    }
+});
+
 const PROBE_ERROR_CODE = 900;
 const SLOW_RESPONSE_MS = 1500;
 

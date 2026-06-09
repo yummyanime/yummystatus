@@ -17,6 +17,11 @@ import {
     aggregateHourlyPingData,
     cleanupOldPingLogs,
 } from "./pingCheck.js";
+import {
+    lighthouseCheckAndSave,
+    aggregateHourlyLighthouseData,
+    cleanupOldLighthouseLogs,
+} from "./lighthouseCheck.js";
 
 const __dirname = path.resolve();
 
@@ -62,13 +67,25 @@ app.listen(port, async () => {
     cleanupOldPingLogs().catch((err) =>
         console.error("Initial ping cleanup failed:", err)
     );
+    lighthouseCheckAndSave().catch((err) =>
+        console.error("Initial Lighthouse check failed:", err)
+    );
+    aggregateHourlyLighthouseData().catch((err) =>
+        console.error("Initial Lighthouse aggregation failed:", err)
+    );
+    cleanupOldLighthouseLogs().catch((err) =>
+        console.error("Initial Lighthouse cleanup failed:", err)
+    );
 
     // Scheduled runs
     setInterval(() => runChecks(locationGroups["2min"]), 2 * 60 * 1000);
     setInterval(() => runChecks(locationGroups["6min"]), 6 * 60 * 1000);
     setInterval(() => pingCheckAndSave().catch((err) => console.error("Ping check failed:", err)), 2 * 60 * 1000);
+    setInterval(() => lighthouseCheckAndSave().catch((err) => console.error("Lighthouse check failed:", err)), 6 * 60 * 1000);
     setInterval(aggregateHourlyData, 60 * 60 * 1000);
     setInterval(aggregateHourlyPingData, 60 * 60 * 1000);
+    setInterval(aggregateHourlyLighthouseData, 60 * 60 * 1000);
     setInterval(cleanupOldLogs, 60 * 60 * 1000);
     setInterval(cleanupOldPingLogs, 60 * 60 * 1000);
+    setInterval(cleanupOldLighthouseLogs, 60 * 60 * 1000);
 });

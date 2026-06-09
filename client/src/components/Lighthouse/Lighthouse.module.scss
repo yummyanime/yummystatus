@@ -1,0 +1,49 @@
+.lighthouse {
+    background-color: var(--color-dark-bg-1);
+    border-radius: var(--border-radius-md);
+    margin-bottom: 1rem;
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1rem 0.75rem;
+    flex-wrap: wrap;
+}
+
+.titleBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.path {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 60vw;
+}
+
+.strategySwitch {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.06);
+    margin: 0 1rem;
+}

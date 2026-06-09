@@ -1,0 +1,65 @@
+.container {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
+}
+
+.tabsWrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+
+    @media (max-width: 830px) {
+        gap: 5px;
+    }
+}
+
+.chartWrapper {
+    height: 280px;
+    min-height: 200px;
+    position: relative;
+
+    @media (max-width: 500px) {
+        height: 220px;
+    }
+}
+
+.avgWrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
+    justify-content: center;
+}
+
+.avgLabel {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
+.avgValue {
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+
+    small {
+        font-size: 1rem;
+        font-weight: 400;
+        margin-left: 5px;
+        color: var(--color-text-muted);
+    }
+}
+
+@media (max-width: 500px) {
+    .avgValue {
+        font-size: 2rem;
+    }
+    .avgLabel {
+        font-size: 15px;
+    }
+}

@@ -88,6 +88,62 @@ export const createHttpTable = async () => {
         await pool.query(pingHourlyLogsQuery);
         console.log('Table "ping_hourly_logs" created or already exists.');
 
+        const lighthouseColumns = `
+      perf_score   FLOAT,
+      ttfb         FLOAT,
+      lcp          FLOAT,
+      fcp          FLOAT,
+      speed_index  FLOAT,
+      tbt          FLOAT,
+      tti          FLOAT,
+      cls          FLOAT,
+      field_lcp    FLOAT,
+      field_inp    FLOAT,
+      field_cls    FLOAT,
+      field_fcp    FLOAT,
+      field_ttfb   FLOAT,
+      diagnostics  JSONB
+    `;
+
+        const lighthouseLogsQuery = `
+    CREATE TABLE IF NOT EXISTS lighthouse_logs (
+      id SERIAL PRIMARY KEY,
+      domain VARCHAR(255),
+      url_path VARCHAR(512),
+      strategy VARCHAR(16),
+      ${lighthouseColumns},
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+        await pool.query(lighthouseLogsQuery);
+        console.log('Table "lighthouse_logs" created or already exists.');
+
+        const lighthouseHourlyLogsQuery = `
+    CREATE TABLE IF NOT EXISTS lighthouse_hourly_logs (
+      id SERIAL PRIMARY KEY,
+      domain VARCHAR(255),
+      url_path VARCHAR(512),
+      strategy VARCHAR(16),
+      ${lighthouseColumns},
+      created_at TIMESTAMP
+    );
+  `;
+        await pool.query(lighthouseHourlyLogsQuery);
+        console.log('Table "lighthouse_hourly_logs" created or already exists.');
+
+        const lighthouseScreenshotsQuery = `
+    CREATE TABLE IF NOT EXISTS lighthouse_screenshots (
+      domain VARCHAR(255),
+      strategy VARCHAR(16),
+      url_path VARCHAR(512),
+      image TEXT,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (domain, strategy)
+    );
+  `;
+        await pool.query(lighthouseScreenshotsQuery);
+        console.log('Table "lighthouse_screenshots" created or already exists.');
+
     } catch (err) {
         console.error("Error creating table", err);
     }

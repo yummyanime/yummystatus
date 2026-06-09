@@ -65,6 +65,7 @@ jobs:
                       echo "GLOBALPING_API_KEY4=${{ secrets.GLOBALPING_API_KEY4 }}" >> .env
                       echo "GLOBALPING_API_KEY5=${{ secrets.GLOBALPING_API_KEY5 }}" >> .env
                       echo "GLOBALPING_SECRET_KEY=${{ secrets.GLOBALPING_SECRET_KEY }}" >> .env
+                      echo "PSI_API_KEY=${{ secrets.PSI_API_KEY }}" >> .env
                       # Pull the latest image from Docker Hub
                       # Prune unused Docker components (images, containers, networks) to free disk space
                       sudo docker system prune -a -f || true

@@ -16,6 +16,7 @@ services:
             - GLOBALPING_API_KEY4=${GLOBALPING_API_KEY4}
             - GLOBALPING_API_KEY5=${GLOBALPING_API_KEY5}
             - GLOBALPING_SECRET_KEY=${GLOBALPING_SECRET_KEY}
+            - PSI_API_KEY=${PSI_API_KEY}
         restart: always
 
     db:

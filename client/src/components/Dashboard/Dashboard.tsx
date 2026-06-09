@@ -7,6 +7,7 @@ import Overview from "../Overview/Overview.tsx";
 import { useDataStatus } from "../../context/DataStatusContext.tsx";
 import { useDashboardSettings } from "../../context/DashboardSettingsContext.tsx";
 import CountryChart from "../CountryChart/CountryChart.tsx";
+import Lighthouse from "../Lighthouse/Lighthouse.tsx";
 
 interface Log {
     created_at: string;
@@ -406,6 +407,7 @@ const Dashboard = () => {
                 isChartLoading={isChartLoading}
                 loading={loading}
             />
+            <Lighthouse domain={domain} />
         </div>
     );
 };

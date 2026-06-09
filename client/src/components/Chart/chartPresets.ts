@@ -157,3 +157,19 @@ export const backendMetricPreset: ChartConfig<BackendMetricPoint> = {
         msCell("Значение", point.y),
     ],
 };
+
+// Точка графика Lighthouse: одна метрика, общая для Lab и CrUX-серий.
+export interface LighthousePoint extends ChartLog {
+    value?: number | null;
+}
+
+// digits=3 для безразмерного CLS, иначе целые миллисекунды/баллы.
+export const makeLighthousePreset = (
+    digits: number,
+    valueLabel = "Значение"
+): ChartConfig<LighthousePoint> => ({
+    getValue: (log) => log.value,
+    renderTooltip: ({ series, point }: ChartTooltipContext<LighthousePoint>): ChartTooltipCell[] => [
+        msCell(series || valueLabel, point.y, digits),
+    ],
+});
