@@ -1,0 +1,10 @@
+.container {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+
+    &[data-variant="bottom"] {
+        width: 100%;
+        align-items: center;
+    }
+}

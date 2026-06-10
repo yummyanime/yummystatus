@@ -9,18 +9,22 @@
     right: 0;
     z-index: 1000;
     background-color: var(--color-dark-bg-1);
+    margin-top: 20px;
+
+    @media (max-width: 768px) {
+        display: none;
+    }
 }
 
 .header {
-    padding: 10px;
     display: flex;
-    align-items: center;
-	max-width: 1350px;
+    align-items: stretch;
+    max-width: 1350px;
     width: 100%;
 }
 
 .logoContainer {
-    margin-right: 40px;
+    margin: 10px 40px 10px 10px;
     text-align: center;
     display: flex;
     align-items: center;
@@ -31,16 +35,17 @@
     font-weight: bold;
     color: #fff;
 
-	@media (max-width: 650px) {
-    	display: none;
-	}
+    @media (max-width: 650px) {
+        display: none;
+    }
 }
 
 .nav {
     flex-grow: 1;
     display: flex;
     justify-content: flex-end;
-    align-items: center;
+    align-items: stretch;
+    align-self: stretch;
 }
 
 .logoImg {
@@ -51,4 +56,24 @@
 
 .logoLink {
     text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.bottomBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 56px;
+    border-top: 3px solid var(--color-red);
+    z-index: 1100;
+    width: 100%;
+    background: var(--color-dark-bg-1);
+    transition: transform 0.1s;
+    will-change: transform;
+    display: none;
+
+    @media (max-width: 768px) {
+        display: block;
+    }
 }

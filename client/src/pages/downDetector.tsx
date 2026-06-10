@@ -32,12 +32,6 @@ const DownDetector: React.FC = () => {
 
     return (
         <>
-            <h1>YummyUptime DownDetector — сбои и жалобы</h1>
-            <p>
-                Сообщите о проблеме и посмотрите статистику жалоб пользователей
-                за последние 24 часа.
-            </p>
-
             <ReportBlock onReported={fetchData} />
             <ReportChart data={data} loading={loading} />
         </>

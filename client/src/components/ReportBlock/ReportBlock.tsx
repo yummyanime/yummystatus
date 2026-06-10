@@ -35,7 +35,6 @@ const ReportBlock: React.FC<ReportBlockProps> = ({ onReported }) => {
 
     return (
         <div className={styles.block}>
-            <h2 className={styles.title}>Сообщить о сбое</h2>
             <div className={styles.reasonButtons}>
                 {REASONS.map((r) => (
                     <Button

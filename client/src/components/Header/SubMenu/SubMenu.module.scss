@@ -1,0 +1,28 @@
+.container {
+    position: absolute;
+    z-index: 1100;
+    min-width: 220px;
+    background: var(--color-dark-bg-1);
+    box-shadow: var(--box-shadow);
+    padding: 5px;
+    border-radius: var(--border-radius-md);
+
+    &[data-variant="top"] {
+        right: 0;
+        bottom: 0;
+        transform: translate(0, 100%);
+        border-top: 5px solid transparent;
+        background-clip: padding-box;
+    }
+
+    &[data-variant="bottom"] {
+        top: -7px;
+        right: 5px;
+        left: auto;
+        width: fit-content;
+        min-width: 220px;
+        max-height: 70dvh;
+        overflow: hidden auto;
+        transform: translate(0, -100%);
+    }
+}

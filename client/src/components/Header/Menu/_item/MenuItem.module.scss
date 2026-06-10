@@ -1,0 +1,101 @@
+.container {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    color: #fff;
+    padding: 0 20px;
+    position: relative;
+    min-width: 0;
+    cursor: pointer;
+
+    &:hover {
+        background: var(--color-dark-bg-2);
+    }
+
+    .link {
+        min-height: 40px;
+        min-width: calc(100% + 30px);
+        transform: translate(-15px, 0);
+        justify-content: center;
+        color: #fff;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: none;
+        }
+
+        svg {
+            margin-right: 5px;
+            fill: #fff;
+            flex-shrink: 0;
+        }
+    }
+
+    .title {
+        color: #fff;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .arrow {
+        position: absolute;
+        bottom: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        transition: bottom 0.2s;
+        pointer-events: none;
+        display: flex;
+
+        svg {
+            margin-right: 0;
+            fill: #aaa !important;
+        }
+    }
+
+    &[data-variant="bottom"] {
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        color: #aaa;
+        padding: 0;
+
+        &:hover {
+            background: transparent;
+        }
+
+        .link {
+            min-width: 100%;
+            min-height: 0;
+            height: auto;
+            transform: none;
+            margin-top: 4px;
+            flex-direction: column;
+            gap: 4px;
+
+            svg {
+                margin-right: 0;
+            }
+        }
+
+        .title {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .arrow {
+            top: 0;
+            bottom: auto;
+
+            svg {
+                fill: var(--color-red) !important;
+                transform: rotate(180deg);
+            }
+        }
+    }
+}

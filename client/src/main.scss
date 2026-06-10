@@ -92,3 +92,9 @@ p {
 *::-webkit-scrollbar-corner {
     background: transparent;
 }
+
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 56px;
+    }
+}

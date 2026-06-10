@@ -1,0 +1,18 @@
+.container {
+    padding: 10px;
+    justify-content: flex-start;
+    font-weight: 500;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    color: #fff;
+    text-decoration: none;
+    border-radius: var(--border-radius-sm);
+    white-space: nowrap;
+
+    &:hover {
+        background: var(--color-dark-bg-2);
+        text-decoration: none;
+    }
+}
