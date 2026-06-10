@@ -144,6 +144,20 @@ export const createHttpTable = async () => {
         await pool.query(lighthouseScreenshotsQuery);
         console.log('Table "lighthouse_screenshots" created or already exists.');
 
+        const outageReportsQuery = `
+    CREATE TABLE IF NOT EXISTS outage_reports (
+      id SERIAL PRIMARY KEY,
+      domain VARCHAR(255),
+      reason VARCHAR(64) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+        await pool.query(outageReportsQuery);
+        await pool.query(
+            `CREATE INDEX IF NOT EXISTS idx_outage_reports_created_at ON outage_reports (created_at);`
+        );
+        console.log('Table "outage_reports" created or already exists.');
+
     } catch (err) {
         console.error("Error creating table", err);
     }

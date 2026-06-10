@@ -362,4 +362,88 @@ router.get("/status-summary", async (req, res) => {
     }
 });
 
+const OUTAGE_REASONS = new Set([
+    "not_loading",
+    "slow",
+    "no_media",
+    "freezing",
+]);
+
+const OUTAGE_WINDOW_HOURS = 24;
+const OUTAGE_BUCKET_MS = 30 * 60 * 1000;
+
+router.post("/outage-reports", async (req, res) => {
+    try {
+        const { reason, domain } = req.body ?? {};
+
+        if (!OUTAGE_REASONS.has(reason)) {
+            return res.status(400).json({ error: "Invalid reason" });
+        }
+
+        const domainValue =
+            typeof domain === "string" && domain.trim() !== ""
+                ? domain.trim().slice(0, 255)
+                : null;
+
+        await pool.query(
+            `INSERT INTO outage_reports (domain, reason) VALUES ($1, $2)`,
+            [domainValue, reason]
+        );
+
+        res.status(201).json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server Error");
+    }
+});
+
+router.get("/outage-reports", async (req, res) => {
+    try {
+        const now = Date.now();
+        const windowMs = OUTAGE_WINDOW_HOURS * 60 * 60 * 1000;
+        const end = Math.ceil(now / OUTAGE_BUCKET_MS) * OUTAGE_BUCKET_MS;
+        const start = end - windowMs;
+
+        const { rows } = await pool.query(
+            `SELECT reason, created_at
+             FROM outage_reports
+             WHERE created_at >= NOW() - $1::interval
+             ORDER BY created_at ASC;`,
+            [`${OUTAGE_WINDOW_HOURS} hour`]
+        );
+
+        const bucketCount = Math.round(windowMs / OUTAGE_BUCKET_MS);
+        const counts = new Array(bucketCount).fill(0);
+        const reasonCounts = {};
+
+        for (const row of rows) {
+            const t = new Date(row.created_at).getTime();
+            const idx = Math.floor((t - start) / OUTAGE_BUCKET_MS);
+            if (idx >= 0 && idx < bucketCount) {
+                counts[idx] += 1;
+                reasonCounts[row.reason] = (reasonCounts[row.reason] ?? 0) + 1;
+            }
+        }
+
+        const buckets = counts.map((count, i) => ({
+            time: new Date(start + i * OUTAGE_BUCKET_MS).toISOString(),
+            count,
+        }));
+
+        const reasons = Object.entries(reasonCounts)
+            .map(([reason, count]) => ({ reason, count }))
+            .sort((a, b) => b.count - a.count);
+
+        res.json({
+            updatedAt: new Date(now).toISOString(),
+            total: rows.length,
+            buckets,
+            reasons,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server Error");
+    }
+});
+
 export default router;

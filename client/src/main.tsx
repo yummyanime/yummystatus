@@ -3,7 +3,9 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./main.scss";
 import Footer from "./components/Footer/Footer.tsx";
-import Dashboard from "./components/Dashboard/Dashboard.tsx";
+import Home from "./pages/home.tsx";
+import Domain from "./pages/domain.tsx";
+import DownDetector from "./pages/downDetector.tsx";
 import Header from "./components/Header/Header.tsx";
 import StaleDataWarning from "./components/StaleDataWarning/StaleDataWarning.tsx";
 import {
@@ -23,8 +25,9 @@ function App() {
                     <StaleDataWarning isError={isAnyError} />
                 )}
                 <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/:domain" element={<Dashboard />} />
+                    <Route path="/" element={<Home />} />
+                    <Route path="/downdetector" element={<DownDetector />} />
+                    <Route path="/:domain" element={<Domain />} />
                 </Routes>
             </div>
             <Footer />

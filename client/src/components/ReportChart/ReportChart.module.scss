@@ -1,0 +1,97 @@
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    @media (max-width: 900px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chartCard,
+.reasonsCard {
+    background-color: var(--color-dark-bg-1);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow);
+    padding: 1rem;
+}
+
+.chartHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.chartLabel {
+    font-weight: 600;
+    color: #ddd;
+}
+
+.totalBadge {
+    font-size: 0.85rem;
+    color: #aaa;
+    background-color: var(--color-dark-bg-2);
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--border-radius-sm);
+}
+
+.chartWrapper {
+    position: relative;
+    height: 300px;
+}
+
+.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #888;
+}
+
+.reasonsCard {
+    display: flex;
+    flex-direction: column;
+}
+
+.reasonsTitle {
+    font-weight: 600;
+    color: #ddd;
+    margin-bottom: 0.75rem;
+}
+
+.noReasons {
+    color: #888;
+    font-size: 0.9rem;
+    padding: 1rem 0;
+}
+
+.reasonsList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.reasonItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--color-dark-bg-2);
+    border-radius: var(--border-radius-sm);
+    padding: 0.6rem 0.8rem;
+}
+
+.reasonName {
+    color: #eee;
+}
+
+.reasonCount {
+    font-weight: 700;
+    color: var(--color-primary);
+    min-width: 2rem;
+    text-align: right;
+}
