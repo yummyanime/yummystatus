@@ -9,7 +9,10 @@ export const INTERNAL_STATUS = {
     PROBE_OFFLINE: 905,
     CONN_REFUSED: 906,
     TLS_ERROR: 907,
+    MEASUREMENT_TIMEOUT: 908,
 };
+
+class MeasurementTimeoutError extends Error {}
 
 const classifyProbeFailure = (rawOutput) => {
     if (typeof rawOutput !== "string" || !rawOutput) {
@@ -261,14 +264,14 @@ const saveResultToDb = async (
                 if (lastLogResult.rows.length > 0) {
                     finalTotalTime = lastLogResult.rows[0].total_time;
                 } else {
-                    finalTotalTime = 4000;
+                    finalTotalTime = 6000;
                 }
             } catch (err) {
                 console.error('Error fetching last log for fallback time:', err);
-                finalTotalTime = 4000;
+                finalTotalTime = 6000;
             }
         } else {
-            finalTotalTime = 4000;
+            finalTotalTime = 6000;
         }
     }
 
@@ -286,7 +289,7 @@ const saveResultToDb = async (
         asn,
         network,
         toStatusCodeOrNull(statusCode),
-        safeTotalTime !== null ? Math.min(safeTotalTime, 4000) : 4000,
+        safeTotalTime !== null ? Math.min(safeTotalTime, 6000) : 6000,
         toNonNegativeNumberOrNull(downloadTime),
         toNonNegativeNumberOrNull(firstByteTime),
         toNonNegativeNumberOrNull(dnsTime),
@@ -367,7 +370,7 @@ const checkAndSaveDomain = async (domain, locations) => {
         // Step 2 & 3: Poll for the measurement result until it's finished
         let resultData;
         const startTime = Date.now();
-        const timeout = 120000; // 120 seconds timeout
+        const timeout = 180000;
 
         while (Date.now() - startTime < timeout) {
             const getResultResponse = await fetch(
@@ -396,7 +399,7 @@ const checkAndSaveDomain = async (domain, locations) => {
         }
 
         if (!resultData || resultData.status !== "finished") {
-            throw new Error(`Measurement ${id} for ${target} did not complete in 120s.`);
+            throw new MeasurementTimeoutError(`Measurement ${id} for ${target} did not complete in 180s.`);
         }
 
         const resultsByLocation = new Map(
@@ -504,8 +507,11 @@ const checkAndSaveDomain = async (domain, locations) => {
             `Failed to complete HTTP measurement cycle for ${target}:`,
             err.message
         );
+        const failureCode = err instanceof MeasurementTimeoutError
+            ? INTERNAL_STATUS.MEASUREMENT_TIMEOUT
+            : INTERNAL_STATUS.PROBE_FAIL;
         for (const location of locations) {
-            await saveResultToDb("failed", target, location.country, location.city, null, null, INTERNAL_STATUS.PROBE_FAIL, null, null, null, null, null, null, false);
+            await saveResultToDb("failed", target, location.country, location.city, null, null, failureCode, null, null, null, null, null, null, false);
         }
     }
 };
