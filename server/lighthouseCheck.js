@@ -7,7 +7,7 @@ const DEFAULT_PATH = "/catalog/item/monolog-farmatsevta-2";
 export const lighthouseTargets = [
     { domain: "old.yummyani.me", path: DEFAULT_PATH },
     { domain: "ru.yummyani.me", path: DEFAULT_PATH },
-    { domain: "en.yummyani.me", path: DEFAULT_PATH },
+    { domain: "ru.yummy-ani.me", path: DEFAULT_PATH },
     { domain: "old.yummy-ani.me", path: DEFAULT_PATH },
 ];
 

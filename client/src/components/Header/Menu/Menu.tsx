@@ -2,7 +2,7 @@ import React from "react";
 import styles from "./Menu.module.scss";
 import MenuItem from "./_item/MenuItem.tsx";
 import SubMenu, { type SubMenuEntry } from "../SubMenu/SubMenu.tsx";
-import { domains } from "../../../data/constants.ts";
+import { domains, getDomainLabel } from "../../../data/constants.ts";
 import { HomeIcon, ListIcon, ErrorIcon } from "../../../icons.tsx";
 
 interface MenuProps {
@@ -14,7 +14,7 @@ const Menu: React.FC<MenuProps> = ({ variant }) => {
     const iconColor = "currentColor";
 
     const domainItems: SubMenuEntry[] = domains.map((domain) => ({
-        title: domain,
+        title: getDomainLabel(domain),
         href: `/${domain}`,
     }));
 

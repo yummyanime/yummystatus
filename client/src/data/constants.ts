@@ -18,13 +18,39 @@ export const countries = [
     { code: "AM", name: "Армения" },
 ];
 
-export const domains = [
-    "old.yummyani.me",
-    "old.yummy-ani.me",
-    "ru.yummyani.me",
-    "en.yummyani.me",
-    "uk.yummyani.me",
+export const domainGroups = [
+    {
+        title: "Старый сайт",
+        domains: [
+            { value: "old.yummyani.me", label: "old.yummyani.me" },
+            { value: "old.yummy-ani.me", label: "old.yummy-ani.me" },
+        ],
+    },
+    {
+        title: "Новый сайт",
+        domains: [
+            { value: "ru.yummyani.me", label: "new.yummyani.me" },
+            { value: "ru.yummy-ani.me", label: "new.yummy-ani.me" },
+        ],
+    },
+    {
+        title: "Служебные сервисы",
+        domains: [{ value: "api.yani.tv", label: "API" }],
+    },
 ];
+
+export const domains = domainGroups.flatMap((group) =>
+    group.domains.map((entry) => entry.value)
+);
+
+const domainLabelMap: { [value: string]: string } = Object.fromEntries(
+    domainGroups.flatMap((group) =>
+        group.domains.map((entry) => [entry.value, entry.label])
+    )
+);
+
+export const getDomainLabel = (value: string): string =>
+    domainLabelMap[value] ?? value;
 
 export const cityTranslations: { [key: string]: string } = {
     Moscow: "Москва",

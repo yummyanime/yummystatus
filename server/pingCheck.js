@@ -4,9 +4,9 @@ import fetch from "node-fetch";
 const domains = [
     { name: "old.yummyani.me", apiKeyEnv: "GLOBALPING_API_KEY" },
     { name: "ru.yummyani.me", apiKeyEnv: "GLOBALPING_API_KEY2" },
-    { name: "en.yummyani.me", apiKeyEnv: "GLOBALPING_API_KEY3" },
+    { name: "ru.yummy-ani.me", apiKeyEnv: "GLOBALPING_API_KEY3" },
     { name: "old.yummy-ani.me", apiKeyEnv: "GLOBALPING_API_KEY4" },
-    { name: "uk.yummyani.me", apiKeyEnv: "GLOBALPING_API_KEY5" },
+    { name: "api.yani.tv", apiKeyEnv: "GLOBALPING_API_KEY6" },
 ];
 
 const pingLocation = { country: "RU", city: "Moscow" };

@@ -1,4 +1,4 @@
-import { countries, domains as domainList } from "../../data/constants.ts";
+import { countries, domains as domainList, domainGroups } from "../../data/constants.ts";
 import ChartPlug from "../Chart/_plug/ChartPlug.tsx";
 import CountryChartItem from "./CountryChartItem/CountryChartItem.tsx";
 import styles from "./CountryChart.module.scss";
@@ -69,28 +69,51 @@ const CountryChart = (props: CountryChartProps) => {
     const { type, timeRange, isChartLoading, loading } = props;
 
     if (type === "domain") {
+        if (loading) {
+            return (
+                <div className={styles.chartsGrid}>
+                    {Array.from({ length: domainList.length }).map((_, i) => (
+                        <ChartPlug key={i} />
+                    ))}
+                </div>
+            );
+        }
+
+        const visibleGroups = domainGroups
+            .map((group) => ({
+                title: group.title,
+                entries: group.domains.filter(
+                    (entry) => props.domainLogs[entry.value]
+                ),
+            }))
+            .filter((group) => group.entries.length > 0);
+
         return (
-            <div className={styles.chartsGrid}>
-                {loading
-                    ? Array.from({ length: domainList.length }).map((_, i) => (
-                          <ChartPlug key={i} />
-                      ))
-                    : domainList.map((domainName) => {
-                          const cityLogs = props.domainLogs[domainName];
-                          if (!cityLogs) return null;
-                          return (
-                              <CountryChartItem
-                                  key={domainName}
-                                  type="domain"
-                                  domainName={domainName}
-                                  cityLogs={cityLogs}
-                                  cities={Object.keys(cityLogs)}
-                                  timeRange={timeRange}
-                                  isChartLoading={isChartLoading}
-                              />
-                          );
-                      })}
-            </div>
+            <>
+                {visibleGroups.map((group, index) => (
+                    <div key={group.title} className={styles.chartGroup}>
+                        <h3 className={styles.groupTitle}>{group.title}</h3>
+                        <div className={styles.chartsGrid}>
+                            {group.entries.map((entry) => (
+                                <CountryChartItem
+                                    key={entry.value}
+                                    type="domain"
+                                    domainName={entry.value}
+                                    cityLogs={props.domainLogs[entry.value]}
+                                    cities={Object.keys(
+                                        props.domainLogs[entry.value]
+                                    )}
+                                    timeRange={timeRange}
+                                    isChartLoading={isChartLoading}
+                                />
+                            ))}
+                        </div>
+                        {index < visibleGroups.length - 1 && (
+                            <hr className={styles.chartDivider} />
+                        )}
+                    </div>
+                ))}
+            </>
         );
     }
 

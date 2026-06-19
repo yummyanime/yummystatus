@@ -9,6 +9,17 @@
     }
 }
 
+.chartGroup {
+    & + .chartGroup {
+        margin-top: 24px;
+    }
+}
+
+.groupTitle {
+    margin: 0 0 14px;
+    font-size: 1.2rem;
+}
+
 .chartDivider {
     border: none;
     height: 5px;

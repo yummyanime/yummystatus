@@ -3,7 +3,7 @@ import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import useResize from "../../hooks/useResize.tsx";
 import styles from "../Status/Status.module.scss";
-import { cityTranslations } from "../../data/constants.ts";
+import { cityTranslations, getDomainLabel } from "../../data/constants.ts";
 import ReactCountryFlag from "react-country-flag";
 
 interface GroupedLog {
@@ -82,7 +82,7 @@ const DomainStatus: React.FC<DomainStatusProps> = ({ domain, logs }) => {
 
     return (
         <div className={styles.domainSection}>
-            <h4>{domain}</h4>
+            <h4>{getDomainLabel(domain)}</h4>
             <div className={styles.requests} ref={requestsRef}>
                 {visibleLogs.map((log, index) => (
                     <Tippy

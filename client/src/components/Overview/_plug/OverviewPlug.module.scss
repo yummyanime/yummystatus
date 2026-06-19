@@ -1,7 +1,8 @@
 .overviewContainer {
     display: flex;
     background-color: var(--color-dark-bg-1);
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow);
     margin-bottom: 20px;
     overflow: hidden;
     min-height: 250px;
@@ -41,7 +42,7 @@
         width: 250px;
         height: 50px;
         background-color: var(--color-bg);
-        border-radius: var(--border-radius);
+        border-radius: var(--border-radius-sm);
     }
 }
 
@@ -59,7 +60,7 @@
         flex: 1;
         min-height: 150px;
         background-color: var(--color-bg);
-        border-radius: var(--border-radius);
+        border-radius: var(--border-radius-sm);
     }
 
     .avgWrapper {
@@ -74,14 +75,14 @@
         height: 15px;
         background-color: var(--color-bg);
         margin-bottom: 5px;
-        border-radius: var(--border-radius);
+        border-radius: var(--border-radius-sm);
     }
 
     .avgValue {
         width: 80px;
         height: 45px;
         background-color: var(--color-bg);
-        border-radius: var(--border-radius);
+        border-radius: var(--border-radius-sm);
     }
 }
 

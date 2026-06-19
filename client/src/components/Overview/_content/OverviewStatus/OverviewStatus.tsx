@@ -1,6 +1,6 @@
 import React from "react";
 import styles from "./OverviewStatus.module.scss";
-import { domains as domainOrder } from "../../../../data/constants.ts";
+import { domains as domainOrder, getDomainLabel } from "../../../../data/constants.ts";
 
 interface Log {
     created_at: string;
@@ -59,12 +59,9 @@ const OverviewStatus: React.FC<OverviewStatusProps> = ({ allLogs }) => {
         return "Все работает стабильно";
     };
 
-    const uniqueDomains = Array.from(new Set(allLogs.map(log => log.domain).filter(Boolean))) as string[];
-    const domains = uniqueDomains.sort((a, b) => {
-        const indexA = domainOrder.indexOf(a);
-        const indexB = domainOrder.indexOf(b);
-        return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
-    });
+    const domains = domainOrder.filter((d) =>
+        allLogs.some((log) => log.domain === d)
+    );
 
     const domainStatuses: DomainStatus[] = domains.map(domain => {
         const domainLogs = allLogs.filter(log => log.domain === domain);
@@ -117,7 +114,7 @@ const OverviewStatus: React.FC<OverviewStatusProps> = ({ allLogs }) => {
                         title={status.statusText}
                     >
                         <div className={styles.statusCircle} />
-                        <span>{status.domain}</span>
+                        <span>{getDomainLabel(status.domain)}</span>
                     </div>
                 ))}
             </div>

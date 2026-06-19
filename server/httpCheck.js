@@ -28,9 +28,9 @@ const classifyProbeFailure = (rawOutput) => {
 export const domains = [
     { name: "old.yummyani.me", apiKeyEnv: "GLOBALPING_API_KEY" },
     { name: "ru.yummyani.me", apiKeyEnv: "GLOBALPING_API_KEY2" },
-    { name: "en.yummyani.me", apiKeyEnv: "GLOBALPING_API_KEY3" },
+    { name: "ru.yummy-ani.me", apiKeyEnv: "GLOBALPING_API_KEY3" },
     { name: "old.yummy-ani.me", apiKeyEnv: "GLOBALPING_API_KEY4" },
-    { name: "uk.yummyani.me", apiKeyEnv: "GLOBALPING_API_KEY5" },
+    { name: "api.yani.tv", path: "/feed", apiKeyEnv: "GLOBALPING_API_KEY6" },
 ];
 
 const toNonNegativeNumberOrNull = (value) => {
@@ -332,11 +332,14 @@ const checkAndSaveDomain = async (domain, locations) => {
                 type: "http",
                 measurementOptions: {
                     protocol: "HTTPS",
-                    ...(secretKey && {
+                    ...((domain.path || secretKey) && {
                         request: {
-                            headers: {
-                                "X-Secret-Key": secretKey,
-                            },
+                            ...(domain.path && { path: domain.path }),
+                            ...(secretKey && {
+                                headers: {
+                                    "X-Secret-Key": secretKey,
+                                },
+                            }),
                         },
                     }),
                 },
