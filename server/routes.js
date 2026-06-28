@@ -244,20 +244,23 @@ router.get("/lighthouse-screenshot", async (req, res) => {
 
 const PROBE_ERROR_CODE = 900;
 const SLOW_RESPONSE_MS = 1500;
+const DOWNTIME_ERROR_CODES = new Set([902, 908]);
+
+const isProbeNoise = (r) =>
+    Number(r.status_code) >= PROBE_ERROR_CODE &&
+    !DOWNTIME_ERROR_CODES.has(Number(r.status_code));
+
+const isRelevantResult = (r) => !isProbeNoise(r);
 
 const isProblematicResult = (r) =>
-    Number(r.status_code) < PROBE_ERROR_CODE &&
+    isRelevantResult(r) &&
     (r.status_code !== 200 ||
         r.total_time === null ||
         (r.total_time !== null && r.total_time > SLOW_RESPONSE_MS));
 
 const getBucketStatus = (results) => {
-    const relevant = results.filter(
-        (r) => Number(r.status_code) < PROBE_ERROR_CODE
-    );
-    const probeErrorCount = results.filter(
-        (r) => Number(r.status_code) >= PROBE_ERROR_CODE
-    ).length;
+    const relevant = results.filter(isRelevantResult);
+    const probeErrorCount = results.filter(isProbeNoise).length;
 
     if (probeErrorCount > 0 && relevant.length === 0) return "PROBE_ERROR";
 

@@ -1,6 +1,11 @@
 import React from "react";
 import styles from "./OverviewStatus.module.scss";
-import { domains as domainOrder, getDomainLabel } from "../../../../data/constants.ts";
+import {
+    domains as domainOrder,
+    getDomainLabel,
+    isRelevantStatus,
+    SLOW_RESPONSE_MS,
+} from "../../../../data/constants.ts";
 
 interface Log {
     created_at: string;
@@ -26,12 +31,12 @@ const OverviewStatus: React.FC<OverviewStatusProps> = ({ allLogs }) => {
         const okCodes = [200, 202];
         const isErrorLog = (log: Log) =>
             !okCodes.includes(log.status_code as number) ||
-            Boolean(log.total_time && log.total_time > 1500);
+            Boolean(log.total_time && log.total_time > SLOW_RESPONSE_MS);
 
         const relevantLogs = logs.filter(
             (log) =>
                 log.status_code !== undefined &&
-                Number(log.status_code) < 900
+                isRelevantStatus(log.status_code)
         );
 
         if (relevantLogs.length === 0) return "Все работает стабильно";

@@ -242,37 +242,15 @@ const saveResultToDb = async (
     dnsTime,
     tlsTime,
     tcpTime,
-    shouldIgnore599 = true,
     serverTiming = null
 ) => {
     let finalTotalTime = totalTime;
 
     if (finalTotalTime === null) {
-        const isProbeInfraFailure =
-            statusCode === INTERNAL_STATUS.PROBE_FAIL ||
-            statusCode === INTERNAL_STATUS.PROBE_OFFLINE;
-        if ((isProbeInfraFailure && shouldIgnore599) || statusCode === null || statusCode === INTERNAL_STATUS.API_LIMIT) {
-            try {
-                const lastLogQuery = `
-                    SELECT total_time 
-                    FROM http_logs 
-                    WHERE domain = $1 AND country = $2 AND city = $3 AND total_time IS NOT NULL AND status_code = 200
-                    ORDER BY created_at DESC 
-                    LIMIT 1
-                `;
-                const lastLogResult = await pool.query(lastLogQuery, [target, country, city]);
-                if (lastLogResult.rows.length > 0) {
-                    finalTotalTime = lastLogResult.rows[0].total_time;
-                } else {
-                    finalTotalTime = 6000;
-                }
-            } catch (err) {
-                console.error('Error fetching last log for fallback time:', err);
-                finalTotalTime = 6000;
-            }
-        } else {
-            finalTotalTime = 6000;
-        }
+        const isTimeoutFailure =
+            statusCode === INTERNAL_STATUS.TIMEOUT ||
+            statusCode === INTERNAL_STATUS.MEASUREMENT_TIMEOUT;
+        finalTotalTime = isTimeoutFailure ? 6000 : null;
     }
 
     const query = `
@@ -289,7 +267,7 @@ const saveResultToDb = async (
         asn,
         network,
         toStatusCodeOrNull(statusCode),
-        safeTotalTime !== null ? Math.min(safeTotalTime, 6000) : 6000,
+        safeTotalTime !== null ? Math.min(safeTotalTime, 6000) : null,
         toNonNegativeNumberOrNull(downloadTime),
         toNonNegativeNumberOrNull(firstByteTime),
         toNonNegativeNumberOrNull(dnsTime),
@@ -469,12 +447,6 @@ const checkAndSaveDomain = async (domain, locations) => {
             };
         });
 
-        const shouldIgnore599 = resultsToSave.some(
-            (result) =>
-                result.statusCode !== INTERNAL_STATUS.PROBE_FAIL &&
-                result.statusCode !== INTERNAL_STATUS.PROBE_OFFLINE
-        );
-
         for (const result of resultsToSave) {
             if (result.isSuccess) {
                 console.log(
@@ -498,7 +470,6 @@ const checkAndSaveDomain = async (domain, locations) => {
                 result.dnsTime,
                 result.tlsTime,
                 result.tcpTime,
-                shouldIgnore599,
                 result.serverTiming
             );
         }

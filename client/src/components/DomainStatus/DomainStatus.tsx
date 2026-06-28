@@ -3,7 +3,13 @@ import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import useResize from "../../hooks/useResize.tsx";
 import styles from "../Status/Status.module.scss";
-import { cityTranslations, getDomainLabel } from "../../data/constants.ts";
+import {
+    cityTranslations,
+    getDomainLabel,
+    isProbeNoise,
+    isRelevantStatus,
+    SLOW_RESPONSE_MS,
+} from "../../data/constants.ts";
 import ReactCountryFlag from "react-country-flag";
 
 interface GroupedLog {
@@ -26,18 +32,18 @@ interface DomainStatusProps {
 type LogResult = GroupedLog["results"][number];
 
 const isProblematicResult = (r: LogResult): boolean =>
-    Number(r.status_code) < 900 &&
+    isRelevantStatus(r.status_code) &&
     (r.status_code !== 200 ||
         r.total_time === null ||
-        (r.total_time !== null && r.total_time > 1500));
+        (r.total_time !== null && r.total_time > SLOW_RESPONSE_MS));
 
 const getStatusColor = (log: GroupedLog) => {
-    const relevantResults = log.results.filter(
-        (r) => Number(r.status_code) < 900
+    const relevantResults = log.results.filter((r) =>
+        isRelevantStatus(r.status_code)
     );
 
-    const probeErrorCount = log.results.filter(
-        (r) => Number(r.status_code) >= 900
+    const probeErrorCount = log.results.filter((r) =>
+        isProbeNoise(r.status_code)
     ).length;
 
     if (probeErrorCount > 0 && relevantResults.length === 0) {

@@ -83,6 +83,17 @@ export const cityTranslations: { [key: string]: string } = {
     Aktau: "Актау",
 };
 
+export const PROBE_ERROR_CODE = 900;
+export const SLOW_RESPONSE_MS = 1500;
+export const DOWNTIME_ERROR_CODES = new Set([902, 908]);
+
+export const isProbeNoise = (statusCode: number | null | undefined): boolean =>
+    Number(statusCode) >= PROBE_ERROR_CODE &&
+    !DOWNTIME_ERROR_CODES.has(Number(statusCode));
+
+export const isRelevantStatus = (statusCode: number | null | undefined): boolean =>
+    !isProbeNoise(statusCode);
+
 export const CHART_COLORS = [
     "#ff6666",
     "#36a2eb",
