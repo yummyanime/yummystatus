@@ -245,6 +245,7 @@ router.get("/lighthouse-screenshot", async (req, res) => {
 const PROBE_ERROR_CODE = 900;
 const SLOW_RESPONSE_MS = 1500;
 const DOWNTIME_ERROR_CODES = new Set([902, 908]);
+const CAPTCHA_STATUS_CODES = new Set([202, 307]);
 
 const isProbeNoise = (r) =>
     Number(r.status_code) >= PROBE_ERROR_CODE &&
@@ -265,7 +266,7 @@ const getBucketStatus = (results) => {
     if (probeErrorCount > 0 && relevant.length === 0) return "PROBE_ERROR";
 
     const captchaCount = relevant.filter(
-        (r) => Number(r.status_code) === 202
+        (r) => CAPTCHA_STATUS_CODES.has(Number(r.status_code))
     ).length;
     if (captchaCount > 0) return "CAPTCHA";
 

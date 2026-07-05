@@ -89,6 +89,7 @@ export const PROBE_ERROR_CODE = 900;
 export const SLOW_RESPONSE_MS = 1500;
 export const CHART_SPIKE_MS = 2500;
 export const DOWNTIME_ERROR_CODES = new Set([902, 908]);
+export const CAPTCHA_STATUS_CODES = new Set([202, 307]);
 
 export const isProbeNoise = (statusCode: number | null | undefined): boolean =>
     Number(statusCode) >= PROBE_ERROR_CODE &&

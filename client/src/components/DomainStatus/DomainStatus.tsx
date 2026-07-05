@@ -4,6 +4,7 @@ import "tippy.js/dist/tippy.css";
 import useResize from "../../hooks/useResize.tsx";
 import styles from "../Status/Status.module.scss";
 import {
+    CAPTCHA_STATUS_CODES,
     cityTranslations,
     getDomainLabel,
     isProbeNoise,
@@ -51,7 +52,7 @@ const getStatusColor = (log: GroupedLog) => {
     }
 
     const captchaCount = relevantResults.filter(
-        (r) => Number(r.status_code) === 202
+        (r) => CAPTCHA_STATUS_CODES.has(Number(r.status_code))
     ).length;
 
     if (captchaCount > 0) {
