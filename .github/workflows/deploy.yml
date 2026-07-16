@@ -51,13 +51,10 @@ jobs:
                       cd yummystatus
                       git reset --hard HEAD
                       git pull
-                      if [ ! -f /usr/local/lib/docker/cli-plugins/docker-compose ]; then
-                        echo "Installing docker compose plugin v2.24.6"
-                        sudo mkdir -p /usr/local/lib/docker/cli-plugins
-                        sudo curl -SL "https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/lib/docker/cli-plugins/docker-compose
-                        sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
-                      else
-                        echo "docker compose plugin already exists, skipping installation"
+                      if ! command -v docker >/dev/null 2>&1; then
+                        echo "Docker not found, installing via get.docker.com"
+                        curl -fsSL https://get.docker.com | sh
+                        systemctl enable --now docker
                       fi
                       echo "DB_USER=${{ secrets.DB_USER }}" > .env
                       echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
