@@ -1,5 +1,6 @@
-import { forwardRef, type ButtonHTMLAttributes } from "react";
+import { forwardRef, type ButtonHTMLAttributes, type HTMLAttributes } from "react";
 import styles from "./Button.module.scss";
+import Ripple from "../../tools/Ripple/Ripple.tsx";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     active?: boolean;
@@ -16,9 +17,15 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             .join(" ");
 
         return (
-            <button ref={ref} type={type} className={classNames} {...rest}>
+            <Ripple
+                tag="button"
+                ref={ref as unknown as React.Ref<HTMLDivElement>}
+                type={type as "submit"}
+                className={classNames}
+                {...(rest as HTMLAttributes<HTMLDivElement>)}
+            >
                 {children}
-            </button>
+            </Ripple>
         );
     }
 );

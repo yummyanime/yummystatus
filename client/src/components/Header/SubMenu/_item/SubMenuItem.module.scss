@@ -1,18 +1,29 @@
 .container {
-    padding: 10px;
-    justify-content: flex-start;
-    font-weight: 500;
+    display: flex;
     width: 100%;
     box-sizing: border-box;
-    display: flex;
-    align-items: center;
     color: #fff;
     text-decoration: none;
     border-radius: var(--border-radius-sm);
     white-space: nowrap;
 
     &:hover {
-        background: var(--color-dark-bg-2);
         text-decoration: none;
+    }
+}
+
+.ripple {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    font-weight: 500;
+    color: #fff;
+    border-radius: var(--border-radius-sm);
+
+    &:hover {
+        background: var(--color-dark-bg-2);
     }
 }

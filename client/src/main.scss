@@ -48,6 +48,7 @@
     --border-radius-md: 8px;
     --border-radius-lg: 12px;
     --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    --ripple-color: #dbdada2f;
 }
 
 
@@ -63,6 +64,7 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
 }
 
 a {

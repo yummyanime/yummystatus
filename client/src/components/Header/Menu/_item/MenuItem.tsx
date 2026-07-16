@@ -1,6 +1,7 @@
 import React, { type ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import styles from "./MenuItem.module.scss";
+import Ripple from "../../../../tools/Ripple/Ripple.tsx";
 import { FlatArrowIcon } from "../../../../icons.tsx";
 
 interface MenuItemProps {
@@ -47,8 +48,10 @@ const MenuItem: React.FC<MenuItemProps> = ({
                     }
                 }}
             >
-                {icon}
-                <span className={styles.title}>{title}</span>
+                <Ripple className={styles.ripple}>
+                    {icon}
+                    <span className={styles.title}>{title}</span>
+                </Ripple>
             </Link>
             {subList && (
                 <span className={styles.arrow}>
