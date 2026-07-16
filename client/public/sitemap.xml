@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-        <loc>https://uptime.yani.tv/</loc>
+        <loc>https://yummystatus.me/</loc>
         <lastmod>2026-06-29</lastmod>
         <changefreq>hourly</changefreq>
         <priority>1.0</priority>
     </url>
     <url>
-        <loc>https://uptime.yani.tv/downdetector</loc>
+        <loc>https://yummystatus.me/downdetector</loc>
         <lastmod>2026-06-29</lastmod>
         <changefreq>hourly</changefreq>
         <priority>0.9</priority>
     </url>
     <url>
-        <loc>https://uptime.yani.tv/old.yummyani.me</loc>
+        <loc>https://yummystatus.me/old.yummyani.me</loc>
         <lastmod>2026-06-29</lastmod>
         <changefreq>hourly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://uptime.yani.tv/old.yummy-ani.me</loc>
+        <loc>https://yummystatus.me/old.yummy-ani.me</loc>
         <lastmod>2026-06-29</lastmod>
         <changefreq>hourly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://uptime.yani.tv/ru.yummyani.me</loc>
+        <loc>https://yummystatus.me/ru.yummyani.me</loc>
         <lastmod>2026-06-29</lastmod>
         <changefreq>hourly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://uptime.yani.tv/ru.yummy-ani.me</loc>
+        <loc>https://yummystatus.me/ru.yummy-ani.me</loc>
         <lastmod>2026-06-29</lastmod>
         <changefreq>hourly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://uptime.yani.tv/api.yani.tv</loc>
+        <loc>https://yummystatus.me/api.yani.tv</loc>
         <lastmod>2026-06-29</lastmod>
         <changefreq>hourly</changefreq>
         <priority>0.6</priority>

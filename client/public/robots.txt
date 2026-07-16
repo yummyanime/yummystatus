@@ -13,5 +13,5 @@ Disallow: /lighthouse-screenshot
 Disallow: /outage-reports
 Disallow: /events
 
-Host: https://uptime.yani.tv
-Sitemap: https://uptime.yani.tv/sitemap.xml
+Host: https://yummystatus.me
+Sitemap: https://yummystatus.me/sitemap.xml

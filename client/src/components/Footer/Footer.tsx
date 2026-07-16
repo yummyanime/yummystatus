@@ -35,7 +35,7 @@ const Footer: React.FC = () => {
             </div>
             <div className={styles.copyright}>
                 <p className={styles.text}>
-                    Yummy Uptime {yearText}. Создано специально для проектов Yummy.
+                    Yummy Status {yearText}. Создано специально для проектов Yummy.
                 </p>
             </div>
         </footer>

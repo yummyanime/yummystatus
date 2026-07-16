@@ -23,7 +23,7 @@ jobs:
               with:
                   context: .
                   push: true
-                  tags: ${{ secrets.DOCKER_USERNAME }}/uptime-checker:latest
+                  tags: ${{ secrets.DOCKER_USERNAME }}/yummystatus:latest
 
     deploy:
         needs: build-and-push
@@ -38,10 +38,10 @@ jobs:
                   port: ${{ secrets.PORT }}
                   script: |
                       # Clone the repository if it doesn't exist
-                      if [ ! -d "uptime-checker" ]; then
-                        git clone https://github.com/${{ github.repository }}.git uptime-checker
+                      if [ ! -d "yummystatus" ]; then
+                        git clone https://github.com/${{ github.repository }}.git yummystatus
                       fi
-                      cd uptime-checker
+                      cd yummystatus
                       # Force update to the latest version
                       git reset --hard HEAD
                       git pull

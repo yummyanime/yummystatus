@@ -1,6 +1,6 @@
 {
-    "name": "YummyUptime — мониторинг доступности Ями Аниме",
-    "short_name": "YummyUptime",
+    "name": "YummyStatus — мониторинг доступности Ями Аниме",
+    "short_name": "YummyStatus",
     "description": "Мониторинг доступности и времени отклика сайта Ями Аниме (YummyAnime) по странам в реальном времени.",
     "lang": "ru-RU",
     "start_url": "/",

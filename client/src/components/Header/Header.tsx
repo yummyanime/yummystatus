@@ -13,10 +13,10 @@ const Header: React.FC = () => {
                         <div className={styles.logoContainer}>
                             <img
                                 src={logo}
-                                alt="YummyUptime Logo"
+                                alt="YummyStatus Logo"
                                 className={styles.logoImg}
                             />
-                            <span className={styles.logo}>YummyUptime</span>
+                            <span className={styles.logo}>YummyStatus</span>
                         </div>
                     </Link>
                     <nav className={styles.nav}>

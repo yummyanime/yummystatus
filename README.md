@@ -1,72 +1,77 @@
-# Uptime-checker
+# YummyStatus
 
-Простой сервис для мониторинга доступности сайтов через HTTP-запросы с использованием API [globalping.io](https://globalping.io/).
+A simple service for monitoring website availability via HTTP requests using the [globalping.io](https://globalping.io/) API.
 
-Сервис собирает статистику по времени ответа, кодам состояния и другим параметрам, а затем отображает ее в виде графиков.
+The service collects statistics on response time, status codes, and other parameters, then visualizes them as charts.
 
 <img width="1851" height="1224" alt="Image" src="https://github.com/user-attachments/assets/d56eeffc-f7ac-4c1f-9831-d8a47bb828dc" />
 
-## Технологический стек
+## Tech stack
 
-### Фронтенд
+### Frontend
 
-- **React**: Библиотека для создания пользовательских интерфейсов.
-- **TypeScript**: Типизированный JavaScript.
-- **Vite**: Инструмент для сборки frontend-приложений.
-- **Chart.js**: Библиотека для создания графиков.
-- **Sass**: CSS-препроцессор.
+- **React**: UI library.
+- **TypeScript**: Typed JavaScript.
+- **Vite**: Frontend build tool.
+- **Chart.js**: Charting library.
+- **Sass**: CSS preprocessor.
 
-### Бекенд
+### Backend
 
-- **Node.js**: Среда выполнения JavaScript.
-- **Express.js**: Фреймворк для создания веб-приложений на Node.js.
-- **PostgreSQL**: Реляционная база данных.
+- **Node.js**: JavaScript runtime.
+- **Express.js**: Web framework for Node.js.
+- **PostgreSQL**: Relational database.
 
-### Деплой
+### Deployment
 
-- **Docker**: Платформа для контейнеризации приложений.
-- **Nginx**: Веб-сервер и обратный прокси-сервер.
+- **Docker**: Application containerization platform.
+- **Nginx**: Web server and reverse proxy.
 
-## Локальное развертывание
+## Tooling
 
-### Предварительные требования
+- **Biome**: Linting and formatting (`bun run lint`, `bun run format`).
+- **simple-git-hooks**: A `pre-commit` hook runs `bun run typecheck` before every commit.
 
-- [Bun](https://bun.sh/) (версия 1.x или выше)
+## Local setup
 
-### Установка
+### Prerequisites
 
-1.  Склонируйте репозиторий:
+- [Bun](https://bun.sh/) (version 1.x or higher)
+
+### Installation
+
+1.  Clone the repository:
 
     ```bash
-    git clone https://github.com/Fristaylo/Uptime-checker.git
-    cd Uptime-checker
+    git clone https://github.com/Fristaylo/yummystatus.git
+    cd yummystatus
     ```
 
-2.  Установите зависимости:
+2.  Install dependencies:
 
     ```bash
     bun install
     ```
 
-### Запуск
+### Running
 
-1.  Запустите сервер и клиент:
+1.  Start the server and client:
 
     ```bash
     bun run dev
     ```
 
-После этого клиент будет доступен по адресу `http://localhost:5173`.
+The client will then be available at `http://localhost:5173`.
 
-## Серверное развертывание
+## Server deployment
 
-### Предварительные требования
+### Prerequisites
 
 - [Docker](https://www.docker.com/)
 
-### Сборка и запуск контейнеров
+### Building and running the containers
 
-Для запуска проекта с помощью Docker выполните следующую команду в корневой директории проекта:
+To run the project with Docker, execute the following command in the project root directory:
 
 ```bash
 docker-compose up --build

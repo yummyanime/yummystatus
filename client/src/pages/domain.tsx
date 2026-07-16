@@ -9,7 +9,7 @@ const Domain: React.FC = () => {
     const domainLabel = domain ? getDomainLabel(domain) : domain;
 
     usePageMeta(
-        `Статус ${domainLabel} — YummyUptime`,
+        `Статус ${domainLabel} — YummyStatus`,
         `Доступность и время отклика ${domainLabel}: аптайм, скорость загрузки и статус по странам в реальном времени.`
     );
 
