@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
     app:
-        image: fristaylo/yummystatus
+        image: ghcr.io/fristaylo/yummystatus
 
         ports:
             - "80:80"

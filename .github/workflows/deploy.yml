@@ -8,22 +8,26 @@ on:
 jobs:
     build-and-push:
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
         steps:
             - name: Checkout
               uses: actions/checkout@v3
 
-            - name: Login to Docker Hub
-              uses: docker/login-action@v2
+            - name: Login to GHCR
+              uses: docker/login-action@v3
               with:
-                  username: ${{ secrets.DOCKER_USERNAME }}
-                  password: ${{ secrets.DOCKER_PASSWORD }}
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Build and push
-              uses: docker/build-push-action@v4
+              uses: docker/build-push-action@v5
               with:
                   context: .
                   push: true
-                  tags: ${{ secrets.DOCKER_USERNAME }}/yummystatus:latest
+                  tags: ghcr.io/fristaylo/yummystatus:latest
 
     deploy:
         needs: build-and-push
@@ -33,9 +37,9 @@ jobs:
               uses: appleboy/ssh-action@master
               with:
                   host: ${{ secrets.HOST }}
-                  username: ${{ secrets.USERNAME }}
+                  username: root
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
-                  port: ${{ secrets.PORT }}
+                  port: 22
                   script: |
                       # Clone the repository if it doesn't exist
                       if [ ! -d "yummystatus" ]; then
@@ -55,10 +59,10 @@ jobs:
                         echo "docker compose plugin already exists, skipping installation"
                       fi
                       # Create .env file
-                      echo "DATABASE_URL=postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}" > .env
+                      echo "DATABASE_URL=postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@db:5432/uptime_checker" > .env
                       echo "POSTGRES_USER=${{ secrets.DB_USER }}" >> .env
                       echo "POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-                      echo "POSTGRES_DB=${{ secrets.DB_NAME }}" >> .env
+                      echo "POSTGRES_DB=uptime_checker" >> .env
                       echo "GLOBALPING_API_KEY=${{ secrets.GLOBALPING_API_KEY }}" >> .env
                       echo "GLOBALPING_API_KEY2=${{ secrets.GLOBALPING_API_KEY2 }}" >> .env
                       echo "GLOBALPING_API_KEY3=${{ secrets.GLOBALPING_API_KEY3 }}" >> .env
@@ -71,7 +75,7 @@ jobs:
                       # Prune unused Docker components (images, containers, networks) to free disk space
                       sudo docker system prune -a -f || true
                       
-                      # Pull the latest image from Docker Hub
+                      echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
                       docker compose pull
                       # Run the new container from the pulled image
                       docker compose up -d
