@@ -5,6 +5,11 @@ export default defineConfig({
     base: "./",
     plugins: [react()],
     server: {
+        host: true,
+        watch: {
+            usePolling: true,
+            interval: 100,
+        },
         proxy: {
             "/logs": {
                 target: "http://localhost:3000",

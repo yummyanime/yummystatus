@@ -3,7 +3,7 @@
     align-items: center;
     height: 100%;
     color: #fff;
-    padding: 0 20px;
+    padding: 0 15px;
     position: relative;
     min-width: 0;
     cursor: pointer;
@@ -84,17 +84,16 @@
         }
 
         .title {
-            font-size: 12px;
+            font-size: 9px;
             font-weight: 600;
         }
 
         .arrow {
-            top: 0;
+            top: -2px;
             bottom: auto;
 
             svg {
-                fill: var(--color-red) !important;
-                transform: rotate(180deg);
+                fill: var(--color-primary) !important;
             }
         }
     }

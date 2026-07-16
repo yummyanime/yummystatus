@@ -19,7 +19,7 @@
 .header {
     display: flex;
     align-items: stretch;
-    max-width: 1390px;
+    max-width: 1360px;
     width: 100%;
 }
 
@@ -65,7 +65,7 @@
     bottom: 0;
     left: 0;
     height: 56px;
-    border-top: 3px solid var(--color-red);
+    border-top: 3px solid var(--color-primary);
     z-index: 1100;
     width: 100%;
     background: var(--color-dark-bg-1);

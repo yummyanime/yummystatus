@@ -10,7 +10,7 @@ interface MenuProps {
 }
 
 const Menu: React.FC<MenuProps> = ({ variant }) => {
-    const iconSize = variant === "top" ? 16 : 22;
+    const iconSize = variant === "top" ? 12 : 15;
     const iconColor = "currentColor";
 
     const domainItems: SubMenuEntry[] = domains.map((domain) => ({
@@ -23,19 +23,19 @@ const Menu: React.FC<MenuProps> = ({ variant }) => {
             <MenuItem
                 variant={variant}
                 href="/"
-                title="Главная"
+                title="ГЛАВНАЯ"
                 icon={<HomeIcon size={iconSize} color={iconColor} />}
             />
             <MenuItem
                 variant={variant}
                 href="/downdetector"
-                title="Сбои"
+                title="СБОИ"
                 icon={<ErrorIcon size={iconSize} color={iconColor} />}
             />
             <MenuItem
                 variant={variant}
                 href="#"
-                title="Домены"
+                title="ДОМЕНЫ"
                 icon={<ListIcon size={iconSize} color={iconColor} />}
                 subList={
                     <SubMenu variant={variant} items={domainItems} first={true} />
