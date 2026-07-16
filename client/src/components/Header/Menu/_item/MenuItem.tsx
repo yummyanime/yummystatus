@@ -30,7 +30,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
     }, [opened, hover]);
 
     return (
-        <div
+        <Ripple
             className={styles.container}
             data-variant={variant}
             data-opened={opened ? "true" : undefined}
@@ -48,10 +48,8 @@ const MenuItem: React.FC<MenuItemProps> = ({
                     }
                 }}
             >
-                <Ripple className={styles.ripple}>
-                    {icon}
-                    <span className={styles.title}>{title}</span>
-                </Ripple>
+                {icon}
+                <span className={styles.title}>{title}</span>
             </Link>
             {subList && (
                 <span className={styles.arrow}>
@@ -61,7 +59,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
             {subList && (
                 <div style={{ display: opened ? "" : "none" }}>{subList}</div>
             )}
-        </div>
+        </Ripple>
     );
 };
 
