@@ -4,7 +4,11 @@ import pg from "pg";
 const { Pool } = pg;
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    host: "db",
+    port: 5432,
+    database: "yummystatus",
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
 });
 
 export const createHttpTable = async () => {

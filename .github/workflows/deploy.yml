@@ -45,15 +45,12 @@ jobs:
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   port: 22
                   script: |
-                      # Clone the repository if it doesn't exist
                       if [ ! -d "yummystatus" ]; then
                         git clone https://github.com/${{ github.repository }}.git yummystatus
                       fi
                       cd yummystatus
-                      # Force update to the latest version
                       git reset --hard HEAD
                       git pull
-                      # Install/Update docker compose plugin
                       if [ ! -f /usr/local/lib/docker/cli-plugins/docker-compose ]; then
                         echo "Installing docker compose plugin v2.24.6"
                         sudo mkdir -p /usr/local/lib/docker/cli-plugins
@@ -62,11 +59,8 @@ jobs:
                       else
                         echo "docker compose plugin already exists, skipping installation"
                       fi
-                      # Create .env file
-                      echo "DATABASE_URL=postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@db:5432/uptime_checker" > .env
-                      echo "POSTGRES_USER=${{ secrets.DB_USER }}" >> .env
-                      echo "POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-                      echo "POSTGRES_DB=uptime_checker" >> .env
+                      echo "DB_USER=${{ secrets.DB_USER }}" > .env
+                      echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
                       echo "GLOBALPING_API_KEY=${{ secrets.GLOBALPING_API_KEY }}" >> .env
                       echo "GLOBALPING_API_KEY2=${{ secrets.GLOBALPING_API_KEY2 }}" >> .env
                       echo "GLOBALPING_API_KEY3=${{ secrets.GLOBALPING_API_KEY3 }}" >> .env
@@ -75,8 +69,6 @@ jobs:
                       echo "GLOBALPING_API_KEY6=${{ secrets.GLOBALPING_API_KEY6 }}" >> .env
                       echo "GLOBALPING_SECRET_KEY=${{ secrets.GLOBALPING_SECRET_KEY }}" >> .env
                       echo "PSI_API_KEY=${{ secrets.PSI_API_KEY }}" >> .env
-                      # Pull the latest image from Docker Hub
-                      # Prune unused Docker components (images, containers, networks) to free disk space
                       sudo docker system prune -a -f || true
                       
                       echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin

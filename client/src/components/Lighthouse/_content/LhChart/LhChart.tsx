@@ -23,7 +23,7 @@ interface LhChartProps {
     timeRange: string;
 }
 
-const LAB_SERIES = "Uptime сервис";
+const LAB_SERIES = "Status сервис";
 const FIELD_SERIES = "Google";
 
 const LhChart: React.FC<LhChartProps> = ({ logs, timeRange }) => {
