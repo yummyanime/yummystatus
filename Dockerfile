@@ -21,4 +21,4 @@ COPY package.json .
 
 COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
 
-CMD sh -c "nginx -g 'daemon off;' & bun run start:server"
+CMD sh -c "nginx -g 'daemon off;' & bun server/index.js"

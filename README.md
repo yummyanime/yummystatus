@@ -36,32 +36,23 @@ The service collects statistics on response time, status codes, and other parame
 
 ### Prerequisites
 
-- [Bun](https://bun.sh/) (version 1.x or higher)
-
-### Installation
-
-1.  Clone the repository:
-
-    ```bash
-    git clone https://github.com/Fristaylo/yummystatus.git
-    cd yummystatus
-    ```
-
-2.  Install dependencies:
-
-    ```bash
-    bun install
-    ```
+- [Docker](https://www.docker.com/)
 
 ### Running
 
-1.  Start the server and client:
+1.  Copy the env template and fill in the values:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+2.  Start the database, server and client:
 
     ```bash
     bun run dev
     ```
 
-The client will then be available at `http://localhost:5173`.
+The client will then be available at `http://localhost:5173` (API on `http://localhost:3000`).
 
 ## Server deployment
 

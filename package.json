@@ -5,15 +5,11 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "start": "bun run start:server",
-        "start:server": "bun server/index.js",
-        "start:client": "bunx vite client --config client/vite.config.ts",
-        "dev": "concurrently \"bun run start:client\" \"bun run start:server\"",
+        "dev": "docker compose -f docker-compose.dev.yml up -d && echo \"\nСайт: http://localhost:5173   API: http://localhost:3000\n\"",
         "build": "tsc -b client && bunx vite build client --config client/vite.config.ts",
         "typecheck": "tsc -b client",
         "lint": "biome check .",
         "format": "biome format --write .",
-        "preview": "bunx vite preview --config client/vite.config.ts",
         "prepare": "simple-git-hooks"
     },
     "simple-git-hooks": {
