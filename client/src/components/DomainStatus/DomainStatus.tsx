@@ -1,7 +1,6 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
-import useResize from "../../hooks/useResize.tsx";
 import styles from "../Status/Status.module.scss";
 import {
     cityTranslations,
@@ -28,6 +27,8 @@ interface DomainStatusProps {
     domain: string;
     logs: GroupedLog[];
     timeRange?: string;
+    registerRow: (domain: string, el: HTMLDivElement | null) => void;
+    onScroll: (el: HTMLDivElement) => void;
 }
 
 type LogResult = GroupedLog["results"][number];
@@ -40,15 +41,34 @@ const isProblematicResult = (r: LogResult): boolean =>
 
 const getStatusColor = (log: GroupedLog) => styles[getBucketColor(log.results)];
 
-const DomainStatus: React.FC<DomainStatusProps> = ({ domain, logs }) => {
+const DomainStatus: React.FC<DomainStatusProps> = ({
+    domain,
+    logs,
+    registerRow,
+    onScroll,
+}) => {
     const requestsRef = useRef<HTMLDivElement>(null);
-    const width = useResize(requestsRef);
+    const [isBig, setIsBig] = useState(false);
 
-    const blockBasis = 10;
-    const blockGap = 4;
-    const maxBlocks =
-        width > 0 ? Math.floor(width / (blockBasis + blockGap)) : 0;
-    const visibleLogs = maxBlocks > 0 ? logs.slice(-maxBlocks) : [];
+    useEffect(() => {
+        const el = requestsRef.current;
+        if (el) el.scrollLeft = el.scrollWidth;
+    }, [logs]);
+
+    useEffect(() => {
+        const measure = () => {
+            const el = requestsRef.current;
+            if (el) setIsBig(el.scrollWidth <= el.clientWidth + 1);
+        };
+        measure();
+        window.addEventListener("resize", measure);
+        return () => window.removeEventListener("resize", measure);
+    }, [logs]);
+
+    const setRef = (el: HTMLDivElement | null) => {
+        requestsRef.current = el;
+        registerRow(domain, el);
+    };
 
     const health = getDomainHealth(
         logs.flatMap((log) =>
@@ -66,8 +86,12 @@ const DomainStatus: React.FC<DomainStatusProps> = ({ domain, logs }) => {
                 <span className={`${styles.statusCircle} ${styles[health]}`} />
                 <h4>{getDomainLabel(domain)}</h4>
             </div>
-            <div className={styles.requests} ref={requestsRef}>
-                {visibleLogs.map((log, index) => (
+            <div
+                className={`${styles.requests} ${isBig ? styles.big : ""}`}
+                ref={setRef}
+                onScroll={(e) => onScroll(e.currentTarget)}
+            >
+                {logs.map((log, index) => (
                     <Tippy
                         key={`${log.created_at}-${index}`}
                         content={

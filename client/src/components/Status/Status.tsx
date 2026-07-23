@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { domains } from "../../data/constants.ts";
 import DomainStatus from "../DomainStatus/DomainStatus.tsx";
 import StatusPlug from "./_plug/StatusPlug.tsx";
@@ -37,6 +37,50 @@ interface StatusProps {
 
 const Status: React.FC<StatusProps> = ({ domain, allLogs, loading, timeRange }) => {
     const [domainLogs, setDomainLogs] = useState<DomainLogs>({});
+    const [canLeft, setCanLeft] = useState(false);
+    const [canRight, setCanRight] = useState(false);
+    const rows = useRef<Map<string, HTMLDivElement>>(new Map());
+    const syncing = useRef(false);
+
+    const updateEdges = () => {
+        let left = false;
+        let right = false;
+        rows.current.forEach((el) => {
+            if (el.scrollLeft > 1) left = true;
+            if (el.scrollLeft < el.scrollWidth - el.clientWidth - 1) right = true;
+        });
+        setCanLeft(left);
+        setCanRight(right);
+    };
+
+    const registerRow = (domainName: string, el: HTMLDivElement | null) => {
+        if (el) rows.current.set(domainName, el);
+        else rows.current.delete(domainName);
+    };
+
+    const syncScroll = (source: HTMLDivElement) => {
+        updateEdges();
+        if (syncing.current) return;
+        syncing.current = true;
+        rows.current.forEach((el) => {
+            if (el !== source) el.scrollLeft = source.scrollLeft;
+        });
+        requestAnimationFrame(() => (syncing.current = false));
+    };
+
+    const scrollAll = (direction: number) => {
+        rows.current.forEach((el) =>
+            el.scrollBy({
+                left: direction * el.clientWidth * 0.8,
+                behavior: "smooth",
+            })
+        );
+    };
+
+    useEffect(() => {
+        window.addEventListener("resize", updateEdges);
+        return () => window.removeEventListener("resize", updateEdges);
+    }, []);
 
     useEffect(() => {
         if (allLogs.length === 0) return;
@@ -109,6 +153,14 @@ const Status: React.FC<StatusProps> = ({ domain, allLogs, loading, timeRange }) 
     return (
         <div>
             <div className={styles.statusContainer}>
+                <button
+                    type="button"
+                    className={`${styles.scrollBtn} ${styles.scrollLeft} ${canLeft ? styles.canScroll : ""}`}
+                    onClick={() => scrollAll(-1)}
+                    aria-label="Прокрутить влево"
+                >
+                    <span>‹</span>
+                </button>
                 {domains.map(
                     (d) =>
                         (!domain || domain === d) && (
@@ -117,9 +169,19 @@ const Status: React.FC<StatusProps> = ({ domain, allLogs, loading, timeRange }) 
                                 domain={d}
                                 logs={domainLogs[d] || []}
                                 timeRange={timeRange}
+                                registerRow={registerRow}
+                                onScroll={syncScroll}
                             />
                         )
                 )}
+                <button
+                    type="button"
+                    className={`${styles.scrollBtn} ${styles.scrollRight} ${canRight ? styles.canScroll : ""}`}
+                    onClick={() => scrollAll(1)}
+                    aria-label="Прокрутить вправо"
+                >
+                    <span>›</span>
+                </button>
             </div>
         </div>
     );
