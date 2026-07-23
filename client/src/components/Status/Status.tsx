@@ -37,10 +37,12 @@ interface StatusProps {
 
 const Status: React.FC<StatusProps> = ({ domain, allLogs, loading, timeRange }) => {
     const [domainLogs, setDomainLogs] = useState<DomainLogs>({});
-    const [canLeft, setCanLeft] = useState(false);
-    const [canRight, setCanRight] = useState(false);
     const rows = useRef<Map<string, HTMLDivElement>>(new Map());
+    const leftBtn = useRef<HTMLButtonElement>(null);
+    const rightBtn = useRef<HTMLButtonElement>(null);
     const syncing = useRef(false);
+    const buttonScroll = useRef(false);
+    const buttonTimer = useRef(0);
 
     const updateEdges = () => {
         let left = false;
@@ -49,8 +51,8 @@ const Status: React.FC<StatusProps> = ({ domain, allLogs, loading, timeRange }) 
             if (el.scrollLeft > 1) left = true;
             if (el.scrollLeft < el.scrollWidth - el.clientWidth - 1) right = true;
         });
-        setCanLeft(left);
-        setCanRight(right);
+        leftBtn.current?.classList.toggle(styles.canScroll, left);
+        rightBtn.current?.classList.toggle(styles.canScroll, right);
     };
 
     const registerRow = (domainName: string, el: HTMLDivElement | null) => {
@@ -60,7 +62,7 @@ const Status: React.FC<StatusProps> = ({ domain, allLogs, loading, timeRange }) 
 
     const syncScroll = (source: HTMLDivElement) => {
         updateEdges();
-        if (syncing.current) return;
+        if (buttonScroll.current || syncing.current) return;
         syncing.current = true;
         rows.current.forEach((el) => {
             if (el !== source) el.scrollLeft = source.scrollLeft;
@@ -69,18 +71,27 @@ const Status: React.FC<StatusProps> = ({ domain, allLogs, loading, timeRange }) 
     };
 
     const scrollAll = (direction: number) => {
+        buttonScroll.current = true;
         rows.current.forEach((el) =>
             el.scrollBy({
                 left: direction * el.clientWidth * 0.8,
                 behavior: "smooth",
             })
         );
+        window.clearTimeout(buttonTimer.current);
+        buttonTimer.current = window.setTimeout(() => {
+            buttonScroll.current = false;
+        }, 500);
     };
 
     useEffect(() => {
         window.addEventListener("resize", updateEdges);
         return () => window.removeEventListener("resize", updateEdges);
     }, []);
+
+    useEffect(() => {
+        updateEdges();
+    }, [domainLogs]);
 
     useEffect(() => {
         if (allLogs.length === 0) return;
@@ -154,8 +165,9 @@ const Status: React.FC<StatusProps> = ({ domain, allLogs, loading, timeRange }) 
         <div>
             <div className={styles.statusContainer}>
                 <button
+                    ref={leftBtn}
                     type="button"
-                    className={`${styles.scrollBtn} ${styles.scrollLeft} ${canLeft ? styles.canScroll : ""}`}
+                    className={`${styles.scrollBtn} ${styles.scrollLeft}`}
                     onClick={() => scrollAll(-1)}
                     aria-label="Прокрутить влево"
                 >
@@ -175,8 +187,9 @@ const Status: React.FC<StatusProps> = ({ domain, allLogs, loading, timeRange }) 
                         )
                 )}
                 <button
+                    ref={rightBtn}
                     type="button"
-                    className={`${styles.scrollBtn} ${styles.scrollRight} ${canRight ? styles.canScroll : ""}`}
+                    className={`${styles.scrollBtn} ${styles.scrollRight}`}
                     onClick={() => scrollAll(1)}
                     aria-label="Прокрутить вправо"
                 >

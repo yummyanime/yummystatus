@@ -74,10 +74,9 @@
     position: absolute;
     top: 1rem;
     bottom: 1rem;
-    width: 52px;
+    width: 32px;
     display: flex;
     align-items: center;
-    justify-content: center;
     padding: 0;
     border: none;
     background: none;
@@ -87,18 +86,7 @@
     transition: opacity 0.3s ease, transform 0.3s ease;
     z-index: 3;
 
-    &::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 100%;
-        z-index: 0;
-    }
-
     span {
-        position: relative;
-        z-index: 1;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -132,23 +120,13 @@
 }
 
 .scrollLeft {
-    left: calc(2rem + var(--label-col));
+    left: calc(1rem + var(--label-col));
     transform: translateX(-6px);
-
-    &::before {
-        left: 0;
-        background: linear-gradient(to right, var(--color-dark-bg-1) 40%, transparent);
-    }
 }
 
 .scrollRight {
-    right: 1rem;
+    right: 0.25rem;
     transform: translateX(6px);
-
-    &::before {
-        right: 0;
-        background: linear-gradient(to left, var(--color-dark-bg-1) 40%, transparent);
-    }
 }
 
 .requestBlock {
