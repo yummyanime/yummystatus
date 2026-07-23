@@ -62,6 +62,7 @@ export const domains = [
     { name: "ru.yummy-ani.me", apiKeyEnv: "GLOBALPING_API_KEY3" },
     { name: "old.yummy-ani.me", apiKeyEnv: "GLOBALPING_API_KEY4" },
     { name: "api.yani.tv", path: "/feed", apiKeyEnv: "GLOBALPING_API_KEY6" },
+    { name: "waf.valtrix.org", protocol: "HTTP", apiKeyEnv: "GLOBALPING_API_KEY5" },
 ];
 
 const toNonNegativeNumberOrNull = (value) => {
@@ -370,7 +371,7 @@ const checkAndSaveDomain = async (domain, locations, intervalMs) => {
                 })),
                 type: "http",
                 measurementOptions: {
-                    protocol: "HTTPS",
+                    protocol: domain.protocol || "HTTPS",
                     ...((domain.path || secretKey) && {
                         request: {
                             ...(domain.path && { path: domain.path }),

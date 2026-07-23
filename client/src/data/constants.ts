@@ -37,7 +37,10 @@ export const domainGroups = [
     },
     {
         title: "Служебные сервисы",
-        domains: [{ value: "api.yani.tv", label: "API" }],
+        domains: [
+            { value: "api.yani.tv", label: "API" },
+            { value: "waf.valtrix.org", label: "Защита" },
+        ],
     },
 ];
 

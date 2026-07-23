@@ -7,6 +7,7 @@ const domains = [
     { name: "ru.yummy-ani.me", apiKeyEnv: "GLOBALPING_API_KEY3" },
     { name: "old.yummy-ani.me", apiKeyEnv: "GLOBALPING_API_KEY4" },
     { name: "api.yani.tv", apiKeyEnv: "GLOBALPING_API_KEY6" },
+    { name: "waf.valtrix.org", apiKeyEnv: "GLOBALPING_API_KEY5" },
 ];
 
 const pingLocation = { country: "RU", city: "Moscow" };
