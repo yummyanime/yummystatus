@@ -1,4 +1,5 @@
 import React from "react";
+import OverviewStatus from "./_content/OverviewStatus/OverviewStatus.tsx";
 import OverviewChart from "./_content/OverviewChart/OverviewChart.tsx";
 import styles from "./Overview.module.scss";
 import OverviewPlug from "./_plug/OverviewPlug.tsx";
@@ -33,6 +34,9 @@ const Overview: React.FC<OverviewProps> = ({ allLogs, pingLogs, loading, timeRan
 
     return (
         <div className={styles.overviewContainer}>
+            <div className={styles.leftPart}>
+                <OverviewStatus allLogs={allLogs} />
+            </div>
             <div className={styles.rightPart}>
                 <OverviewChart allLogs={allLogs} pingLogs={pingLogs} timeRange={timeRange} domain={domain} />
             </div>

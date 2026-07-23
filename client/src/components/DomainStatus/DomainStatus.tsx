@@ -4,11 +4,10 @@ import "tippy.js/dist/tippy.css";
 import useResize from "../../hooks/useResize.tsx";
 import styles from "../Status/Status.module.scss";
 import {
-    CAPTCHA_STATUS_CODES,
     cityTranslations,
+    getBucketColor,
     getDomainHealth,
     getDomainLabel,
-    isProbeNoise,
     isRelevantStatus,
     SLOW_RESPONSE_MS,
 } from "../../data/constants.ts";
@@ -39,44 +38,7 @@ const isProblematicResult = (r: LogResult): boolean =>
         r.total_time === null ||
         (r.total_time !== null && r.total_time > SLOW_RESPONSE_MS));
 
-const getStatusColor = (log: GroupedLog) => {
-    const relevantResults = log.results.filter((r) =>
-        isRelevantStatus(r.status_code)
-    );
-
-    const probeErrorCount = log.results.filter((r) =>
-        isProbeNoise(r.status_code)
-    ).length;
-
-    if (probeErrorCount > 0 && relevantResults.length === 0) {
-        return styles.grey;
-    }
-
-    const captchaCount = relevantResults.filter(
-        (r) => CAPTCHA_STATUS_CODES.has(Number(r.status_code))
-    ).length;
-
-    if (captchaCount > 0) {
-        return styles.blue;
-    }
-
-    const problematicCountriesCount =
-        relevantResults.filter(isProblematicResult).length;
-
-    if (relevantResults.length > 0 && problematicCountriesCount === relevantResults.length) {
-        return styles.red;
-    }
-    if (problematicCountriesCount >= 3) {
-        return styles.orange;
-    }
-    if (problematicCountriesCount === 1) {
-        return styles.darkGreen;
-    }
-    if (problematicCountriesCount >= 2) {
-        return styles.yellow;
-    }
-    return styles.green;
-};
+const getStatusColor = (log: GroupedLog) => styles[getBucketColor(log.results)];
 
 const DomainStatus: React.FC<DomainStatusProps> = ({ domain, logs }) => {
     const requestsRef = useRef<HTMLDivElement>(null);

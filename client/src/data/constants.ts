@@ -140,6 +140,94 @@ export const getDomainHealth = (
     return "stable";
 };
 
+export const getGlobalHealth = (
+    logs: { domain?: string; created_at: string; status_code?: number; total_time?: number }[]
+): DomainHealth => {
+    const domainNames = [...new Set(logs.map((l) => l.domain).filter(Boolean))];
+    let worst: DomainHealth = "stable";
+    for (const d of domainNames) {
+        const health = getDomainHealth(logs.filter((l) => l.domain === d));
+        if (health === "critical") return "critical";
+        if (health === "warning") worst = "warning";
+    }
+    return worst;
+};
+
+export type BucketColor =
+    | "green"
+    | "darkGreen"
+    | "yellow"
+    | "orange"
+    | "red"
+    | "grey"
+    | "blue";
+
+interface BucketResult {
+    status_code: number | null;
+    total_time: number | null;
+}
+
+const isBucketResultProblematic = (r: BucketResult): boolean =>
+    isRelevantStatus(r.status_code) &&
+    (r.status_code !== 200 ||
+        r.total_time === null ||
+        r.total_time > SLOW_RESPONSE_MS);
+
+export const getBucketColor = (results: BucketResult[]): BucketColor => {
+    const relevant = results.filter((r) => isRelevantStatus(r.status_code));
+    const probeErrorCount = results.filter((r) => isProbeNoise(r.status_code)).length;
+
+    if (probeErrorCount > 0 && relevant.length === 0) return "grey";
+
+    const captchaCount = relevant.filter((r) =>
+        CAPTCHA_STATUS_CODES.has(Number(r.status_code))
+    ).length;
+    if (captchaCount > 0) return "blue";
+
+    const problematic = relevant.filter(isBucketResultProblematic).length;
+
+    if (relevant.length > 0 && problematic === relevant.length) return "red";
+    if (problematic >= 3) return "orange";
+    if (problematic === 1) return "darkGreen";
+    if (problematic >= 2) return "yellow";
+    return "green";
+};
+
+export const getBucketColorCounts = (
+    logs: { domain?: string; created_at: string; status_code?: number; total_time?: number }[]
+): Record<BucketColor, number> => {
+    const counts: Record<BucketColor, number> = {
+        green: 0,
+        darkGreen: 0,
+        yellow: 0,
+        orange: 0,
+        red: 0,
+        grey: 0,
+        blue: 0,
+    };
+
+    const buckets = new Map<string, BucketResult[]>();
+    for (const log of logs) {
+        const key = `${log.domain ?? ""}|${log.created_at.substring(0, 16)}`;
+        const bucket = buckets.get(key);
+        const result: BucketResult = {
+            status_code: log.status_code ?? null,
+            total_time: log.total_time ?? null,
+        };
+        if (bucket) {
+            bucket.push(result);
+        } else {
+            buckets.set(key, [result]);
+        }
+    }
+
+    for (const results of buckets.values()) {
+        counts[getBucketColor(results)] += 1;
+    }
+
+    return counts;
+};
+
 export const CHART_COLORS = [
     "#ff6666",
     "#36a2eb",

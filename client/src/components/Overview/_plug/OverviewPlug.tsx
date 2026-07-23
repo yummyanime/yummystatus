@@ -5,13 +5,18 @@ import styles from "./OverviewPlug.module.scss";
 const OverviewPlug: React.FC = () => {
     return (
         <div className={styles.overviewContainer}>
-            <div className={styles.statusBadge}></div>
-            <div className={styles.chartWrapper}></div>
-            <div className={styles.bottomRow}>
+            <div className={styles.leftPart}>
+                <div className={styles.statusBadge}></div>
+                <div className={styles.chartArea}>
+                    <div className={styles.donut}></div>
+                </div>
+            </div>
+            <div className={styles.rightPart}>
                 <div className={styles.tabsWrapper}>
                     <Button active>Время загрузки</Button>
                     <Button>Ping</Button>
                 </div>
+                <div className={styles.chartWrapper}></div>
                 <div className={styles.avgWrapper}>
                     <span className={styles.avgLabel}>Среднее время загрузки</span>
                     <div className={styles.avgValue}></div>
