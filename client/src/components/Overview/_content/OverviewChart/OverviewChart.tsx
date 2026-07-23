@@ -7,6 +7,11 @@ import {
     httpRequestTimePreset,
     pingPreset,
 } from "../../../Chart/chartPresets.ts";
+import {
+    getDomainHealth,
+    HEALTH_LABEL,
+    type DomainHealth,
+} from "../../../../data/constants.ts";
 import styles from "./OverviewChart.module.scss";
 
 interface Log {
@@ -206,6 +211,19 @@ const OverviewChart: React.FC<OverviewChartProps> = ({ allLogs, pingLogs, timeRa
             ? Object.keys(processedBackend.cityLogs)
             : Object.keys(processedPing.cityLogs);
 
+    const globalHealth = useMemo<DomainHealth>(() => {
+        const domainNames = [
+            ...new Set(allLogs.map((l) => l.domain).filter(Boolean)),
+        ] as string[];
+        let worst: DomainHealth = "stable";
+        for (const d of domainNames) {
+            const health = getDomainHealth(allLogs.filter((l) => l.domain === d));
+            if (health === "critical") return "critical";
+            if (health === "warning") worst = "warning";
+        }
+        return worst;
+    }, [allLogs]);
+
     const tabOptions: { value: OverviewTab; label: string }[] = [
         { value: "loadTime", label: "Время загрузки" },
         { value: "ping", label: "Ping" },
@@ -216,16 +234,8 @@ const OverviewChart: React.FC<OverviewChartProps> = ({ allLogs, pingLogs, timeRa
 
     return (
         <div className={styles.container}>
-            <div className={styles.tabsWrapper}>
-                {tabOptions.map((option) => (
-                    <Button
-                        key={option.value}
-                        active={activeTab === option.value}
-                        onClick={() => handleTabChange(option.value)}
-                    >
-                        {option.label}
-                    </Button>
-                ))}
+            <div className={`${styles.statusBadge} ${styles[globalHealth]}`}>
+                {HEALTH_LABEL[globalHealth]}
             </div>
             <div className={styles.chartWrapper}>
                 <LazyMount fill>
@@ -255,31 +265,44 @@ const OverviewChart: React.FC<OverviewChartProps> = ({ allLogs, pingLogs, timeRa
                     )}
                 </LazyMount>
             </div>
-            <div className={styles.avgWrapper}>
-                {isBackend ? (
-                    <>
-                        <span className={styles.avgLabel}>Среднее backend-время</span>
-                        <span className={styles.avgValue}>
-                            {Object.values(processedBackend.metricAvgs).reduce((a, b) => a + b, 0).toFixed(0)}
-                            <small>мс</small>
-                        </span>
-                    </>
-                ) : (
-                    <>
-                        <span className={styles.avgLabel}>
-                            {isLoadTime
-                                ? "Среднее время загрузки"
-                                : domain
-                                    ? "Ping"
-                                    : "Средний Ping"
-                            }
-                        </span>
-                        <span className={styles.avgValue}>
-                            {currentAvg.toFixed(0)}
-                            <small>мс</small>
-                        </span>
-                    </>
-                )}
+            <div className={styles.bottomRow}>
+                <div className={styles.tabsWrapper}>
+                    {tabOptions.map((option) => (
+                        <Button
+                            key={option.value}
+                            active={activeTab === option.value}
+                            onClick={() => handleTabChange(option.value)}
+                        >
+                            {option.label}
+                        </Button>
+                    ))}
+                </div>
+                <div className={styles.avgWrapper}>
+                    {isBackend ? (
+                        <>
+                            <span className={styles.avgLabel}>Среднее backend-время</span>
+                            <span className={styles.avgValue}>
+                                {Object.values(processedBackend.metricAvgs).reduce((a, b) => a + b, 0).toFixed(0)}
+                                <small>мс</small>
+                            </span>
+                        </>
+                    ) : (
+                        <>
+                            <span className={styles.avgLabel}>
+                                {isLoadTime
+                                    ? "Среднее время загрузки"
+                                    : domain
+                                        ? "Ping"
+                                        : "Средний Ping"
+                                }
+                            </span>
+                            <span className={styles.avgValue}>
+                                {currentAvg.toFixed(0)}
+                                <small>мс</small>
+                            </span>
+                        </>
+                    )}
+                </div>
             </div>
         </div>
     );

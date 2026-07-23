@@ -2,6 +2,10 @@
 
 .overviewContainer {
     display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 1rem;
+    box-sizing: border-box;
     background-color: var(--color-dark-bg-1);
     border-radius: var(--border-radius-md);
     box-shadow: var(--box-shadow);
@@ -10,69 +14,14 @@
     height: 250px;
 }
 
-.leftPart {
-    flex: 0 0 40%;
-    border-right: 2px solid rgba(255, 255, 255, 0.05);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 1rem;
-    box-sizing: border-box;
-}
-
 .statusBadge {
     width: 240px;
     max-width: 100%;
-    height: 40px;
+    height: 36px;
+    align-self: center;
     background-color: var(--color-bg);
     border-radius: var(--border-radius-sm);
     @include shimmer;
-}
-
-.domainList {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-
-.domainItem {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.statusCircle {
-    width: 13px;
-    height: 13px;
-    border-radius: 50%;
-    background-color: var(--color-bg);
-}
-
-.domainLabel {
-    width: 150px;
-    height: 18px;
-    background-color: var(--color-bg);
-    border-radius: var(--border-radius-sm);
-    @include shimmer;
-}
-
-.rightPart {
-    flex: 1 1 0;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 1rem;
-    box-sizing: border-box;
-}
-
-.tabsWrapper {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
 }
 
 .chartWrapper {
@@ -83,11 +32,24 @@
     @include shimmer;
 }
 
+.bottomRow {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tabsWrapper {
+    display: flex;
+    gap: 10px;
+}
+
 .avgWrapper {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
     gap: 10px;
 }
 
@@ -106,12 +68,6 @@
 
 @media (max-width: 830px) {
     .overviewContainer {
-        flex-direction: column;
         height: auto;
-    }
-
-    .leftPart {
-        border-right: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 }

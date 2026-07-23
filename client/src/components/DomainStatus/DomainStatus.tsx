@@ -6,6 +6,7 @@ import styles from "../Status/Status.module.scss";
 import {
     CAPTCHA_STATUS_CODES,
     cityTranslations,
+    getDomainHealth,
     getDomainLabel,
     isProbeNoise,
     isRelevantStatus,
@@ -87,9 +88,22 @@ const DomainStatus: React.FC<DomainStatusProps> = ({ domain, logs }) => {
         width > 0 ? Math.floor(width / (blockBasis + blockGap)) : 0;
     const visibleLogs = maxBlocks > 0 ? logs.slice(-maxBlocks) : [];
 
+    const health = getDomainHealth(
+        logs.flatMap((log) =>
+            log.results.map((r) => ({
+                created_at: log.created_at,
+                status_code: r.status_code ?? undefined,
+                total_time: r.total_time ?? undefined,
+            }))
+        )
+    );
+
     return (
         <div className={styles.domainSection}>
-            <h4>{getDomainLabel(domain)}</h4>
+            <div className={styles.domainTitle}>
+                <span className={`${styles.statusCircle} ${styles[health]}`} />
+                <h4>{getDomainLabel(domain)}</h4>
+            </div>
             <div className={styles.requests} ref={requestsRef}>
                 {visibleLogs.map((log, index) => (
                     <Tippy

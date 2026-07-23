@@ -100,6 +100,46 @@ export const isProbeNoise = (statusCode: number | null | undefined): boolean =>
 export const isRelevantStatus = (statusCode: number | null | undefined): boolean =>
     !isProbeNoise(statusCode);
 
+export type DomainHealth = "stable" | "warning" | "critical";
+
+export const HEALTH_LABEL: Record<DomainHealth, string> = {
+    stable: "Все работает стабильно",
+    warning: "Возможные неполадки",
+    critical: "Возникли неполадки",
+};
+
+export const getDomainHealth = (
+    logs: { created_at: string; status_code?: number; total_time?: number }[]
+): DomainHealth => {
+    if (logs.length === 0) return "stable";
+
+    const okCodes = [200, 202];
+    const isErrorLog = (log: { status_code?: number; total_time?: number }) =>
+        !okCodes.includes(log.status_code as number) ||
+        Boolean(log.total_time && log.total_time > SLOW_RESPONSE_MS);
+
+    const relevantLogs = logs.filter(
+        (log) => log.status_code !== undefined && isRelevantStatus(log.status_code)
+    );
+    if (relevantLogs.length === 0) return "stable";
+
+    const errorRate =
+        (relevantLogs.filter(isErrorLog).length / relevantLogs.length) * 100;
+
+    const sortedLogs = [...relevantLogs].sort(
+        (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+    const lastLogs = sortedLogs.slice(-4);
+    const last4Errors = lastLogs.length >= 4 && lastLogs.every(isErrorLog);
+    const last2Errors =
+        lastLogs.length >= 2 && lastLogs.slice(-2).every(isErrorLog);
+
+    if (errorRate >= 20 || last4Errors) return "critical";
+    if (errorRate >= 5 || last2Errors) return "warning";
+    return "stable";
+};
+
 export const CHART_COLORS = [
     "#ff6666",
     "#36a2eb",

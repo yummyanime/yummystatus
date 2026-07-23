@@ -7,9 +7,42 @@
     height: 100%;
 }
 
+.statusBadge {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--status-color);
+}
+
+.stable {
+    --status-color: var(--color-green);
+}
+
+.warning {
+    --status-color: var(--color-yellow);
+}
+
+.critical {
+    --status-color: var(--color-red);
+}
+
+.chartWrapper {
+    flex: 1;
+    min-height: 150px;
+    position: relative;
+}
+
+.bottomRow {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
 .tabsWrapper {
     display: flex;
-    justify-content: center;
     gap: 10px;
 
     @media (max-width: 830px) {
@@ -17,18 +50,11 @@
     }
 }
 
-.chartWrapper {
-    flex: 1;
-    min-height: 120px;
-    position: relative;
-}
-
 .avgWrapper {
 	display: flex;
     flex-direction: row;
     align-items: center;
     gap: 10px;
-	justify-content: center;
 }
 
 .avgLabel {

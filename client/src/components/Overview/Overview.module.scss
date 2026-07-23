@@ -4,13 +4,8 @@
     border-radius: var(--border-radius-md);
     margin-bottom: 1rem;
     overflow: hidden;
-    height: 250px;
+    min-height: 250px;
     box-shadow: var(--box-shadow);
-}
-
-.leftPart {
-    flex: 0 0 40%;
-    border-right: 2px solid rgba(255, 255, 255, 0.05);
 }
 
 .rightPart {
@@ -20,12 +15,6 @@
 
 @media (max-width: 830px) {
     .overviewContainer {
-        flex-direction: column;
         height: auto;
-    }
-
-    .leftPart {
-        border-right: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 }
