@@ -244,12 +244,11 @@ router.get("/lighthouse-screenshot", async (req, res) => {
 
 const PROBE_ERROR_CODE = 900;
 const SLOW_RESPONSE_MS = 1500;
-const DOWNTIME_ERROR_CODES = new Set([902, 908]);
+const IGNORED_ERROR_CODES = new Set([904, 905]);
 const CAPTCHA_STATUS_CODES = new Set([202, 307]);
 
 const isProbeNoise = (r) =>
-    Number(r.status_code) >= PROBE_ERROR_CODE &&
-    !DOWNTIME_ERROR_CODES.has(Number(r.status_code));
+    IGNORED_ERROR_CODES.has(Number(r.status_code));
 
 const isRelevantResult = (r) => !isProbeNoise(r);
 

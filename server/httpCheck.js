@@ -14,15 +14,13 @@ export const INTERNAL_STATUS = {
 
 class MeasurementTimeoutError extends Error {}
 
-const PROBE_ERROR_CODE = 900;
-const DOWNTIME_ERROR_CODES = new Set([
-    INTERNAL_STATUS.TIMEOUT,
-    INTERNAL_STATUS.MEASUREMENT_TIMEOUT,
+const IGNORED_ERROR_CODES = new Set([
+    INTERNAL_STATUS.API_LIMIT,
+    INTERNAL_STATUS.PROBE_OFFLINE,
 ]);
 
 const isProbeNoiseCode = (statusCode) =>
-    Number(statusCode) >= PROBE_ERROR_CODE &&
-    !DOWNTIME_ERROR_CODES.has(Number(statusCode));
+    IGNORED_ERROR_CODES.has(Number(statusCode));
 
 const GLOBALPING_MEASUREMENTS_URL = "https://api.globalping.io/v1/measurements";
 const CREATE_RETRY_BASE_DELAY = 2000;
