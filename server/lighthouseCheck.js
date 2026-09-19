@@ -46,6 +46,7 @@ export const LIGHTHOUSE_NUMERIC_FIELDS = [
     "tbt",
     "tti",
     "cls",
+    "load_time",
     "field_lcp",
     "field_inp",
     "field_cls",
@@ -114,6 +115,7 @@ const parsePsiResponse = (data) => {
             tbt: auditValue(audits, "total-blocking-time"),
             tti: auditValue(audits, "interactive"),
             cls: auditValue(audits, "cumulative-layout-shift"),
+            load_time: toNumberOrNull(audits.metrics?.details?.items?.[0]?.observedLoad),
             field_lcp: fieldPercentile(data, "LARGEST_CONTENTFUL_PAINT_MS"),
             field_inp: fieldPercentile(data, "INTERACTION_TO_NEXT_PAINT"),
             field_cls: (() => {
@@ -132,10 +134,10 @@ const saveLighthouseResult = async (target, strategy, parsed) => {
     const query = `
       INSERT INTO lighthouse_logs (
         domain, url_path, strategy,
-        perf_score, ttfb, lcp, fcp, speed_index, tbt, tti, cls,
+        perf_score, ttfb, lcp, fcp, speed_index, tbt, tti, cls, load_time,
         field_lcp, field_inp, field_cls, field_fcp, field_ttfb,
         diagnostics
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
     `;
     const values = [
         target.domain,
@@ -149,6 +151,7 @@ const saveLighthouseResult = async (target, strategy, parsed) => {
         m.tbt,
         m.tti,
         m.cls,
+        m.load_time,
         m.field_lcp,
         m.field_inp,
         m.field_cls,

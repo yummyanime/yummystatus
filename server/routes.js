@@ -197,7 +197,7 @@ router.get("/lighthouse-logs", async (req, res) => {
             dateTo,
         });
 
-        const columns = `domain, url_path, strategy, perf_score, ttfb, lcp, fcp, speed_index, tbt, tti, cls, field_lcp, field_inp, field_cls, field_fcp, field_ttfb, diagnostics, created_at`;
+        const columns = `domain, url_path, strategy, perf_score, ttfb, lcp, fcp, speed_index, tbt, tti, cls, load_time, field_lcp, field_inp, field_cls, field_fcp, field_ttfb, diagnostics, created_at`;
 
         const conditions = [whereSql];
         const queryParams = [...params];

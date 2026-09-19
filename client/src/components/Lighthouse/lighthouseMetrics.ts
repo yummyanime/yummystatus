@@ -11,6 +11,7 @@ export interface LighthouseLog {
     tbt?: number | null;
     tti?: number | null;
     cls?: number | null;
+    load_time?: number | null;
     field_lcp?: number | null;
     field_inp?: number | null;
     field_cls?: number | null;
@@ -24,10 +25,12 @@ export type LighthouseMetricKey =
     | "lcp"
     | "ttfb"
     | "cls"
+    | "field_inp"
     | "tbt"
     | "fcp"
     | "speed_index"
-    | "tti";
+    | "tti"
+    | "load_time";
 
 export type Rating = "good" | "ni" | "poor" | "none";
 
@@ -39,6 +42,7 @@ export interface LighthouseMetric {
     good: number;
     poor: number;
     higherIsBetter?: boolean;
+    fieldOnly?: boolean;
 }
 
 export const LIGHTHOUSE_METRICS: LighthouseMetric[] = [
@@ -66,6 +70,7 @@ export const LIGHTHOUSE_METRICS: LighthouseMetric[] = [
         good: 0.1,
         poor: 0.25,
     },
+    { key: "field_inp", label: "INP", unit: "ms", good: 200, poor: 500, fieldOnly: true },
     { key: "tbt", label: "TBT", unit: "ms", good: 200, poor: 600 },
     {
         key: "fcp",
@@ -83,6 +88,7 @@ export const LIGHTHOUSE_METRICS: LighthouseMetric[] = [
         poor: 5800,
     },
     { key: "tti", label: "TTI", unit: "ms", good: 3800, poor: 7300 },
+    { key: "load_time", label: "Load", unit: "ms", good: 3000, poor: 6000 },
     {
         key: "perf_score",
         label: "Score",
@@ -143,8 +149,10 @@ export const SUMMARY_KEYS: LighthouseMetricKey[] = [
     "lcp",
     "ttfb",
     "cls",
+    "field_inp",
     "tbt",
     "fcp",
+    "load_time",
     "perf_score",
 ];
 

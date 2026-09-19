@@ -59,17 +59,19 @@ const LhChart: React.FC<LhChartProps> = ({ logs, timeRange }) => {
             (p) => p.value !== null && p.value !== undefined && Number.isFinite(p.value as number)
         );
 
+        const labSeries = metric.fieldOnly ? FIELD_SERIES : LAB_SERIES;
+
         const cityLogs: Record<string, LighthousePoint[]> = {
-            [LAB_SERIES]: labPoints,
+            [labSeries]: labPoints,
         };
-        const cities = [LAB_SERIES];
+        const cities = [labSeries];
         if (metric.fieldKey && hasField) {
             cityLogs[FIELD_SERIES] = fieldPoints;
             cities.push(FIELD_SERIES);
         }
 
         return { cityLogs, cities, avg: avgOf(logs, metric.key) };
-    }, [logs, metric.key, metric.fieldKey]);
+    }, [logs, metric.key, metric.fieldKey, metric.fieldOnly]);
 
     const preset = useMemo(() => makeLighthousePreset(digits, metric.label), [digits, metric.label]);
 

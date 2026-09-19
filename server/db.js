@@ -103,6 +103,7 @@ export const createHttpTable = async () => {
       tbt          FLOAT,
       tti          FLOAT,
       cls          FLOAT,
+      load_time    FLOAT,
       field_lcp    FLOAT,
       field_inp    FLOAT,
       field_cls    FLOAT,
@@ -185,6 +186,9 @@ export const createHttpTable = async () => {
         }
         await pool.query(`ANALYZE http_logs, http_hourly_logs, ping_logs, ping_hourly_logs, lighthouse_logs, lighthouse_hourly_logs;`);
         console.log("Log table indexes created or already exist.");
+
+        await pool.query("ALTER TABLE lighthouse_logs ADD COLUMN IF NOT EXISTS load_time FLOAT;");
+        await pool.query("ALTER TABLE lighthouse_hourly_logs ADD COLUMN IF NOT EXISTS load_time FLOAT;");
 
     } catch (err) {
         console.error("Error creating table", err);
