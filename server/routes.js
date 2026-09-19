@@ -225,23 +225,6 @@ router.get("/lighthouse-logs", async (req, res) => {
     }
 });
 
-router.get("/lighthouse-screenshot", async (req, res) => {
-    try {
-        const { domain, strategy } = req.query;
-        if (!domain || !strategy) {
-            return res.status(400).json({ error: "domain and strategy are required" });
-        }
-        const { rows } = await pool.query(
-            `SELECT image, url_path, updated_at FROM lighthouse_screenshots WHERE domain = $1 AND strategy = $2`,
-            [domain, strategy]
-        );
-        res.json(rows[0] ?? null);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Server Error");
-    }
-});
-
 const PROBE_ERROR_CODE = 900;
 const SLOW_RESPONSE_MS = 1500;
 const SUMMARY_COUNTRIES = ["RU", "UA", "BY"];

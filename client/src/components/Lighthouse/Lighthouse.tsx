@@ -1,9 +1,15 @@
-import React, { useEffect, useState, useCallback } from "react";
-import LhSummary, { type ScreenshotData } from "./_content/LhSummary/LhSummary.tsx";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import LhSummary from "./_content/LhSummary/LhSummary.tsx";
 import LhChart from "./_content/LhChart/LhChart.tsx";
+import LhTable from "./_content/LhTable/LhTable.tsx";
 import LighthousePlug from "./_plug/LighthousePlug.tsx";
+import ToggleSwitch from "../ToggleSwitch/ToggleSwitch.tsx";
 import { useDashboardSettings } from "../../context/DashboardSettingsContext.tsx";
-import type { LighthouseLog } from "./lighthouseMetrics.ts";
+import {
+    averageByHour,
+    groupLogs,
+    type LighthouseLog,
+} from "./lighthouseMetrics.ts";
 import styles from "./Lighthouse.module.scss";
 
 interface LighthouseProps {
@@ -18,7 +24,6 @@ const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
         () => (localStorage.getItem("lighthouseStrategy") as Strategy) || "mobile"
     );
     const [logs, setLogs] = useState<LighthouseLog[]>([]);
-    const [screenshot, setScreenshot] = useState<ScreenshotData | null>(null);
     const [loading, setLoading] = useState(true);
     const [hasData, setHasData] = useState(false);
 
@@ -46,23 +51,12 @@ const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
 
         const fetchAll = async () => {
             try {
-                const [logsRes, shotRes] = await Promise.all([
-                    fetch(`/lighthouse-logs?${buildQuery()}`),
-                    fetch(
-                        `/lighthouse-screenshot?domain=${encodeURIComponent(
-                            domain
-                        )}&strategy=${strategy}`
-                    ),
-                ]);
+                const logsRes = await fetch(`/lighthouse-logs?${buildQuery()}`);
 
                 if (!cancelled && logsRes.ok) {
                     const data: LighthouseLog[] = await logsRes.json();
                     setLogs(data);
                     if (data.length > 0) setHasData(true);
-                }
-                if (!cancelled && shotRes.ok) {
-                    const shot = await shotRes.json();
-                    setScreenshot(shot);
                 }
             } catch (e) {
                 console.error("Error fetching Lighthouse data:", e);
@@ -75,7 +69,16 @@ const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
         return () => {
             cancelled = true;
         };
-    }, [buildQuery, domain, strategy]);
+    }, [buildQuery]);
+
+    const pages = useMemo(() => {
+        const grouped = groupLogs(logs, (l) => l.url_path ?? "");
+        return [...grouped]
+            .map(([path, pageLogs]) => ({ path, logs: pageLogs }))
+            .sort((a, b) => a.path.localeCompare(b.path));
+    }, [logs]);
+
+    const averaged = useMemo(() => averageByHour(logs), [logs]);
 
     if (loading) {
         return <LighthousePlug />;
@@ -87,16 +90,23 @@ const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
 
     return (
         <div className={styles.lighthouse}>
-            <LhSummary
-                logs={logs}
-                strategy={strategy}
-                onStrategyChange={handleStrategy}
-                screenshot={screenshot}
-            />
+            <div className={styles.header}>
+                <ToggleSwitch
+                    label={strategy === "desktop" ? "ПК" : "Телефон"}
+                    checked={strategy === "desktop"}
+                    onChange={(checked) => handleStrategy(checked ? "desktop" : "mobile")}
+                />
+            </div>
+
+            <LhSummary logs={logs} />
 
             <div className={styles.divider} />
 
-            <LhChart logs={logs} timeRange={effectiveTimeRange} />
+            <LhTable pages={pages} timeRange={effectiveTimeRange} />
+
+            <div className={styles.divider} />
+
+            <LhChart logs={averaged} timeRange={effectiveTimeRange} />
         </div>
     );
 };

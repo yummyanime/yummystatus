@@ -4,25 +4,28 @@ import styles from "./LighthousePlug.module.scss";
 const LighthousePlug: React.FC = () => {
     return (
         <div className={styles.lighthouse}>
-            <div className={styles.summary}>
-                <div className={styles.screenshot}>
-                    <div className={styles.strategySwitch}>
-                        <div className={styles.switchButton}></div>
-                        <div className={styles.switchButton}></div>
-                    </div>
-                    <div className={styles.shot}></div>
-                </div>
-                <div className={styles.cards}>
-                    {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className={styles.card}>
-                            <div className={styles.cardHead}>
-                                <div className={styles.cardLabel}></div>
-                                <div className={styles.dot}></div>
-                            </div>
-                            <div className={styles.cardValue}></div>
+            <div className={styles.header}>
+                <div className={styles.toggle}></div>
+            </div>
+
+            <div className={styles.cards}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className={styles.card}>
+                        <div className={styles.cardHead}>
+                            <div className={styles.cardLabel}></div>
+                            <div className={styles.dot}></div>
                         </div>
-                    ))}
-                </div>
+                        <div className={styles.cardValue}></div>
+                    </div>
+                ))}
+            </div>
+
+            <div className={styles.divider} />
+
+            <div className={styles.table}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className={styles.tableRow}></div>
+                ))}
             </div>
 
             <div className={styles.divider} />

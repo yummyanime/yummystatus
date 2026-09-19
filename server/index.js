@@ -33,10 +33,8 @@ app.use(express.json());
 app.use(apiRoutes);
 
 
-// Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'client/dist')));
 
-// All other GET requests not handled by the API will return your React app
 app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'client', 'dist', 'index.html'));
 });
@@ -67,9 +65,11 @@ app.listen(port, async () => {
     cleanupOldPingLogs().catch((err) =>
         console.error("Initial ping cleanup failed:", err)
     );
-    lighthouseCheckAndSave().catch((err) =>
-        console.error("Initial Lighthouse check failed:", err)
-    );
+    const lighthouseLoop = async () => {
+        await lighthouseCheckAndSave().catch((err) => console.error("Lighthouse check failed:", err));
+        setTimeout(lighthouseLoop, 60 * 1000);
+    };
+    lighthouseLoop();
     aggregateHourlyLighthouseData().catch((err) =>
         console.error("Initial Lighthouse aggregation failed:", err)
     );
@@ -77,11 +77,9 @@ app.listen(port, async () => {
         console.error("Initial Lighthouse cleanup failed:", err)
     );
 
-    // Scheduled runs
     setInterval(() => runChecks(locationGroups["2min"], 2 * 60 * 1000), 2 * 60 * 1000);
     setInterval(() => runChecks(locationGroups["6min"], 6 * 60 * 1000), 6 * 60 * 1000);
     setInterval(() => pingCheckAndSave(2 * 60 * 1000).catch((err) => console.error("Ping check failed:", err)), 2 * 60 * 1000);
-    setInterval(() => lighthouseCheckAndSave().catch((err) => console.error("Lighthouse check failed:", err)), 6 * 60 * 1000);
     setInterval(aggregateHourlyData, 60 * 60 * 1000);
     setInterval(aggregateHourlyPingData, 60 * 60 * 1000);
     setInterval(aggregateHourlyLighthouseData, 60 * 60 * 1000);

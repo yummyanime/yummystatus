@@ -1,22 +1,42 @@
 import pool from "./db.js";
 import fetch from "node-fetch";
 
-// Какие страницы измеряем Lighthouse-ом. Один путь на домен (можно расширить).
-const DEFAULT_PATH = "/catalog/item/monolog-farmatsevta-2";
-
-export const lighthouseTargets = [
-    { domain: "old.yummyani.me", path: DEFAULT_PATH },
-    { domain: "ru.yummyani.me", path: DEFAULT_PATH },
-    { domain: "ru.yummy-ani.me", path: DEFAULT_PATH },
-    { domain: "old.yummy-ani.me", path: DEFAULT_PATH },
+const LIGHTHOUSE_DOMAINS = ["ru.yummyani.me", "ru.yummy-ani.me"];
+const LIGHTHOUSE_PATHS = [
+    "/",
+    "/catalog",
+    "/catalog/announces",
+    "/catalog/ongoing",
+    "/catalog/schedule",
+    "/catalog/top",
+    "/catalog/collection",
+    "/catalog/collection/324",
+    "/catalog/genre/bisenen",
+    "/catalog/director/4",
+    "/catalog/studio/a1pictures",
+    "/catalog/item/monolog-farmatsevta-2",
+    "/posts",
+    "/posts/2252",
+    "/reviews",
+    "/reviews/1",
+    "/videos",
+    "/videos/642",
+    "/users",
+    "/designs",
+    "/designs/1",
+    "/pages/about-yummy",
+    "/pages/faq",
 ];
+
+export const lighthouseTargets = LIGHTHOUSE_DOMAINS.flatMap((domain) =>
+    LIGHTHOUSE_PATHS.map((path) => ({ domain, path }))
+);
 
 export const lighthouseStrategies = ["mobile", "desktop"];
 
 const PSI_ENDPOINT =
     "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
 
-// Числовые поля, по которым строятся графики и почасовая агрегация.
 export const LIGHTHOUSE_NUMERIC_FIELDS = [
     "perf_score",
     "ttfb",
@@ -39,14 +59,12 @@ const toNumberOrNull = (value) => {
     return Number.isFinite(num) ? num : null;
 };
 
-// Безопасно достаём numericValue конкретного аудита Lighthouse.
 const auditValue = (audits, key) => {
     const audit = audits?.[key];
     if (!audit) return null;
     return toNumberOrNull(audit.numericValue);
 };
 
-// p75 из CrUX (поле). Сначала пробуем данные конкретного URL, иначе — по домену.
 const fieldPercentile = (data, key) => {
     const url = data?.loadingExperience?.metrics?.[key]?.percentile;
     const origin = data?.originLoadingExperience?.metrics?.[key]?.percentile;
@@ -86,8 +104,6 @@ const parsePsiResponse = (data) => {
         best_practices: scorePct(categories["best-practices"]),
     };
 
-    const screenshot = audits["final-screenshot"]?.details?.data ?? null;
-
     return {
         metrics: {
             perf_score: scorePct(categories.performance),
@@ -100,7 +116,6 @@ const parsePsiResponse = (data) => {
             cls: auditValue(audits, "cumulative-layout-shift"),
             field_lcp: fieldPercentile(data, "LARGEST_CONTENTFUL_PAINT_MS"),
             field_inp: fieldPercentile(data, "INTERACTION_TO_NEXT_PAINT"),
-            // CrUX отдаёт CLS-перцентиль как целое ×100 (36 → реальный CLS 0.36).
             field_cls: (() => {
                 const raw = fieldPercentile(data, "CUMULATIVE_LAYOUT_SHIFT_SCORE");
                 return raw === null ? null : raw / 100;
@@ -109,7 +124,6 @@ const parsePsiResponse = (data) => {
             field_ttfb: fieldPercentile(data, "EXPERIMENTAL_TIME_TO_FIRST_BYTE"),
         },
         diagnostics,
-        screenshot,
     };
 };
 
@@ -145,18 +159,6 @@ const saveLighthouseResult = async (target, strategy, parsed) => {
     await pool.query(query, values);
 };
 
-// Скриншот храним только последний на (домен, стратегия) — UPSERT, чтобы БД не пухла.
-const saveScreenshot = async (target, strategy, image) => {
-    if (!image) return;
-    const query = `
-      INSERT INTO lighthouse_screenshots (domain, strategy, url_path, image, updated_at)
-      VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
-      ON CONFLICT (domain, strategy)
-      DO UPDATE SET image = EXCLUDED.image, url_path = EXCLUDED.url_path, updated_at = CURRENT_TIMESTAMP
-    `;
-    await pool.query(query, [target.domain, strategy, target.path, image]);
-};
-
 const measureOne = async (target, strategy) => {
     const url = buildPsiUrl(target, strategy);
     try {
@@ -181,7 +183,6 @@ const measureOne = async (target, strategy) => {
         }
 
         await saveLighthouseResult(target, strategy, parsed);
-        await saveScreenshot(target, strategy, parsed.screenshot);
 
         console.log(
             `[LH SUCCESS] ${target.domain}${target.path} (${strategy}): score=${parsed.metrics.perf_score}, LCP=${parsed.metrics.lcp}ms, TTFB=${parsed.metrics.ttfb}ms, CLS=${parsed.metrics.cls}`
@@ -198,7 +199,6 @@ export const lighthouseCheckAndSave = async () => {
     console.log(
         `--- Starting Lighthouse check cycle at ${new Date().toISOString()} for ${lighthouseTargets.length} targets ---`
     );
-    // Последовательно: PSI медленный (~10-30с на URL) и не любит бурст-нагрузку.
     for (const target of lighthouseTargets) {
         for (const strategy of lighthouseStrategies) {
             await measureOne(target, strategy);
@@ -234,7 +234,6 @@ export const aggregateHourlyLighthouseData = async () => {
         `;
         await pool.query(query);
 
-        // Диагностику (JSONB) усредняем по числовым ключам за тот же час.
         const diagQuery = `
             WITH per_metric AS (
                 SELECT

@@ -8,6 +8,7 @@ import {
 } from "../../../Chart/chartPresets.ts";
 import {
     LIGHTHOUSE_METRICS,
+    avgOf,
     getMetric,
     rate,
     RATING_COLORS,
@@ -44,16 +45,10 @@ const LhChart: React.FC<LhChartProps> = ({ logs, timeRange }) => {
     const { cityLogs, cities, avg } = useMemo(() => {
         const labPoints: LighthousePoint[] = [];
         const fieldPoints: LighthousePoint[] = [];
-        let sum = 0;
-        let count = 0;
 
         for (const log of logs) {
             const labVal = log[metric.key] as number | null | undefined;
             labPoints.push({ created_at: log.created_at, value: labVal });
-            if (labVal !== null && labVal !== undefined && Number.isFinite(labVal)) {
-                sum += labVal;
-                count += 1;
-            }
             if (metric.fieldKey) {
                 const fieldVal = log[metric.fieldKey] as number | null | undefined;
                 fieldPoints.push({ created_at: log.created_at, value: fieldVal });
@@ -73,7 +68,7 @@ const LhChart: React.FC<LhChartProps> = ({ logs, timeRange }) => {
             cities.push(FIELD_SERIES);
         }
 
-        return { cityLogs, cities, avg: count > 0 ? sum / count : null };
+        return { cityLogs, cities, avg: avgOf(logs, metric.key) };
     }, [logs, metric.key, metric.fieldKey]);
 
     const preset = useMemo(() => makeLighthousePreset(digits, metric.label), [digits, metric.label]);

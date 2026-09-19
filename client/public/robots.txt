@@ -9,7 +9,6 @@ Disallow: /ping
 Disallow: /locations
 Disallow: /status-summary
 Disallow: /lighthouse-logs
-Disallow: /lighthouse-screenshot
 Disallow: /outage-reports
 Disallow: /events
 
