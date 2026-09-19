@@ -6,47 +6,61 @@
 
 .table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0 4px;
     font-size: 14px;
 
-    th,
-    td {
-        padding: 8px 10px;
+    th {
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--color-text-muted);
         text-align: right;
         white-space: nowrap;
-    }
 
-    th:first-child,
-    td:first-child {
-        text-align: left;
-        color: var(--color-text);
-    }
-
-    th {
-        font-weight: 600;
-        color: var(--color-text-muted);
-        font-size: 12px;
-    }
-
-    td {
-        font-variant-numeric: tabular-nums;
-        font-weight: 600;
+        &:first-child {
+            text-align: left;
+        }
     }
 }
 
-.row {
-    cursor: pointer;
-
-    &:hover {
-        background-color: var(--color-dark-bg-2);
-    }
-}
-
-.active {
+.row td {
+    padding: 10px 12px;
     background-color: var(--color-dark-bg-2);
+    cursor: pointer;
+    text-align: right;
+    white-space: nowrap;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    transition: background-color 0.25s ease, box-shadow 0.25s ease;
+
+    &:first-child {
+        text-align: left;
+        font-weight: 500;
+        color: var(--color-text);
+        border-radius: var(--border-radius-md) 0 0 var(--border-radius-md);
+    }
+
+    &:last-child {
+        border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
+    }
 }
 
-.chartRow td {
-    padding: 0;
-    white-space: normal;
+.row:hover td {
+    background-color: var(--color-button-active-bg);
+}
+
+.selected td,
+.selected:hover td {
+    background-color: rgba(255, 102, 102, 0.14);
+}
+
+.selected td:first-child {
+    box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.row.total td {
+    font-weight: 700;
 }

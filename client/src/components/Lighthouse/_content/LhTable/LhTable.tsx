@@ -1,5 +1,6 @@
 import cn from "classnames";
-import React, { useMemo, useState } from "react";
+import type React from "react";
+import { useMemo } from "react";
 import {
     avgOf,
     formatMetric,
@@ -9,24 +10,29 @@ import {
     rate,
     SUMMARY_KEYS,
 } from "../../lighthouseMetrics.ts";
-import LhChart from "../LhChart/LhChart.tsx";
 import styles from "./LhTable.module.scss";
 
 interface LhTableProps {
     pages: { path: string; logs: LighthouseLog[] }[];
-    timeRange: string;
+    selected: string | null;
+    onSelect: (path: string | null) => void;
 }
 
-const LhTable: React.FC<LhTableProps> = ({ pages, timeRange }) => {
-    const [expanded, setExpanded] = useState<string | null>(null);
-
+const LhTable: React.FC<LhTableProps> = ({ pages, selected, onSelect }) => {
     const rows = useMemo(
         () =>
-            pages.map((page) => ({
-                ...page,
+            [
+                {
+                    path: null,
+                    label: "Все страницы",
+                    logs: pages.flatMap((p) => p.logs),
+                },
+                ...pages.map((p) => ({ ...p, label: p.path })),
+            ].map((row) => ({
+                ...row,
                 averages: SUMMARY_KEYS.map((key) => ({
                     metric: getMetric(key),
-                    avg: avgOf(page.logs, key),
+                    avg: avgOf(row.logs, key),
                 })),
             })),
         [pages]
@@ -44,46 +50,29 @@ const LhTable: React.FC<LhTableProps> = ({ pages, timeRange }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {rows.map((row) => {
-                        const isActive = expanded === row.path;
-                        return (
-                            <React.Fragment key={row.path}>
-                                <tr
-                                    className={cn(
-                                        styles.row,
-                                        isActive && styles.active
-                                    )}
-                                    onClick={() =>
-                                        setExpanded(isActive ? null : row.path)
-                                    }
+                    {rows.map((row) => (
+                        <tr
+                            key={row.path ?? "all"}
+                            onClick={() => onSelect(row.path)}
+                            className={cn(
+                                styles.row,
+                                row.path === null && styles.total,
+                                row.path === selected && styles.selected
+                            )}
+                        >
+                            <td>{row.label}</td>
+                            {row.averages.map(({ metric, avg }) => (
+                                <td
+                                    key={metric.key}
+                                    style={{
+                                        color: RATING_COLORS[rate(metric, avg)],
+                                    }}
                                 >
-                                    <td>{row.path}</td>
-                                    {row.averages.map(({ metric, avg }) => (
-                                        <td
-                                            key={metric.key}
-                                            style={{
-                                                color: RATING_COLORS[
-                                                    rate(metric, avg)
-                                                ],
-                                            }}
-                                        >
-                                            {formatMetric(metric, avg)}
-                                        </td>
-                                    ))}
-                                </tr>
-                                {isActive ? (
-                                    <tr className={styles.chartRow}>
-                                        <td colSpan={SUMMARY_KEYS.length + 1}>
-                                            <LhChart
-                                                logs={row.logs}
-                                                timeRange={timeRange}
-                                            />
-                                        </td>
-                                    </tr>
-                                ) : null}
-                            </React.Fragment>
-                        );
-                    })}
+                                    {formatMetric(metric, avg)}
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
                 </tbody>
             </table>
         </div>

@@ -4,6 +4,10 @@
     gap: 10px;
 }
 
+.labelLeft {
+    flex-direction: row-reverse;
+}
+
 .label {
     font-size: 14px;
 	font-weight: 500;

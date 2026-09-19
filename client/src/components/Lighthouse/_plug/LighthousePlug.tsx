@@ -8,22 +8,9 @@ const LighthousePlug: React.FC = () => {
                 <div className={styles.toggle}></div>
             </div>
 
-            <div className={styles.cards}>
-                {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className={styles.card}>
-                        <div className={styles.cardHead}>
-                            <div className={styles.cardLabel}></div>
-                            <div className={styles.dot}></div>
-                        </div>
-                        <div className={styles.cardValue}></div>
-                    </div>
-                ))}
-            </div>
-
-            <div className={styles.divider} />
-
             <div className={styles.table}>
-                {Array.from({ length: 6 }).map((_, i) => (
+                <div className={styles.tableHead}></div>
+                {Array.from({ length: 7 }).map((_, i) => (
                     <div key={i} className={styles.tableRow}></div>
                 ))}
             </div>

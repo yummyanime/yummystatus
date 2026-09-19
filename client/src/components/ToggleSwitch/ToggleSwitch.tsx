@@ -1,14 +1,16 @@
+import cn from "classnames";
 import styles from "./ToggleSwitch.module.scss";
 
 interface ToggleSwitchProps {
     label: string;
     checked: boolean;
     onChange: (checked: boolean) => void;
+    labelLeft?: boolean;
 }
 
-const ToggleSwitch = ({ label, checked, onChange }: ToggleSwitchProps) => {
+const ToggleSwitch = ({ label, checked, onChange, labelLeft }: ToggleSwitchProps) => {
     return (
-        <div className={styles.toggleSwitchContainer}>
+        <div className={cn(styles.toggleSwitchContainer, labelLeft && styles.labelLeft)}>
             <label className={styles.toggleSwitch}>
                 <input
                     type="checkbox"

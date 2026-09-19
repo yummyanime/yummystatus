@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import LhSummary from "./_content/LhSummary/LhSummary.tsx";
 import LhChart from "./_content/LhChart/LhChart.tsx";
 import LhTable from "./_content/LhTable/LhTable.tsx";
 import LighthousePlug from "./_plug/LighthousePlug.tsx";
@@ -25,7 +24,7 @@ const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
     );
     const [logs, setLogs] = useState<LighthouseLog[]>([]);
     const [loading, setLoading] = useState(true);
-    const [hasData, setHasData] = useState(false);
+    const [selected, setSelected] = useState<string | null>(null);
 
     const handleStrategy = (value: Strategy) => {
         setStrategy(value);
@@ -56,7 +55,6 @@ const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
                 if (!cancelled && logsRes.ok) {
                     const data: LighthouseLog[] = await logsRes.json();
                     setLogs(data);
-                    if (data.length > 0) setHasData(true);
                 }
             } catch (e) {
                 console.error("Error fetching Lighthouse data:", e);
@@ -79,12 +77,14 @@ const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
     }, [logs]);
 
     const averaged = useMemo(() => averageByHour(logs), [logs]);
+    const page = pages.find((p) => p.path === selected);
+    const chartLogs = page?.logs ?? averaged;
 
-    if (loading) {
+    if (loading && logs.length === 0) {
         return <LighthousePlug />;
     }
 
-    if (!hasData && logs.length === 0) {
+    if (logs.length === 0) {
         return null;
     }
 
@@ -95,18 +95,15 @@ const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
                     label={strategy === "desktop" ? "ПК" : "Телефон"}
                     checked={strategy === "desktop"}
                     onChange={(checked) => handleStrategy(checked ? "desktop" : "mobile")}
+                    labelLeft
                 />
             </div>
 
-            <LhSummary logs={logs} />
+            <LhTable pages={pages} selected={page?.path ?? null} onSelect={setSelected} />
 
             <div className={styles.divider} />
 
-            <LhTable pages={pages} timeRange={effectiveTimeRange} />
-
-            <div className={styles.divider} />
-
-            <LhChart logs={averaged} timeRange={effectiveTimeRange} />
+            <LhChart logs={chartLogs} timeRange={effectiveTimeRange} />
         </div>
     );
 };
