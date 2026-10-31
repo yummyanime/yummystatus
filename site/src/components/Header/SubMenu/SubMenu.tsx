@@ -9,17 +9,11 @@ export interface SubMenuEntry {
 
 interface SubMenuProps {
     items: SubMenuEntry[];
-    variant: "top" | "bottom";
-    first?: boolean;
 }
 
-const SubMenu: React.FC<SubMenuProps> = ({ items, variant, first }) => {
+const SubMenu: React.FC<SubMenuProps> = ({ items }) => {
     return (
-        <div
-            className={styles.container}
-            data-variant={variant}
-            data-first={first ? "true" : undefined}
-        >
+        <div className={styles.container}>
             {items.map((item) => (
                 <SubMenuItem key={item.href} title={item.title} href={item.href} />
             ))}

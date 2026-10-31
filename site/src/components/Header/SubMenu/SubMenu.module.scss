@@ -7,22 +7,9 @@
     box-shadow: var(--box-shadow);
     padding: 5px;
     border-radius: 10px;
-
-    &[data-variant="top"] {
-        right: 0;
-        bottom: 0;
-        transform: translate(0, 100%);
-        border-top: 5px solid transparent;
-        background-clip: padding-box;
-    }
-
-    &[data-variant="bottom"] {
-        top: -7px;
-        right: 5px;
-        left: auto;
-        width: fit-content;
-        max-height: 70dvh;
-        overflow: hidden auto;
-        transform: translate(0, -100%);
-    }
+    right: 0;
+    bottom: 0;
+    transform: translate(0, 100%);
+    border-top: 5px solid transparent;
+    background-clip: padding-box;
 }

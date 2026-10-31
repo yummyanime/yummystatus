@@ -22,6 +22,8 @@ import {
     addDays,
 } from "date-fns";
 import { useDashboardSettings } from "../../context/DashboardSettingsContext.tsx";
+import { useHashDialog } from "../../hooks/useHashDialog.ts";
+import Dialog from "../Dialog/Dialog.tsx";
 import styles from "./DateRangePicker.module.scss";
 
 const WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -190,8 +192,8 @@ const CalendarIcon = () => (
 
 const DateRangePicker = () => {
     const { dateRange, setDateRange } = useDashboardSettings();
-    const [isOpen, setIsOpen] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
+    const { shown, opened, closing, open, close } = useHashDialog("date-range");
+    const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
 
     const initialFrom = dateRange ? new Date(dateRange.from) : null;
     const initialTo = dateRange ? new Date(dateRange.to) : null;
@@ -215,25 +217,6 @@ const DateRangePicker = () => {
             setPendingTo(null);
         }
     }, [dateRange]);
-
-    useEffect(() => {
-        if (!isOpen) return;
-        const onClick = (e: MouseEvent) => {
-            if (!containerRef.current) return;
-            if (!containerRef.current.contains(e.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-        const onEsc = (e: KeyboardEvent) => {
-            if (e.key === "Escape") setIsOpen(false);
-        };
-        document.addEventListener("mousedown", onClick);
-        document.addEventListener("keydown", onEsc);
-        return () => {
-            document.removeEventListener("mousedown", onClick);
-            document.removeEventListener("keydown", onEsc);
-        };
-    }, [isOpen]);
 
     const monthDays = useMemo(() => buildMonthDays(viewMonth), [viewMonth]);
 
@@ -333,12 +316,13 @@ const DateRangePicker = () => {
     const isActive = Boolean(dateRange);
 
     return (
-        <div className={styles.container} ref={containerRef}>
+        <div className={styles.container}>
             <button
                 type="button"
                 className={`${styles.trigger} ${isActive ? styles.triggerActive : ""}`}
-                onClick={() => setIsOpen((v) => !v)}
-                aria-expanded={isOpen}
+                ref={setAnchor}
+                onClick={opened ? () => close() : open}
+                aria-expanded={opened}
             >
                 <CalendarIcon />
                 <span className={styles.triggerLabel}>{buttonLabel}</span>
@@ -371,8 +355,13 @@ const DateRangePicker = () => {
                 )}
             </button>
 
-            {isOpen && (
-                <div className={styles.popover} role="dialog">
+            {shown && (
+                <Dialog
+                    anchor={anchor}
+                    onClose={close}
+                    closing={closing}
+                    className={styles.dialog}
+                >
                     <div className={styles.header}>
                         <button
                             type="button"
@@ -485,7 +474,7 @@ const DateRangePicker = () => {
                             Сбросить
                         </button>
                     </div>
-                </div>
+                </Dialog>
             )}
         </div>
     );

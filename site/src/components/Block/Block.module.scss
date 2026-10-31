@@ -1,0 +1,21 @@
+.block {
+    box-shadow: var(--box-shadow);
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+
+    border-radius: var(--border-radius-md);
+
+    &.flat {
+        box-shadow: none;
+        margin: 0;
+    }
+
+    @include mediaSM {
+        margin: 5px 0;
+
+        &:where(:not(.flat)) {
+            border-radius: 0;
+        }
+    }
+}

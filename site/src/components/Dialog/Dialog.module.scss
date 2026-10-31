@@ -1,0 +1,240 @@
+@keyframes fade {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes rise {
+    from {
+        transform: translateY(100%);
+    }
+}
+
+@keyframes settle {
+    from {
+        transform: translateY(var(--y));
+    }
+}
+
+@keyframes exit {
+    from {
+        transform: translateY(var(--y));
+    }
+
+    to {
+        transform: translateY(calc(var(--y) + 20vh));
+    }
+}
+
+@keyframes dismiss {
+    from {
+        transform: translateY(var(--y));
+    }
+
+    to {
+        transform: translateY(100%);
+    }
+}
+
+@keyframes vanish {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes drop {
+    from {
+        translate: 0 -16px;
+        opacity: 0;
+    }
+}
+
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    background: rgb(0 0 0 / 50%);
+    touch-action: none;
+}
+
+.panel {
+    position: fixed;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: var(--dialog-width, 550px);
+    max-width: calc(100vw - 20px);
+    color: inherit;
+    background: var(--color-dark-bg-1);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow);
+
+    > [data-tabs] {
+        flex: 1;
+        min-height: 0;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+
+        > :first-child {
+            touch-action: pan-x;
+        }
+
+        > :last-child {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+
+            @include scrollBar;
+        }
+    }
+}
+
+.root {
+    display: contents;
+
+    &[data-state] {
+        pointer-events: none;
+    }
+
+    &[data-kind="dialog"] > .panel {
+        inset: 10vh 0 auto;
+        margin-inline: auto;
+        max-height: 80vh;
+    }
+
+    &[data-kind="sheet"] > .backdrop {
+        background: rgb(0 0 0 / 32%);
+        animation: fade 0.25s linear;
+    }
+
+    &[data-kind="sheet"] > .panel {
+        inset: auto 0 0;
+        margin-inline: auto;
+        width: min(640px, 100%);
+        max-width: none;
+        max-height: calc(100svh - 40px);
+        padding-bottom: env(safe-area-inset-bottom);
+        border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+        animation: rise 0.4s cubic-bezier(0.05, 0.7, 0.1, 1);
+        will-change: transform;
+
+        &[data-snap] {
+            --half: calc(100% - 58svh);
+
+            height: calc(100svh - 40px);
+        }
+
+        &[data-snap="half"] {
+            transform: translateY(var(--half));
+
+            > [data-tabs] > :last-child {
+                overflow: hidden;
+            }
+        }
+
+        &::before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            z-index: 2;
+            width: 36px;
+            height: 5px;
+            translate: -50% 0;
+            border-radius: 3px;
+            background: currentColor;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        > [data-tabs="1"] > :first-child {
+            display: none;
+        }
+    }
+
+    &[data-kind="popover"] > .panel {
+        inset: 0 auto auto 0;
+        z-index: 5;
+        width: var(--dialog-width, max-content);
+        max-height: calc(100dvh - 16px);
+
+        > [data-tabs] > :first-child {
+            display: none;
+        }
+    }
+
+    &[data-kind="sheet"] {
+        &[data-instant] > .backdrop {
+            animation: none;
+        }
+
+        &[data-state="closing"] > .backdrop {
+            animation: vanish 0.22s linear forwards;
+        }
+
+        &[data-state="closing"]:has(~ .root[data-kind="sheet"]:not([data-state])) > .backdrop {
+            visibility: hidden;
+        }
+
+        &[data-motion="drag"] > .panel {
+            animation: none;
+        }
+
+        &[data-motion="settle"] > .panel {
+            animation: settle var(--duration) cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        &[data-motion="exit"] > .panel {
+            animation:
+                exit 0.35s cubic-bezier(0.3, 0, 0.8, 0.15) forwards,
+                vanish 0.3s cubic-bezier(0.3, 0, 0.8, 0.15) forwards;
+        }
+
+        &[data-motion="dismiss"] {
+            > .backdrop {
+                animation-duration: min(0.22s, calc(var(--duration) - 20ms));
+            }
+
+            > .panel {
+                animation: dismiss var(--duration) cubic-bezier(0.2, 0.5, 0.7, 1) forwards;
+            }
+        }
+    }
+
+    &[data-kind="dialog"] {
+        &[data-state="closing"]:has(~ .root[data-kind="dialog"]:not([data-state])) {
+            visibility: hidden;
+        }
+
+        &:not([data-state], [data-instant]) {
+            > .backdrop {
+                animation: fade 0.2s;
+            }
+
+            > .panel {
+                animation: drop 0.25s ease-out;
+            }
+        }
+
+        &[data-state="closing"] {
+            > .backdrop {
+                animation: fade 0.2s reverse forwards;
+            }
+
+            > .panel {
+                animation: drop 0.2s reverse forwards;
+            }
+        }
+    }
+
+    &[data-kind="popover"][data-state="closing"] > .panel {
+        display: none;
+    }
+}
+
+body:has(> .root:is([data-kind="sheet"], [data-kind="dialog"]:not([data-state]))) {
+    overflow: hidden;
+}

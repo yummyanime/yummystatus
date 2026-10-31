@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "./Menu.module.scss";
 import MenuItem from "./_item/MenuItem.tsx";
-import SubMenu, { type SubMenuEntry } from "../SubMenu/SubMenu.tsx";
+import { type SubMenuEntry } from "../SubMenu/SubMenu.tsx";
 import { domains, getDomainLabel } from "../../../data/constants.ts";
 import { HomeIcon, ListIcon, ErrorIcon } from "../../../icons.tsx";
 
@@ -41,9 +41,8 @@ const Menu: React.FC<MenuProps> = ({ variant, isSticky }) => {
                 href="#"
                 title="ДОМЕНЫ"
                 icon={<ListIcon size={iconSize} color={iconColor} />}
-                subList={
-                    <SubMenu variant={variant} items={domainItems} first={true} />
-                }
+                items={domainItems}
+                sheetKey="domains"
             />
         </nav>
     );

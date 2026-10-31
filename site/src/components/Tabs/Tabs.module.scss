@@ -1,0 +1,162 @@
+.parent {
+    display: flex;
+    isolation: isolate;
+    flex-wrap: wrap;
+    align-items: stretch;
+    flex: 1;
+
+    @include mediaSM {
+        &:not(.singleTabParent) > * {
+            flex: 1 0 auto;
+        }
+    }
+
+    @include mediaTouch {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        min-width: 0;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        &:not(.singleTabParent) {
+            contain: inline-size;
+            padding-top: 5px;
+            margin-top: -5px;
+        }
+
+        &:not(.singleTabParent) > * {
+            flex: 1 0 auto;
+        }
+
+        &.singleTabParent {
+            overflow: visible;
+        }
+    }
+
+    &.multipleRows {
+        & > * {
+            flex: 1 0 auto;
+        }
+    }
+
+    &.singleTabParent {
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+
+        @include mediaSM {
+            justify-content: flex-start;
+        }
+    }
+}
+
+.oneTab {
+    position: relative;
+    height: 48px;
+    min-width: 74px;
+    padding: 0 18px;
+    white-space: nowrap;
+    display: flex;
+    gap: 7px;
+    font-weight: 500;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+
+    @include desktopHover(true, 0.1s, 0.2s) {
+        background: var(--head-hover);
+    }
+
+    @include mediaSM {
+        height: 40px;
+        padding: 0 12px;
+        gap: 5px;
+        font-size: 0.875rem;
+    }
+
+    a {
+        text-decoration: inherit;
+        color: inherit;
+    }
+
+    &.selected {
+        background: var(--color-primary);
+    }
+
+    .tabIcon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+
+        @include mediaSM {
+            display: none;
+        }
+    }
+
+    .count {
+        isolation: isolate;
+        z-index: 1;
+        position: absolute;
+        display: block;
+        top: -5px;
+        right: -5px;
+        padding: 0 5px;
+        background: var(--color-green);
+        font-size: 0.875rem;
+
+        border-radius: var(--border-radius-md);
+
+        @include mediaSM {
+            right: 0;
+        }
+    }
+
+    svg {
+        fill: currentColor !important;
+    }
+
+    h2 {
+        font-size: inherit;
+        font-weight: inherit;
+        margin: 0;
+        padding: 0;
+    }
+
+    &.singleTab {
+        cursor: default;
+
+        &.hasHref,
+        &.interactive {
+            cursor: pointer;
+
+            @include desktopHover(false) {
+                background: var(--head-hover) !important;
+            }
+        }
+
+        @include desktopHover(false) {
+            background: transparent !important;
+        }
+
+        &.selected {
+            background: transparent !important;
+        }
+    }
+}
+
+.link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+
+    @include desktopHover(true, 0.1s, 0.2s) {
+        background-color: var(--head-hover);
+    }
+}

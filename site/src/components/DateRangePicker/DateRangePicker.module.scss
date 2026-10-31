@@ -1,5 +1,4 @@
 .container {
-    position: relative;
     display: inline-block;
 }
 
@@ -64,33 +63,11 @@
     }
 }
 
-.popover {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    width: 320px;
-    max-width: calc(100vw - 20px);
-    background-color: var(--color-dark-bg-1);
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--box-shadow);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    padding: 12px;
-    z-index: 3;
-    color: #fff;
-    user-select: none;
+.dialog {
+    --dialog-width: 320px;
 
-    @include mediaSM {
-        z-index: 50;
-        position: fixed;
-        top: 50%;
-        left: 10px;
-        right: 10px;
-        transform: translateY(-50%);
-        width: auto;
-        max-width: none;
-        max-height: calc(100vh - 20px);
-        overflow: auto;
-    }
+    padding: 12px;
+    user-select: none;
 }
 
 .header {
