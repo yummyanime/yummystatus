@@ -45,7 +45,7 @@ export const cityTranslations: { [key: string]: string } = {
     Moscow: "Москва",
     "Saint Petersburg": "Санкт-Петербург",
     Kyiv: "Киев",
-    Lviv: "Львов",
+    Dnipro: "Днепр",
     Odesa: "Одесса",
     Almaty: "Алматы",
     Minsk: "Минск",

@@ -82,7 +82,7 @@ export const locationGroups = {
         { country: "RU", city: "Saint Petersburg" },
         { country: "RU", city: "Novosibirsk" },
         { country: "UA", city: "Kyiv" },
-        { country: "UA", city: "Lviv" },
+        { country: "UA", city: "Dnipro" },
         { country: "UA", city: "Odesa" },
         { country: "KZ", city: "Almaty" },
         { country: "KZ", city: "Aktau" },

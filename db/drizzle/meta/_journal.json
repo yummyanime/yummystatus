@@ -15,6 +15,13 @@
             "when": 1793469581046,
             "tag": "0001_hourly_unique_keys",
             "breakpoints": true
+        },
+        {
+            "idx": 2,
+            "version": "7",
+            "when": 1793472548436,
+            "tag": "0002_migrate_lviv_to_dnipro",
+            "breakpoints": true
         }
     ]
 }
