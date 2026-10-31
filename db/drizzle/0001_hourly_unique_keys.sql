@@ -1,0 +1,6 @@
+DELETE FROM "http_hourly_logs" WHERE "id" IN (SELECT "id" FROM (SELECT "id", ROW_NUMBER() OVER (PARTITION BY created_at, domain, country, city ORDER BY "id") AS "rn" FROM "http_hourly_logs") "d" WHERE "d"."rn" > 1);--> statement-breakpoint
+DELETE FROM "ping_hourly_logs" WHERE "id" IN (SELECT "id" FROM (SELECT "id", ROW_NUMBER() OVER (PARTITION BY created_at, domain, country, city ORDER BY "id") AS "rn" FROM "ping_hourly_logs") "d" WHERE "d"."rn" > 1);--> statement-breakpoint
+DELETE FROM "lighthouse_hourly_logs" WHERE "id" IN (SELECT "id" FROM (SELECT "id", ROW_NUMBER() OVER (PARTITION BY created_at, domain, url_path, strategy ORDER BY "id") AS "rn" FROM "lighthouse_hourly_logs") "d" WHERE "d"."rn" > 1);--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_http_hourly_logs_key" ON "http_hourly_logs" USING btree ("created_at","domain","country","city");--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_lighthouse_hourly_logs_key" ON "lighthouse_hourly_logs" USING btree ("created_at","domain","url_path","strategy");--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_ping_hourly_logs_key" ON "ping_hourly_logs" USING btree ("created_at","domain","country","city");

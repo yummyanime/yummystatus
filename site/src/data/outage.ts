@@ -1,0 +1,13 @@
+export const REASONS = [
+    { code: "not_loading", label: "Не загружается сайт" },
+    { code: "slow", label: "Долгая загрузка" },
+    { code: "no_media", label: "Нет изображений и видео" },
+    { code: "freezing", label: "Зависает" },
+    { code: "auth", label: "Не работает регистрация/авторизация" },
+] as const;
+
+export type ReasonCode = (typeof REASONS)[number]["code"];
+
+export const REASON_LABELS: Record<string, string> = Object.fromEntries(
+    REASONS.map((r) => [r.code, r.label])
+);

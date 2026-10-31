@@ -1,0 +1,122 @@
+import React, { useMemo, useState } from "react";
+import Chart from "../../../Chart/Chart.tsx";
+import LazyMount from "../../../LazyMount/LazyMount.tsx";
+import Button from "../../../Button/Button.tsx";
+import {
+    makeLighthousePreset,
+    type LighthousePoint,
+} from "../../../Chart/chartPresets.ts";
+import {
+    LIGHTHOUSE_METRICS,
+    avgOf,
+    getMetric,
+    rate,
+    RATING_COLORS,
+    formatMetric,
+    metricUnitLabel,
+    type LighthouseMetricKey,
+} from "../../lighthouseMetrics.ts";
+import type { LighthouseLog } from "../../../../api.ts";
+import styles from "./LhChart.module.scss";
+
+interface LhChartProps {
+    logs: LighthouseLog[];
+    timeRange: string;
+}
+
+const LAB_SERIES = "Status сервис";
+const FIELD_SERIES = "Google";
+
+const LhChart: React.FC<LhChartProps> = ({ logs, timeRange }) => {
+    const [activeMetric, setActiveMetric] = useState<LighthouseMetricKey>(
+        () =>
+            (localStorage.getItem("lighthouseMetric") as LighthouseMetricKey) ||
+            "lcp"
+    );
+
+    const handleMetricChange = (key: LighthouseMetricKey) => {
+        setActiveMetric(key);
+        localStorage.setItem("lighthouseMetric", key);
+    };
+
+    const metric = getMetric(activeMetric);
+    const digits = metric.unit === "unitless" ? 2 : 0;
+
+    const { cityLogs, cities, avg } = useMemo(() => {
+        const labPoints: LighthousePoint[] = [];
+        const fieldPoints: LighthousePoint[] = [];
+
+        for (const log of logs) {
+            const labVal = log[metric.key] as number | null | undefined;
+            labPoints.push({ created_at: log.created_at, value: labVal });
+            if (metric.fieldKey) {
+                const fieldVal = log[metric.fieldKey] as number | null | undefined;
+                fieldPoints.push({ created_at: log.created_at, value: fieldVal });
+            }
+        }
+
+        const hasField = fieldPoints.some(
+            (p) => p.value !== null && p.value !== undefined && Number.isFinite(p.value as number)
+        );
+
+        const labSeries = metric.fieldOnly ? FIELD_SERIES : LAB_SERIES;
+
+        const cityLogs: Record<string, LighthousePoint[]> = {
+            [labSeries]: labPoints,
+        };
+        const cities = [labSeries];
+        if (metric.fieldKey && hasField) {
+            cityLogs[FIELD_SERIES] = fieldPoints;
+            cities.push(FIELD_SERIES);
+        }
+
+        return { cityLogs, cities, avg: avgOf(logs, metric.key) };
+    }, [logs, metric.key, metric.fieldKey, metric.fieldOnly]);
+
+    const preset = useMemo(() => makeLighthousePreset(digits, metric.label), [digits, metric.label]);
+
+    const avgRating = rate(metric, avg);
+    const unit = metricUnitLabel(metric);
+
+    return (
+        <div className={styles.container}>
+            <div className={styles.tabsWrapper}>
+                {LIGHTHOUSE_METRICS.map((m) => (
+                    <Button
+                        key={m.key}
+                        active={activeMetric === m.key}
+                        onClick={() => handleMetricChange(m.key)}
+                    >
+                        {m.label}
+                    </Button>
+                ))}
+            </div>
+            <div className={styles.chartWrapper}>
+                <LazyMount fill>
+                    <Chart
+                        cityLogs={cityLogs}
+                        cities={cities}
+                        timeRange={timeRange}
+                        hideLegend={cities.length < 2}
+                        {...preset}
+                    />
+                </LazyMount>
+            </div>
+            <div className={styles.avgWrapper}>
+                <span className={styles.avgLabel}>Среднее {metric.label}</span>
+
+                <span
+                    className={styles.avgValue}
+                    style={{ color: RATING_COLORS[avgRating] }}
+                >
+                    {formatMetric(metric, avg)}
+                    {avg !== null && metric.unit === "unitless" && unit ? (
+                        <small>{unit}</small>
+                    ) : null}
+                </span>
+            </div>
+        </div>
+    );
+};
+
+export default LhChart;

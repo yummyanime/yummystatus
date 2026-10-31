@@ -1,13 +1,11 @@
 # Dependencies
 /node_modules
-/client/node_modules
-/server/node_modules
-bun.lock
+/site/node_modules
 bun.lockb
 
 # Vite
-/client/dist
-/client/.vite
+/site/dist
+/site/.vite
 
 # Logs
 logs

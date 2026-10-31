@@ -1,56 +1,80 @@
 name: yummystatus
 
 services:
-    app:
-        image: ${IMAGE}
-
-        ports:
-            - "80:80"
-            - "443:443"
-        depends_on:
-            - db
-        volumes:
-            - /etc/letsencrypt:/etc/letsencrypt:ro
-            - /var/www/certbot:/var/www/certbot:ro
-        environment:
-            - DB_USER=${DB_USER}
-            - DB_PASSWORD=${DB_PASSWORD}
-            - GLOBALPING_API_KEY=${GLOBALPING_API_KEY}
-            - GLOBALPING_API_KEY2=${GLOBALPING_API_KEY2}
-            - GLOBALPING_API_KEY3=${GLOBALPING_API_KEY3}
-            - GLOBALPING_API_KEY4=${GLOBALPING_API_KEY4}
-            - GLOBALPING_API_KEY5=${GLOBALPING_API_KEY5}
-            - GLOBALPING_API_KEY6=${GLOBALPING_API_KEY6}
-            - GLOBALPING_SECRET_KEY=${GLOBALPING_SECRET_KEY}
-            - PSI_API_KEY=${PSI_API_KEY}
-        restart: always
-
-    bot:
-        image: ${IMAGE}
-        command: bun bot/index.js
-        depends_on:
-            - app
-        environment:
-            - TG_BOT_TOKEN=${TG_BOT_TOKEN}
-            - TG_CHAT_ID=${TG_CHAT_ID}
-            - API_URL=http://app:3000
-            - BOT_STATE_FILE=/data/state.json
-        volumes:
-            - botstate:/data
-        restart: always
-
     db:
         image: postgres:13
-        ports:
-            - "5432:5432"
+        restart: always
         environment:
             - POSTGRES_USER=${DB_USER}
             - POSTGRES_PASSWORD=${DB_PASSWORD}
             - POSTGRES_DB=yummystatus
         volumes:
             - pgdata:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d yummystatus"]
+            interval: 5s
+            timeout: 3s
+            retries: 10
+        ports:
+            - "127.0.0.1:5432:5432"
+
+    api:
+        image: ghcr.io/${GITHUB_REPOSITORY}-api:${TAG:-latest}
         restart: always
+        env_file: .env
+        depends_on:
+            db:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "bun", "-e", "fetch('http://localhost:3000/api/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
+
+    collector:
+        image: ghcr.io/${GITHUB_REPOSITORY}-collector:${TAG:-latest}
+        restart: always
+        env_file: .env
+        depends_on:
+            db:
+                condition: service_healthy
+            api:
+                condition: service_healthy
+
+    bot:
+        image: ghcr.io/${GITHUB_REPOSITORY}-bot:${TAG:-latest}
+        restart: always
+        env_file: .env
+        environment:
+            - API_URL=http://api:3000/
+            - BOT_STATE_FILE=/data/state.json
+        volumes:
+            - botstate:/data
+        depends_on:
+            api:
+                condition: service_healthy
+
+    site:
+        image: ghcr.io/${GITHUB_REPOSITORY}-site:${TAG:-latest}
+        restart: always
+
+    caddy:
+        image: caddy:2-alpine
+        restart: always
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./caddy:/etc/caddy:ro
+            - caddy-data:/data
+            - caddy-config:/config
+        depends_on:
+            - api
+            - site
 
 volumes:
     pgdata:
     botstate:
+    caddy-data:
+    caddy-config:

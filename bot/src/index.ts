@@ -1,0 +1,318 @@
+process.env.TZ = "UTC";
+
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import { API_URL, client, type HealthReport } from "./api.ts";
+import {
+    buildAlert,
+    type Diagnosis,
+    diagnose,
+    formatDuration,
+    withUpdate,
+} from "./diagnose.ts";
+
+interface Incident {
+    messageId: number;
+    hasPhoto: boolean;
+    startedAt: string;
+    updatedAt: string;
+    signature: string;
+    alert: string;
+    okChecks: number;
+}
+
+interface SentMessage {
+    messageId: number;
+    hasPhoto: boolean;
+}
+
+interface TelegramResponse {
+    ok: boolean;
+    description?: string;
+    result?: { message_id: number };
+}
+
+const TOKEN = process.env.TG_BOT_TOKEN;
+const CHAT_ID = process.env.TG_CHAT_ID ?? "";
+const SITE_URL = process.env.SITE_URL ?? "https://yummystatus.me";
+const SCREENSHOT_URL =
+    process.env.SCREENSHOT_URL ??
+    "https://image.thum.io/get/viewportWidth/1400/width/1370/crop/590/refresh/60/wait/12/noanimate/{url}";
+const SCREENSHOT_TARGET =
+    process.env.SCREENSHOT_TARGET ?? `${SITE_URL}/?bare=1`;
+const INTERVAL_MS = Number(process.env.BOT_INTERVAL_MS ?? 2 * 60 * 1000);
+const UPDATE_INTERVAL_MS = Number(
+    process.env.BOT_UPDATE_INTERVAL_MS ?? 15 * 60 * 1000
+);
+const RECOVERY_CHECKS = Number(process.env.BOT_RECOVERY_CHECKS ?? 2);
+const STATE_FILE =
+    process.env.BOT_STATE_FILE ?? new URL("../.state.json", import.meta.url);
+const DRY_RUN = process.env.BOT_DRY_RUN === "1";
+const FORCE_ALERT = process.env.BOT_FORCE_ALERT === "1";
+const ALLOWED_COUNTRIES = "RU,UA,BY";
+const SCREENSHOT_TIMEOUT_MS = 90 * 1000;
+
+if (!DRY_RUN && (!TOKEN || !CHAT_ID)) {
+    console.error("Нужны TG_BOT_TOKEN и TG_CHAT_ID");
+    process.exit(1);
+}
+
+console.log(
+    `Бот запущен: ${API_URL}, интервал ${INTERVAL_MS / 1000} c${DRY_RUN ? ", dry-run" : ""}`
+);
+run();
+const timer = setInterval(run, INTERVAL_MS);
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
+
+async function tick(): Promise<void> {
+    const report = await fetchHealth();
+    const health = FORCE_ALERT ? "critical" : report.health;
+    const now = new Date();
+    const state = readState();
+
+    if (health === "critical") {
+        const diagnosis = diagnose(report);
+        const signature = signatureOf(diagnosis);
+
+        if (!state) {
+            const alert = buildAlert(diagnosis, now);
+            const sent = await sendAlert(alert);
+            writeState({
+                ...sent,
+                startedAt: now.toISOString(),
+                updatedAt: now.toISOString(),
+                signature,
+                alert,
+                okChecks: 0,
+            });
+            console.log(`Инцидент открыт: ${diagnosis.cause.title}`);
+            return;
+        }
+
+        const changed = signature !== state.signature;
+        const stale =
+            now.getTime() - new Date(state.updatedAt).getTime() >=
+            UPDATE_INTERVAL_MS;
+        if (!changed && !stale) {
+            if (state.okChecks) writeState({ ...state, okChecks: 0 });
+            return;
+        }
+
+        const startedAt = new Date(state.startedAt);
+        const alert = buildAlert(diagnosis, startedAt);
+        const update = withUpdate(alert, {
+            kind: "ongoing",
+            at: now,
+            durationMs: now.getTime() - startedAt.getTime(),
+            changed,
+        });
+        const edited = await editAlert(state, update);
+        const resent = edited ? null : await sendAlert(update);
+        writeState({
+            ...state,
+            ...resent,
+            updatedAt: now.toISOString(),
+            signature,
+            alert,
+            okChecks: 0,
+        });
+        console.log(`Инцидент обновлён: ${diagnosis.cause.title}`);
+        return;
+    }
+
+    if (!state) return;
+
+    const okChecks = state.okChecks + 1;
+    if (okChecks < RECOVERY_CHECKS) {
+        writeState({ ...state, okChecks });
+        return;
+    }
+
+    const durationMs = now.getTime() - new Date(state.startedAt).getTime();
+    await editAlert(
+        state,
+        withUpdate(state.alert, { kind: "resolved", at: now, durationMs })
+    );
+    writeState(null);
+    console.log(`Инцидент закрыт, длительность: ${formatDuration(durationMs)}`);
+}
+
+function run(): Promise<void> {
+    return tick().catch((error: unknown) =>
+        console.error("Цикл упал:", errorMessage(error))
+    );
+}
+
+function shutdown(): void {
+    clearInterval(timer);
+    process.exit(0);
+}
+
+function errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+}
+
+function readState(): Incident | null {
+    try {
+        return JSON.parse(readFileSync(STATE_FILE, "utf8")) as Incident;
+    } catch {
+        return null;
+    }
+}
+
+function writeState(state: Incident | null): void {
+    if (state) writeFileSync(STATE_FILE, JSON.stringify(state));
+    else rmSync(STATE_FILE, { force: true });
+}
+
+async function telegram(
+    method: string,
+    body: FormData | Record<string, unknown>
+): Promise<{ message_id: number }> {
+    const init =
+        body instanceof FormData
+            ? { method: "POST", body }
+            : {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(body),
+              };
+    const response = await fetch(
+        `https://api.telegram.org/bot${TOKEN}/${method}`,
+        init
+    );
+    const data = (await response.json()) as TelegramResponse;
+    if (!data.ok || !data.result) {
+        throw new Error(`${method}: ${data.description}`);
+    }
+    return data.result;
+}
+
+async function fetchHealth(): Promise<HealthReport> {
+    const response = await client.api.health.$get(
+        { query: { timeRange: "3hour", countries: ALLOWED_COUNTRIES } },
+        { init: { signal: AbortSignal.timeout(30 * 1000) } }
+    );
+    if (!response.ok) throw new Error(`health: ${response.status}`);
+    return response.json();
+}
+
+async function fetchScreenshot(): Promise<Uint8Array | null> {
+    try {
+        const response = await fetch(
+            SCREENSHOT_URL.replace("{url}", SCREENSHOT_TARGET),
+            {
+                signal: AbortSignal.timeout(SCREENSHOT_TIMEOUT_MS),
+            }
+        );
+        if (!response.ok) throw new Error(`screenshot: ${response.status}`);
+        const image = new Uint8Array(await response.arrayBuffer());
+        return image.byteLength > 0 ? image : null;
+    } catch (error) {
+        console.error("Скриншот не получен:", errorMessage(error));
+        return null;
+    }
+}
+
+async function sendAlert(caption: string): Promise<SentMessage> {
+    const image = await fetchScreenshot();
+
+    if (DRY_RUN) {
+        console.log(
+            `--- caption (${caption.length} симв., фото: ${Boolean(image)}) ---`
+        );
+        console.log(caption);
+        return { messageId: 0, hasPhoto: Boolean(image) };
+    }
+
+    if (image) {
+        const form = new FormData();
+        form.set("chat_id", CHAT_ID);
+        form.set("caption", caption);
+        form.set("parse_mode", "HTML");
+        form.set(
+            "photo",
+            new Blob([image], { type: "image/png" }),
+            "status.png"
+        );
+        const message = await telegram("sendPhoto", form);
+        return { messageId: message.message_id, hasPhoto: true };
+    }
+
+    const message = await telegram("sendMessage", {
+        chat_id: CHAT_ID,
+        text: caption,
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+    });
+    return { messageId: message.message_id, hasPhoto: false };
+}
+
+function messageGone(error: unknown): boolean {
+    return /message to edit not found|message can't be edited|MESSAGE_ID_INVALID/i.test(
+        errorMessage(error)
+    );
+}
+
+async function editAlert(state: Incident, caption: string): Promise<boolean> {
+    const image = state.hasPhoto ? await fetchScreenshot() : null;
+
+    if (DRY_RUN) {
+        console.log(
+            `--- update (${caption.length} симв., фото: ${Boolean(image)}) ---`
+        );
+        console.log(caption);
+        return true;
+    }
+
+    try {
+        if (image) {
+            const form = new FormData();
+            form.set("chat_id", CHAT_ID);
+            form.set("message_id", String(state.messageId));
+            form.set(
+                "media",
+                JSON.stringify({
+                    type: "photo",
+                    media: "attach://photo",
+                    caption,
+                    parse_mode: "HTML",
+                })
+            );
+            form.set(
+                "photo",
+                new Blob([image], { type: "image/png" }),
+                "status.png"
+            );
+            await telegram("editMessageMedia", form);
+        } else if (state.hasPhoto) {
+            await telegram("editMessageCaption", {
+                chat_id: CHAT_ID,
+                message_id: state.messageId,
+                caption,
+                parse_mode: "HTML",
+            });
+        } else {
+            await telegram("editMessageText", {
+                chat_id: CHAT_ID,
+                message_id: state.messageId,
+                text: caption,
+                parse_mode: "HTML",
+                disable_web_page_preview: true,
+            });
+        }
+        return true;
+    } catch (error) {
+        if (!messageGone(error)) throw error;
+        console.error("Сообщение недоступно для правки:", errorMessage(error));
+        return false;
+    }
+}
+
+function signatureOf(diagnosis: Diagnosis): string {
+    return `${diagnosis.cause.key}|${diagnosis.affected
+        .map((entry) => entry.domain)
+        .sort()
+        .join(",")}`;
+}

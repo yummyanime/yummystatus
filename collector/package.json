@@ -1,0 +1,14 @@
+{
+    "name": "@yummystatus/collector",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "start": "bun src/index.ts",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@yummystatus/db": "workspace:*",
+        "drizzle-orm": "^0.44.0"
+    }
+}

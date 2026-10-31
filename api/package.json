@@ -1,0 +1,20 @@
+{
+    "name": "@yummystatus/api",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": "./src/app.ts"
+    },
+    "scripts": {
+        "dev": "bun --hot src/index.ts",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@hono/zod-validator": "^0.7.0",
+        "@yummystatus/db": "workspace:*",
+        "drizzle-orm": "^0.44.0",
+        "hono": "^4.9.0",
+        "zod": "^4.0.5"
+    }
+}

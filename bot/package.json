@@ -1,0 +1,17 @@
+{
+    "name": "@yummystatus/bot",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "start": "bun src/index.ts",
+        "dev": "bun --hot src/index.ts",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "hono": "^4.9.0"
+    },
+    "devDependencies": {
+        "@yummystatus/api": "workspace:*"
+    }
+}

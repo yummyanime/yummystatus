@@ -1,0 +1,22 @@
+{
+    "name": "@yummystatus/db",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": "./src/schema.ts",
+        "./client": "./src/client.ts"
+    },
+    "scripts": {
+        "db:generate": "drizzle-kit generate",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "drizzle-orm": "^0.44.0",
+        "pg": "^8.16.0"
+    },
+    "devDependencies": {
+        "@types/pg": "^8.15.0",
+        "drizzle-kit": "^0.31.0"
+    }
+}

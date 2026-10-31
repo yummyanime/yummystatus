@@ -8,24 +8,21 @@ The service collects statistics on response time, status codes, and other parame
 
 ## Tech stack
 
-### Frontend
+### Monorepo (bun workspaces)
 
-- **React**: UI library.
-- **TypeScript**: Typed JavaScript.
-- **Vite**: Frontend build tool.
-- **Chart.js**: Charting library.
-- **Sass**: CSS preprocessor.
+- `domains.ts`: single source of truth for monitored domains, groups and locations.
+- `db`: Drizzle ORM schema, client and SQL migrations (applied automatically at API startup).
+- `api`: Hono + zod HTTP API under `/api/*`; exports `AppType` for typed `hc` clients.
+- `collector`: HTTP, ping and Lighthouse checks, hourly aggregation, cleanup of old logs.
+- `bot`: Telegram alert bot talking to the API through `hc<AppType>`.
+- `site`: React + Vite + Chart.js + Sass frontend, served by a Caddy static image.
 
-### Backend
+### Infrastructure
 
-- **Node.js**: JavaScript runtime.
-- **Express.js**: Web framework for Node.js.
-- **PostgreSQL**: Relational database.
-
-### Deployment
-
-- **Docker**: Application containerization platform.
-- **Nginx**: Web server and reverse proxy.
+- **Bun** and **TypeScript**: runtime and language for all services.
+- **PostgreSQL 13**: relational database.
+- **Docker** and **Caddy**: one image per service, Caddy gateway with automatic HTTPS.
+- **GitHub Actions**: builds images to GHCR and deploys them with `docker compose`.
 
 ## Tooling
 
@@ -46,24 +43,10 @@ The service collects statistics on response time, status codes, and other parame
     cp .env.example .env
     ```
 
-2.  Start the database, server and client:
+2.  Start the database, API, collector and site:
 
     ```bash
     bun run dev
     ```
 
-The client will then be available at `http://localhost:5173` (API on `http://localhost:3000`).
-
-## Server deployment
-
-### Prerequisites
-
-- [Docker](https://www.docker.com/)
-
-### Building and running the containers
-
-To run the project with Docker, execute the following command in the project root directory:
-
-```bash
-docker-compose up --build
-```
+The site will then be available at `http://localhost:5173` (API on `http://localhost:3000`).
