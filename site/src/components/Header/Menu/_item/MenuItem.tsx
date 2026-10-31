@@ -10,6 +10,7 @@ interface MenuItemProps {
     icon?: ReactNode;
     subList?: ReactNode;
     variant: "top" | "bottom";
+    isSticky?: boolean;
 }
 
 const MenuItem: React.FC<MenuItemProps> = ({
@@ -18,6 +19,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
     icon,
     subList,
     variant,
+    isSticky,
 }) => {
     const hover = variant === "top";
     const [opened, setOpened] = useState(false);
@@ -33,6 +35,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
         <Ripple
             className={styles.container}
             data-variant={variant}
+            data-scrolling={isSticky}
             data-opened={opened ? "true" : undefined}
             onMouseOver={() => hover && subList && setOpened(true)}
             onMouseLeave={() => hover && subList && setOpened(false)}

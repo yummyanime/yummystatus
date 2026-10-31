@@ -5,17 +5,13 @@
     row-gap: 10px;
     column-gap: 30px;
     justify-content: center;
-
-    @media (max-width: 350px) {
-        column-gap: 0px;
-    }
 }
 
 .buttonGroup {
     display: flex;
     gap: 10px;
 
-    @media (max-width: 830px) {
+    @include mediaLG {
         gap: 5px;
     }
 }

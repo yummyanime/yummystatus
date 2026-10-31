@@ -1,5 +1,3 @@
-@use "../../../main" as *;
-
 .overviewContainer {
     display: flex;
     background-color: var(--color-dark-bg-1);
@@ -8,6 +6,10 @@
     margin-bottom: 1rem;
     overflow: hidden;
     min-height: 250px;
+
+    @include mediaLG {
+        flex-direction: column;
+    }
 }
 
 .leftPart {
@@ -20,6 +22,11 @@
     gap: 20px;
     padding: 1rem;
     box-sizing: border-box;
+
+    @include mediaLG {
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
 }
 
 .statusBadge {
@@ -92,15 +99,4 @@
     background-color: var(--color-bg);
     border-radius: var(--border-radius-sm);
     @include shimmer;
-}
-
-@media (max-width: 830px) {
-    .overviewContainer {
-        flex-direction: column;
-    }
-
-    .leftPart {
-        border-right: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
 }

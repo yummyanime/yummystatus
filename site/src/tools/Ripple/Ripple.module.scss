@@ -4,6 +4,7 @@
     top: 0;
     pointer-events: none;
     overflow: hidden;
+    isolation: isolate;
 
     .ripple {
         position: absolute;

@@ -8,8 +8,8 @@
     min-width: 0;
     cursor: pointer;
 
-    &:hover {
-        background: var(--color-dark-bg-2);
+    @include desktopHover(true, 0.1s, 0.2s) {
+        background: var(--head-hover);
     }
 
     .link {
@@ -24,9 +24,7 @@
         font-weight: 500;
         text-decoration: none;
 
-        &:hover {
-            text-decoration: none;
-        }
+        @include desktopHover(false);
 
         svg {
             margin-right: 5px;
@@ -45,16 +43,41 @@
 
     .arrow {
         position: absolute;
-        bottom: 5px;
+        isolation: isolate;
+        top: 50%;
         left: 50%;
-        transform: translateX(-50%);
-        transition: bottom 0.2s;
+        transform: translate(-50%, 20px);
+        transition: transform 0.1s;
         pointer-events: none;
         display: flex;
 
         svg {
             margin-right: 0;
-            fill: #aaa !important;
+            fill: #b8b8b8 !important;
+        }
+    }
+
+    &[data-scrolling="true"] {
+        height: calc(100% - 16px);
+        align-self: center;
+
+        .arrow {
+            transform: translate(-50%, 17px);
+        }
+    }
+
+    &[data-variant="top"] {
+        @media (max-width: 1250px) {
+            padding: 0 8px;
+
+            .link {
+                min-width: calc(100% + 16px);
+                transform: translate(-8px, 0);
+
+                > svg {
+                    display: none;
+                }
+            }
         }
     }
 
@@ -65,7 +88,7 @@
         color: #aaa;
         padding: 0;
 
-        &:hover {
+        @include desktopHover(false) {
             background: transparent;
         }
 
@@ -91,6 +114,7 @@
         .arrow {
             top: -2px;
             bottom: auto;
+            transform: translateX(-50%);
 
             svg {
                 fill: var(--color-primary) !important;

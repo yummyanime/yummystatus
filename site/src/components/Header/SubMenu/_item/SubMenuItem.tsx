@@ -10,11 +10,14 @@ interface SubMenuItemProps {
 
 const SubMenuItem: React.FC<SubMenuItemProps> = ({ title, href }) => {
     return (
-        <Link to={href} className={styles.container}>
-            <Ripple className={styles.ripple}>
-                <span>{title}</span>
-            </Ripple>
-        </Link>
+        <Ripple
+            className={styles.container}
+            tag={Link}
+            to={href}
+            onMouseDown={(e) => e.stopPropagation()}
+        >
+            <span>{title}</span>
+        </Ripple>
     );
 };
 

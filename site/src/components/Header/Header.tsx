@@ -1,25 +1,48 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Link } from "react-router-dom";
 import styles from "./Header.module.scss";
 import Menu from "./Menu/Menu.tsx";
 import Logo from "./Logo/Logo.tsx";
 
 const Header: React.FC = () => {
+    const [isSticky, setSticky] = useState<boolean>();
+    const headerRef = useRef<HTMLDivElement>(null);
+
+    useLayoutEffect(() => {
+        let stuck = false;
+        const update = (commit: (value: boolean) => void) => {
+            const y = window.scrollY;
+            const next = stuck ? y > 30 : y >= 46;
+            if (next === stuck) return;
+            stuck = next;
+            headerRef.current?.style.setProperty(
+                "--from",
+                `${next ? Math.max(30 - y, -66) : y - 38}px`
+            );
+            commit(next);
+        };
+        const onScroll = () => update((value) => flushSync(() => setSticky(value)));
+        update(setSticky);
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
     return (
         <>
-            <div className={styles.headerContainer}>
-                <div className={styles.header}>
-                    <Link to="/" className={styles.logoLink}>
-                        <div className={styles.logoContainer}>
-                            <Logo />
-                            <span className={styles.logo}>YummyStatus</span>
+            <header className={styles.headerContainer}>
+                <div className={styles.header} data-scrolling={isSticky} ref={headerRef}>
+                    <div className={styles.bg}>
+                        <div className={styles.wrapper}>
+                            <Link to="/" className={styles.logo}>
+                                <Logo />
+                                <span className={styles.logoText}>YummyStatus</span>
+                            </Link>
+                            <Menu variant="top" isSticky={isSticky} />
                         </div>
-                    </Link>
-                    <nav className={styles.nav}>
-                        <Menu variant="top" />
-                    </nav>
+                    </div>
                 </div>
-            </div>
+            </header>
             <HeaderBottom />
         </>
     );
@@ -60,11 +83,11 @@ const HeaderBottom: React.FC = () => {
             }
         };
         document.body.addEventListener("touchstart", onTouchStart, {
-            passive: false,
+            passive: true,
         });
         document.body.addEventListener("touchcancel", onTouchEnd);
         document.body.addEventListener("touchend", onTouchEnd, {
-            passive: false,
+            passive: true,
         });
         window.addEventListener("scroll", onScroll);
         return () => {

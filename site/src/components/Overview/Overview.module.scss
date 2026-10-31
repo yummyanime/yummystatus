@@ -6,25 +6,23 @@
     overflow: hidden;
     min-height: 250px;
     box-shadow: var(--box-shadow);
+
+    @include mediaLG {
+        flex-direction: column;
+    }
 }
 
 .leftPart {
     flex: 0 0 40%;
     border-right: 2px solid rgba(255, 255, 255, 0.05);
+
+    @include mediaLG {
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
 }
 
 .rightPart {
     flex: 1 1 0;
     min-width: 0;
-}
-
-@media (max-width: 830px) {
-    .overviewContainer {
-        flex-direction: column;
-    }
-
-    .leftPart {
-        border-right: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
 }

@@ -1,30 +1,3 @@
-@mixin shimmer {
-    position: relative;
-    overflow: hidden;
-
-    &::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -150%;
-        width: 150%;
-        height: 100%;
-        background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.08),
-            transparent
-        );
-        animation: shimmer 1.5s infinite;
-    }
-
-    @keyframes shimmer {
-        100% {
-            left: 150%;
-        }
-    }
-}
-
 :root {
     --color-primary: #ff6666;
     --color-secondary: #6c757d;
@@ -47,8 +20,16 @@
     --border-radius-sm: 4px;
     --border-radius-md: 8px;
     --border-radius-lg: 12px;
-    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    --shadow-color: #2020209a;
+    --box-shadow: -3px 4px 7px 0px var(--shadow-color), 3px 4px 7px 0px var(--shadow-color);
     --ripple-color: #dbdada2f;
+
+    --head: #313131ff;
+    --head-hover: color-mix(in srgb, var(--head) 88%, black 12%);
+    --block-inner: #272727ff;
+    --block-inner-hover: color-mix(in srgb, var(--block-inner) 90%, black 10%);
+    --color-gray: #6c6c6cff;
+    --color-gray-hover: color-mix(in srgb, var(--color-gray) 92%, black 8%);
 }
 
 
@@ -96,34 +77,15 @@ p {
 }
 
 * {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+    @include scrollBar;
+
+    &::-webkit-scrollbar-corner {
+        background: transparent;
+    }
 }
 
-*::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-*::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.4);
-}
-
-*::-webkit-scrollbar-corner {
-    background: transparent;
-}
-
-@media (max-width: 768px) {
-    body {
+body {
+    @include mediaLG {
         padding-bottom: 56px;
     }
 }

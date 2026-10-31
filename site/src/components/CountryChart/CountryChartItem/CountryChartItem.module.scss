@@ -8,7 +8,7 @@
     flex-direction: column;
     min-width: 0;
 
-    @media (max-width: 500px) {
+    @include mediaSM {
         padding: 10px;
     }
 }

@@ -1,7 +1,16 @@
 .container {
     display: flex;
-    align-items: stretch;
+    margin-left: 15px;
     height: 100%;
+    min-width: 0;
+
+    @media (max-width: 1300px) {
+        margin-left: 10px;
+    }
+
+    @include mediaLG {
+        margin-left: 0;
+    }
 
     &[data-variant="bottom"] {
         width: 100%;

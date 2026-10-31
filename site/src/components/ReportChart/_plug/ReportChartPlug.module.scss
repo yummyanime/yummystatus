@@ -1,12 +1,10 @@
-@use "../../../main" as *;
-
 .grid {
     display: grid;
     grid-template-columns: 1fr 320px;
     gap: 1rem;
     margin-bottom: 1rem;
 
-    @media (max-width: 900px) {
+    @include mediaLG {
         grid-template-columns: 1fr;
     }
 }

@@ -14,7 +14,7 @@
         color 0.3s;
     color: #fff;
 
-    &:hover {
+    @include desktopHover(true, 0.3s, 0.3s) {
         background-color: var(--color-button-hover-bg);
     }
 
@@ -26,7 +26,7 @@
 .active {
     background-color: var(--color-primary);
 
-    &:hover {
+    @include desktopHover(true, 0.3s, 0.3s) {
         background-color: var(--color-primary);
     }
 

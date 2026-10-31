@@ -11,7 +11,6 @@
     left: 0;
     right: 0;
     box-sizing: border-box;
-    z-index: 1000;
 
     .inner {
         max-width: 1290px;
@@ -52,7 +51,7 @@
             font-size: 13px;
             transition: border-color 0.15s ease, background-color 0.15s ease;
 
-            &:hover {
+            @include desktopHover {
                 border-color: var(--color-primary);
                 background-color: var(--color-bg);
             }
@@ -77,13 +76,15 @@
             white-space: nowrap;
         }
 
-        @media (max-width: 500px) {
-            .codeItem {
+        .codeItem {
+            @include mediaSM {
                 width: 100%;
                 justify-content: flex-start;
             }
+        }
 
-            .codeLabel {
+        .codeLabel {
+            @include mediaSM {
                 white-space: normal;
                 text-align: left;
             }

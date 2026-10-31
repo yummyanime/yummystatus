@@ -23,6 +23,7 @@ type Props<T> = {
     onRipple?: (e: HTMLDivElement) => boolean;
     tag?: TagName | unknown;
     href?: string;
+    to?: string;
     target?: string;
     type?: "submit";
 } & DetailedHTMLProps<HTMLAttributes<T>, T>;

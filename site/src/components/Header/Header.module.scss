@@ -1,57 +1,110 @@
-.headerContainer {
-    box-shadow: var(--box-shadow);
-    display: flex;
-    width: 100%;
-    justify-content: center;
-    position: sticky;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    background-color: var(--color-dark-bg-1);
-    margin-top: 20px;
+$height: 86;
+$bgHeight: 66;
+$stickDuration: 0.15s;
+$stickEasing: cubic-bezier(0.2, 0.8, 0.2, 1);
 
-    @media (max-width: 768px) {
+.headerContainer {
+    @include mediaLG {
         display: none;
     }
 }
 
 .header {
-    display: flex;
-    align-items: stretch;
-    max-width: 1360px;
+    z-index: 4;
     width: 100%;
-}
+    height: #{$height}px;
+    margin: 20px 0 10px;
+    position: relative;
 
-.logoContainer {
-    margin: 10px 40px 10px 10px;
-    text-align: center;
-    display: flex;
-    align-items: center;
-}
+    .bg {
+        height: #{$bgHeight}px;
+        top: #{calc(($height - $bgHeight) / 2)}px;
+        position: absolute;
+        width: 100%;
 
-.logo {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #fff;
+        &::before {
+            content: "";
+            position: absolute;
+            isolation: isolate;
+            inset: 0;
+            background: var(--head);
+            box-shadow: var(--box-shadow);
+            z-index: -1;
+        }
 
-    @media (max-width: 650px) {
-        display: none;
+        .wrapper {
+            margin: 0 auto;
+            max-width: 1390px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding-right: 10px;
+            justify-content: space-between;
+        }
+    }
+
+    &[data-scrolling="false"] .bg {
+        &::before {
+            animation: unstickBg $stickDuration $stickEasing;
+        }
+
+        .wrapper {
+            animation: unstick $stickDuration $stickEasing;
+        }
+    }
+
+    &[data-scrolling="true"] {
+        .bg {
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            pointer-events: none;
+
+            &::before {
+                transform: translateY(-16px);
+                animation: stick $stickDuration $stickEasing;
+            }
+
+            .wrapper {
+                transform: translateY(-8px);
+                pointer-events: auto;
+                animation: stick $stickDuration $stickEasing;
+            }
+        }
     }
 }
 
-.nav {
-    flex-grow: 1;
-    display: flex;
-    justify-content: flex-end;
-    align-items: stretch;
-    align-self: stretch;
+@keyframes stick {
+    from {
+        transform: translateY(var(--from));
+    }
 }
 
-.logoLink {
-    text-decoration: none;
+@keyframes unstick {
+    from {
+        transform: translateY(var(--from));
+    }
+}
+
+@keyframes unstickBg {
+    from {
+        transform: translateY(calc(var(--from) - 8px));
+    }
+}
+
+.logo {
     display: flex;
     align-items: center;
+    margin-left: 10px;
+    margin-right: 15px;
+    text-decoration: none;
+}
+
+.logoText {
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: bold;
+    color: #fff;
 }
 
 .bottomBar {
@@ -60,14 +113,14 @@
     left: 0;
     height: 56px;
     border-top: 3px solid var(--color-primary);
-    z-index: 1100;
+    z-index: 4;
     width: 100%;
-    background: var(--color-dark-bg-1);
+    background: var(--block-inner);
     transition: transform 0.1s;
     will-change: transform;
     display: none;
 
-    @media (max-width: 768px) {
+    @include mediaLG {
         display: block;
     }
 }

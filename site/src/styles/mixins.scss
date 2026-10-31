@@ -1,0 +1,120 @@
+@mixin shimmer {
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -150%;
+        width: 150%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.08),
+            transparent
+        );
+        animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+        100% {
+            left: 150%;
+        }
+    }
+}
+
+@mixin desktopHover($transition: true, $outerDuration: 0.2s, $innerDuration: 0.3s, $disableTextDecoration: true) {
+    @media (hover: hover) and (pointer: fine) {
+        @if $transition {
+            transition:
+                background $outerDuration ease-out,
+                color $outerDuration ease-out,
+                fill $outerDuration ease-out,
+                opacity $outerDuration ease-out,
+                transform $outerDuration ease-out,
+                border-color $outerDuration ease-out,
+                --dashed-border-color $outerDuration ease-out;
+
+            svg {
+                transition:
+                    transform $outerDuration ease-out,
+                    fill $outerDuration ease-out,
+                    scale $outerDuration ease-out;
+            }
+        }
+
+        &:hover,
+        &:active {
+            @if $transition {
+                transition:
+                    background $innerDuration ease-out,
+                    color $innerDuration ease-out,
+                    fill $innerDuration ease-out,
+                    opacity $innerDuration ease-out,
+                    transform $innerDuration ease-out,
+                    border-color $outerDuration ease-out,
+                    --dashed-border-color $innerDuration ease-out;
+
+                svg {
+                    transition:
+                        transform $innerDuration ease-out,
+                        fill $innerDuration ease-out,
+                        scale $innerDuration ease-out;
+                }
+            }
+
+            @if $disableTextDecoration {
+                text-decoration: none;
+            }
+            @content;
+        }
+    }
+}
+
+@mixin mediaSM {
+    $mobileBreakpoint: 500px;
+
+    @media (max-width: $mobileBreakpoint) {
+        @content;
+    }
+
+    @media (max-height: $mobileBreakpoint) and (orientation: landscape) {
+        @content;
+    }
+}
+
+@mixin mediaLG {
+    @media (max-width: 1024px) {
+        @content;
+    }
+}
+
+@mixin mediaTouch {
+    @media (hover: none), (pointer: coarse) {
+        @content;
+    }
+}
+
+@mixin scrollBar() {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gray) var(--block-inner-hover);
+
+    &::-webkit-scrollbar {
+        width: 8px;
+        height: 0;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: var(--block-inner-hover);
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--color-gray);
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background: var(--color-gray-hover);
+    }
+}

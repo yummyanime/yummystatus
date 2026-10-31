@@ -33,8 +33,10 @@
     cursor: pointer;
     transition: filter 0.15s ease, opacity 0.15s ease;
 
-    &:hover:not(:disabled) {
-        filter: brightness(1.08);
+    &:not(:disabled) {
+        @include desktopHover($transition: false) {
+            filter: brightness(1.08);
+        }
     }
 
     &:disabled {

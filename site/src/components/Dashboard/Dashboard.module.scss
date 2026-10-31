@@ -12,7 +12,7 @@
         text-align: center;
     }
 
-    @media (max-width: 950px) {
+    @include mediaLG {
         padding: 5px;
 
         h2 {

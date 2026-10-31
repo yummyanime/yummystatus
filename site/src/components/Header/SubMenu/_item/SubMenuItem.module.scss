@@ -1,29 +1,18 @@
 .container {
     display: flex;
-    width: 100%;
-    box-sizing: border-box;
-    color: #fff;
-    text-decoration: none;
-    border-radius: var(--border-radius-sm);
-    white-space: nowrap;
-
-    &:hover {
-        text-decoration: none;
-    }
-}
-
-.ripple {
-    display: flex;
     align-items: center;
     justify-content: flex-start;
+    gap: 10px;
     width: 100%;
     box-sizing: border-box;
     padding: 10px;
     font-weight: 500;
     color: #fff;
-    border-radius: var(--border-radius-sm);
+    text-decoration: none;
+    white-space: nowrap;
+    border-radius: 10px;
 
-    &:hover {
-        background: var(--color-dark-bg-2);
+    @include desktopHover(true, 0.1s, 0.2s) {
+        background: var(--head-hover);
     }
 }

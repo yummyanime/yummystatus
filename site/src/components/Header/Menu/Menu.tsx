@@ -7,9 +7,10 @@ import { HomeIcon, ListIcon, ErrorIcon } from "../../../icons.tsx";
 
 interface MenuProps {
     variant: "top" | "bottom";
+    isSticky?: boolean;
 }
 
-const Menu: React.FC<MenuProps> = ({ variant }) => {
+const Menu: React.FC<MenuProps> = ({ variant, isSticky }) => {
     const iconSize = variant === "top" ? 12 : 15;
     const iconColor = "currentColor";
 
@@ -22,18 +23,21 @@ const Menu: React.FC<MenuProps> = ({ variant }) => {
         <nav className={styles.container} data-variant={variant}>
             <MenuItem
                 variant={variant}
+                isSticky={isSticky}
                 href="/"
                 title="ГЛАВНАЯ"
                 icon={<HomeIcon size={iconSize} color={iconColor} />}
             />
             <MenuItem
                 variant={variant}
+                isSticky={isSticky}
                 href="/downdetector"
                 title="СБОИ"
                 icon={<ErrorIcon size={iconSize} color={iconColor} />}
             />
             <MenuItem
                 variant={variant}
+                isSticky={isSticky}
                 href="#"
                 title="ДОМЕНЫ"
                 icon={<ListIcon size={iconSize} color={iconColor} />}

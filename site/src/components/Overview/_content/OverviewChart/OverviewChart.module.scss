@@ -12,7 +12,7 @@
     justify-content: center;
     gap: 10px;
 
-    @media (max-width: 830px) {
+    @include mediaLG {
         gap: 5px;
     }
 }
@@ -48,10 +48,8 @@
         margin-left: 5px;
         color: var(--color-text-muted);
     }
-}
 
-@media (max-width: 500px) {
-    .avgValue {
+    @include mediaSM {
         font-size: 2rem;
     }
 }
