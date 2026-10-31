@@ -1,0 +1,9 @@
+{
+    "version": "1.0",
+    "api_version": 3,
+    "layout": {
+        "logo": "https://yummystatus.me/tableau-logo.png",
+        "color": "#222222",
+        "show_title": false
+    }
+}

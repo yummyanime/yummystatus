@@ -32,6 +32,8 @@ FROM caddy:2-alpine
 COPY <<EOF /etc/caddy/Caddyfile
 :80 {
 	root * /srv
+	@manifest path *.webmanifest
+	header @manifest Content-Type application/manifest+json
 	try_files {path} /index.html
 	file_server
 }

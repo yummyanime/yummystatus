@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import styles from "./Header.module.scss";
 import Menu from "./Menu/Menu.tsx";
-import logo from "../../images/Status-logo.svg";
+import Logo from "./Logo/Logo.tsx";
 
 const Header: React.FC = () => {
     return (
@@ -11,11 +11,7 @@ const Header: React.FC = () => {
                 <div className={styles.header}>
                     <Link to="/" className={styles.logoLink}>
                         <div className={styles.logoContainer}>
-                            <img
-                                src={logo}
-                                alt="YummyStatus Logo"
-                                className={styles.logoImg}
-                            />
+                            <Logo />
                             <span className={styles.logo}>YummyStatus</span>
                         </div>
                     </Link>

@@ -9,10 +9,11 @@
             content="Мониторинг доступности сайта Ями Аниме | YummyAnime: аптайм, время отклика, статус по странам. Работает ли сайт в России, Беларуси, Украине, Казахстане и других странах?"
         />
         <meta name="robots" content="index, follow" />
-        <meta name="theme-color" content="#119cdd" />
+        <meta name="theme-color" content="#222222" />
         <meta name="author" content="Yummy" />
         <link rel="canonical" href="https://yummystatus.me/" />
-        <link rel="manifest" href="./site.webmanifest" />
+        <meta name="application-name" content="YummyStatus" />
+        <meta name="apple-mobile-web-app-title" content="YummyStatus" />
 
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="YummyStatus" />
@@ -26,12 +27,16 @@
             content="Мониторинг доступности сайта Ями Аниме | YummyAnime: аптайм, время отклика и статус по странам в реальном времени."
         />
         <meta property="og:url" content="https://yummystatus.me/" />
+        <meta property="og:image" content="https://yummystatus.me/og.png?v=2" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta
-            property="og:image"
-            content="https://yummystatus.me/android-icon-512x512.png"
+            property="og:image:alt"
+            content="YummyStatus — мониторинг доступности сайта Ями Аниме: логотип в виде штепсельной вилки с кольцом аптайма на тёмном фоне"
         />
 
-        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta
             name="twitter:title"
             content="YummyStatus — работает ли сайт Ями Аниме | YummyAnime"
@@ -40,10 +45,7 @@
             name="twitter:description"
             content="Мониторинг доступности сайта Ями Аниме | YummyAnime: аптайм, время отклика и статус по странам в реальном времени."
         />
-        <meta
-            name="twitter:image"
-            content="https://yummystatus.me/android-icon-512x512.png"
-        />
+        <meta name="twitter:image" content="https://yummystatus.me/og.png?v=2" />
 
         <script type="application/ld+json">
             {
@@ -59,12 +61,48 @@
                     "url": "https://yummystatus.me/",
                     "logo": {
                         "@type": "ImageObject",
-                        "url": "https://yummystatus.me/android-icon-512x512.png"
+                        "url": "https://yummystatus.me/android-chrome-512x512.png"
                     }
                 }
             }
         </script>
 
+        <link
+            rel="icon"
+            href="./favicon.ico"
+            sizes="16x16 32x32 48x48"
+        />
+        <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            href="./favicon-16x16.png"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            href="./favicon-32x32.png"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="96x96"
+            href="./favicon-96x96.png"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="192x192"
+            href="./android-chrome-192x192.png"
+        />
+
+        <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+        <link
+            rel="apple-touch-icon-precomposed"
+            href="./apple-touch-icon-precomposed.png"
+        />
         <link
             rel="apple-touch-icon"
             sizes="57x57"
@@ -107,37 +145,27 @@
         />
         <link
             rel="apple-touch-icon"
+            sizes="167x167"
+            href="./apple-touch-icon-167x167.png"
+        />
+        <link
+            rel="apple-touch-icon"
             sizes="180x180"
             href="./apple-touch-icon-180x180.png"
         />
 
+        <link rel="mask-icon" href="./safari-pinned-tab.svg" color="#FF6666" />
+        <link rel="manifest" href="./site.webmanifest" />
+        <link rel="yandex-tableau-widget" href="./tableau.json" />
         <link
             rel="icon"
             type="image/png"
-            sizes="16x16"
-            href="./favicon-16x16.png"
-        />
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="32x32"
-            href="./favicon-32x32.png"
-        />
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="96x96"
-            href="./favicon-96x96.png"
-        />
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="192x192"
-            href="./android-icon-192x192.png"
+            sizes="228x228"
+            href="./coast-228x228.png"
         />
 
         <meta name="msapplication-TileImage" content="./mstile-144x144.png" />
-        <meta name="msapplication-TileColor" content="#119cdd" />
+        <meta name="msapplication-TileColor" content="#222222" />
         <meta name="msapplication-config" content="./browserconfig.xml" />
     </head>
     <body>
