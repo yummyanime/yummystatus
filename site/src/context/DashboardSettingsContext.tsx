@@ -6,12 +6,13 @@ import {
     useMemo,
     type ReactNode,
 } from "react";
+import type { Dictionary } from "../i18n.ts";
 
-export const timeRangeOptions = [
-    { value: "3hour", label: "3 часа" },
-    { value: "day", label: "День" },
-    { value: "week", label: "Неделя" },
-    { value: "month", label: "Месяц" },
+export const timeRangeOptions: { value: string; labelKey: keyof Dictionary }[] = [
+    { value: "3hour", labelKey: "timeRange3Hour" },
+    { value: "day", labelKey: "timeRangeDay" },
+    { value: "week", labelKey: "timeRangeWeek" },
+    { value: "month", labelKey: "timeRangeMonth" },
 ];
 
 export interface DateRange {

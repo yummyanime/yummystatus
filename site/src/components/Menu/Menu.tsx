@@ -1,5 +1,5 @@
 import styles from "./Menu.module.scss";
-import ToggleSwitch from "../ToggleSwitch/ToggleSwitch.tsx";
+import { useLanguage } from "../../i18n.ts";
 import Button from "../Button/Button.tsx";
 import DateRangePicker from "../DateRangePicker/DateRangePicker.tsx";
 import {
@@ -11,12 +11,9 @@ const Menu = () => {
     const {
         timeRange,
         setTimeRange,
-        autoRefresh,
-        setAutoRefresh,
-        hideUnreliable,
-        setHideUnreliable,
         dateRange,
     } = useDashboardSettings();
+    const { t } = useLanguage();
 
     return (
         <div className={styles.menu}>
@@ -27,21 +24,11 @@ const Menu = () => {
                         active={!dateRange && timeRange === option.value}
                         onClick={() => setTimeRange(option.value)}
                     >
-                        {option.label}
+                        {t(option.labelKey)}
                     </Button>
                 ))}
             </div>
             <DateRangePicker />
-            <ToggleSwitch
-                label="Автообновление"
-                checked={autoRefresh}
-                onChange={setAutoRefresh}
-            />
-            <ToggleSwitch
-                label="Скрывать недостоверные данные"
-                checked={hideUnreliable}
-                onChange={setHideUnreliable}
-            />
         </div>
     );
 };

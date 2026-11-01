@@ -11,8 +11,9 @@ import SubMenuItem from "../../SubMenu/_item/SubMenuItem.tsx";
 
 interface MenuItemProps {
     href: string;
-    title: ReactNode;
+    title: string;
     icon?: ReactNode;
+    iconOnly?: boolean;
     items?: SubMenuEntry[];
     sheetKey?: string;
     variant: "top" | "bottom";
@@ -23,6 +24,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
     href,
     title,
     icon,
+    iconOnly,
     items,
     sheetKey,
     variant,
@@ -37,21 +39,23 @@ const MenuItem: React.FC<MenuItemProps> = ({
             className={styles.container}
             data-variant={variant}
             data-scrolling={isSticky}
+            data-icon-only={iconOnly || undefined}
             onMouseOver={() => hover && items && setOpened(true)}
             onMouseLeave={() => hover && items && setOpened(false)}
         >
             <Link
                 to={href}
                 className={styles.link}
+                aria-label={iconOnly ? title : undefined}
                 onClick={(e) => {
                     if (href === "#") e.preventDefault();
                     if (items && !hover) open();
                 }}
             >
                 {icon}
-                <span className={styles.title}>{title}</span>
+                {!iconOnly && <span className={styles.title}>{title}</span>}
             </Link>
-            {items && (
+            {items && !iconOnly && (
                 <span className={styles.arrow}>
                     <FlatArrowIcon size={8} />
                 </span>
@@ -71,7 +75,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
 export default MenuItem;
 
 interface SheetDialogProps {
-    title: ReactNode;
+    title: string;
     items: SubMenuEntry[];
     closing: boolean;
     onClose: () => Promise<void>;
@@ -86,17 +90,22 @@ function SheetDialog({ title, items, closing, onClose }: SheetDialogProps) {
                 items={[
                     {
                         title,
-                        content: items.map((item) => (
-                            <SubMenuItem
-                                key={item.href}
-                                {...item}
-                                onClick={async (e) => {
-                                    e.preventDefault();
-                                    await onClose();
-                                    navigate(item.href);
-                                }}
-                            />
-                        )),
+                        content: items.map((item, index) => {
+                            if ("type" in item) return <hr key={index} className={styles.separator} />;
+                            return (
+                                <SubMenuItem
+                                    key={index}
+                                    {...item}
+                                    onClick={async (e) => {
+                                        item.onClick?.(e);
+                                        if (item.href.startsWith("#")) return;
+                                        e.preventDefault();
+                                        await onClose();
+                                        navigate(item.href);
+                                    }}
+                                />
+                            );
+                        }),
                     },
                 ]}
             />

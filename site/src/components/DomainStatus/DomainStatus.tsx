@@ -4,11 +4,12 @@ import "tippy.js/dist/tippy.css";
 import styles from "../Status/Status.module.scss";
 import {
     BUCKET_CLASS,
-    cityTranslations,
+    getCityLabel,
     getDomainLabel,
 } from "../../data/constants.ts";
 import type { DomainHealthReport } from "../../api.ts";
 import ReactCountryFlag from "react-country-flag";
+import { useLanguage } from "../../i18n.ts";
 
 interface DomainStatusProps {
     domain: string;
@@ -23,6 +24,7 @@ const DomainStatus: React.FC<DomainStatusProps> = ({
     registerRow,
     onScroll,
 }) => {
+    const { t, tf, language } = useLanguage();
     const requestsRef = useRef<HTMLDivElement>(null);
     const [isBig, setIsBig] = useState(false);
     const buckets = report?.buckets ?? [];
@@ -65,23 +67,27 @@ const DomainStatus: React.FC<DomainStatusProps> = ({
                         content={
                             <div>
                                 <div className={styles.tooltipHeader}>
-                                    {new Date(bucket.time).toLocaleDateString("ru-RU", {
-                                        weekday: "long",
-                                        day: "numeric",
-                                        month: "long",
-                                    })} в {new Date(bucket.time).toLocaleTimeString("ru-RU", {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
+                                    {tf("chartDateTime", {
+                                        date: new Date(bucket.time).toLocaleDateString(language, {
+                                            weekday: "long",
+                                            day: "numeric",
+                                            month: "long",
+                                        }),
+                                        time: new Date(bucket.time).toLocaleTimeString(language, {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        }),
                                     })}
                                 </div>
                                 <div className={styles.tooltipBody}>
                                     <div>
-                                        Среднее время:{" "}
-                                        {bucket.totalTimeAvg.toFixed(2)}мс
+                                        {tf("domainAvgTime", {
+                                            value: `${bucket.totalTimeAvg.toFixed(2)} ${t("unitMs")}`,
+                                        })}
                                     </div>
                                     {bucket.problems.length > 0 ? (
                                         <div>
-                                            <div>Проблемные города:</div>
+                                            <div>{t("domainProblemCities")}</div>
                                             {bucket.problems.map((r, i) => (
                                                 <div key={i}>
                                                     -{" "}
@@ -94,21 +100,23 @@ const DomainStatus: React.FC<DomainStatusProps> = ({
                                                             marginRight: "5px",
                                                         }}
                                                     />{" "}
-                                                    {cityTranslations[r.city ?? ""] ||
-                                                        r.city ||
-                                                        "Неизвестный город"}
+                                                    {r.city
+                                                        ? getCityLabel(r.city)
+                                                        : t("domainUnknownCity")}
                                                     :{" "}
                                                     {r.statusCode !== null
-                                                        ? `Статус: ${r.statusCode}`
-                                                        : "неизвестный статус"}
+                                                        ? tf("domainStatusCode", {
+                                                              code: r.statusCode,
+                                                          })
+                                                        : t("domainUnknownStatus")}
                                                     {r.totalTime !== null
-                                                        ? `; Время: ${r.totalTime}мс`
+                                                        ? `; ${tf("domainTime", { value: `${r.totalTime} ${t("unitMs")}` })}`
                                                         : ""}
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <div>Все города в норме</div>
+                                        <div>{t("domainAllNormal")}</div>
                                     )}
                                 </div>
                             </div>

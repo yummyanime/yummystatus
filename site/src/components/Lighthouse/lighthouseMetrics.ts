@@ -1,4 +1,5 @@
 import type { LighthouseLog } from "../../api.ts";
+import { t, type Dictionary } from "../../i18n.ts";
 
 export type LighthouseMetricKey =
     | "perf_score"
@@ -17,6 +18,7 @@ export type Rating = "good" | "ni" | "poor" | "none";
 export interface LighthouseMetric {
     key: LighthouseMetricKey;
     label: string;
+    labelKey?: keyof Dictionary;
     fieldKey?: keyof LighthouseLog;
     unit: "ms" | "score" | "unitless";
     good: number;
@@ -68,10 +70,11 @@ export const LIGHTHOUSE_METRICS: LighthouseMetric[] = [
         poor: 5800,
     },
     { key: "tti", label: "TTI", unit: "ms", good: 3800, poor: 7300 },
-    { key: "load_time", label: "Load", unit: "ms", good: 3000, poor: 6000 },
+    { key: "load_time", label: "Load", labelKey: "lhMetricLoad", unit: "ms", good: 3000, poor: 6000 },
     {
         key: "perf_score",
         label: "Score",
+        labelKey: "lhMetricScore",
         unit: "score",
         good: 90,
         poor: 50,
@@ -115,14 +118,17 @@ export const formatMetric = (
     }
     if (metric.unit === "score") return String(Math.round(value));
     if (metric.unit === "unitless") return value.toFixed(2);
-    if (value >= 1000) return `${(value / 1000).toFixed(2)} с`;
-    return `${Math.round(value)} мс`;
+    if (value >= 1000) return `${(value / 1000).toFixed(2)} ${t("unitSec")}`;
+    return `${Math.round(value)} ${t("unitMs")}`;
 };
 
+export const metricLabel = (metric: LighthouseMetric): string =>
+    metric.labelKey ? t(metric.labelKey) : metric.label;
+
 export const metricUnitLabel = (metric: LighthouseMetric): string => {
-    if (metric.unit === "score") return "баллов";
+    if (metric.unit === "score") return t("unitScore");
     if (metric.unit === "unitless") return "";
-    return "мс";
+    return t("unitMs");
 };
 
 export const SUMMARY_KEYS: LighthouseMetricKey[] = [

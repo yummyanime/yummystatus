@@ -1,0 +1,49 @@
+.toggle {
+    $toggle-width: 40px;
+    $toggle-height: 24px;
+    $toggle-padding: 4px;
+
+    display: grid;
+    flex-shrink: 0;
+    width: $toggle-width;
+    height: $toggle-height;
+    border-radius: $toggle-height;
+    cursor: pointer;
+    isolation: isolate;
+    overflow: hidden;
+
+    @include desktopHover(false) {
+        .bg {
+            filter: brightness(1.2);
+        }
+    }
+
+    &.active {
+        .bg {
+            background-color: var(--color-primary);
+        }
+
+        .slider {
+            transform: translateX($toggle-width - $toggle-height);
+        }
+    }
+
+    .bg {
+        grid-area: 1 / 1;
+        background-color: var(--color-button-bg);
+        transition:
+            background-color 0.3s,
+            filter 0.3s;
+    }
+
+    .slider {
+        grid-area: 1 / 1;
+        place-self: center start;
+        margin-left: $toggle-padding;
+        width: $toggle-height - 2 * $toggle-padding;
+        height: $toggle-height - 2 * $toggle-padding;
+        background-color: white;
+        border-radius: 50%;
+        transition: transform 0.3s;
+    }
+}

@@ -1,0 +1,16 @@
+.lang {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 8px;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+
+    @include desktopHover {
+        background: var(--block-inner-hover);
+    }
+
+    &.selected {
+        background: var(--block-inner);
+    }
+}

@@ -33,6 +33,10 @@
         }
     }
 
+    &[data-icon-only] .link svg {
+        margin-right: 0;
+    }
+
     .title {
         color: #fff;
         min-width: 0;
@@ -73,10 +77,10 @@
             .link {
                 min-width: calc(100% + 16px);
                 transform: translate(-8px, 0);
+            }
 
-                > svg {
-                    display: none;
-                }
+            &:not([data-icon-only]) .link > svg {
+                display: none;
             }
         }
     }
@@ -121,4 +125,10 @@
             }
         }
     }
+}
+
+.separator {
+    margin: 5px 0;
+    border: 0;
+    border-top: 1px solid var(--head-hover);
 }

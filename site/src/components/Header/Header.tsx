@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import styles from "./Header.module.scss";
 import Menu from "./Menu/Menu.tsx";
 import Logo from "./Logo/Logo.tsx";
+import LanguageDialog from "../LanguageDialog/LanguageDialog.tsx";
 
 const Header: React.FC = () => {
     const [isSticky, setSticky] = useState<boolean>();
@@ -44,6 +45,7 @@ const Header: React.FC = () => {
                 </div>
             </header>
             <HeaderBottom />
+            <LanguageDialog />
         </>
     );
 };

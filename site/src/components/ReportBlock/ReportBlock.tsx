@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Button from "../Button/Button.tsx";
 import { api } from "../../api.ts";
-import { REASONS, type ReasonCode } from "../../data/outage.ts";
+import { useLanguage } from "../../i18n.ts";
+import { REASONS, getReasonLabel, type ReasonCode } from "../../data/outage.ts";
 import styles from "./ReportBlock.module.scss";
 
 interface ReportBlockProps {
@@ -19,6 +20,7 @@ const hasRecentlyReported = () => {
 };
 
 const ReportBlock: React.FC<ReportBlockProps> = ({ onReported }) => {
+    const { t } = useLanguage();
     const [selected, setSelected] = useState<ReasonCode[]>([]);
     const [submitting, setSubmitting] = useState(false);
     const [reported, setReported] = useState(hasRecentlyReported);
@@ -75,7 +77,7 @@ const ReportBlock: React.FC<ReportBlockProps> = ({ onReported }) => {
                         disabled={reported}
                         onClick={() => toggleReason(r.code)}
                     >
-                        {r.label}
+                        {getReasonLabel(r.code)}
                     </Button>
                 ))}
             </div>
@@ -87,10 +89,10 @@ const ReportBlock: React.FC<ReportBlockProps> = ({ onReported }) => {
                 onClick={handleSubmit}
             >
                 {reported
-                    ? "Сообщено о сбое"
+                    ? t("reportSubmitted")
                     : submitting
-                      ? "Отправляем…"
-                      : "Сообщить о сбое"}
+                      ? t("reportSubmitting")
+                      : t("reportSubmit")}
             </button>
         </div>
     );

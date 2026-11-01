@@ -1,5 +1,6 @@
 import type { HttpLog, LocationGroups } from "../../api.ts";
-import { countries, domainGroups } from "../../data/constants.ts";
+import { countryCodes, getCountryName, getDomainGroups } from "../../data/constants.ts";
+import { useLanguage } from "../../i18n.ts";
 import ChartPlug from "../Chart/_plug/ChartPlug.tsx";
 import LazyMount from "../LazyMount/LazyMount.tsx";
 import CountryChartItem from "./CountryChartItem/CountryChartItem.tsx";
@@ -46,19 +47,21 @@ const groupLocationsByCountry = (locations: readonly Location[]) =>
         )
         .sort(
             (a, b) =>
-                countries.findIndex((c) => c.code === a.countryCode) -
-                countries.findIndex((c) => c.code === b.countryCode)
+                countryCodes.indexOf(a.countryCode) -
+                countryCodes.indexOf(b.countryCode)
         );
 
 const CountryChart = (props: CountryChartProps) => {
     const { type, timeRange, loading } = props;
+    useLanguage();
+    const domainGroups = getDomainGroups();
 
     if (type === "domain") {
         if (loading) {
             return (
                 <>
                     {domainGroups.map((group, index) => (
-                        <div key={group.title} className={styles.chartGroup}>
+                        <div key={group.id} className={styles.chartGroup}>
                             <h3 className={styles.groupTitle}>{group.title}</h3>
                             <div className={styles.chartsGrid}>
                                 {group.domains.map((entry) => (
@@ -79,6 +82,7 @@ const CountryChart = (props: CountryChartProps) => {
 
         const visibleGroups = domainGroups
             .map((group) => ({
+                id: group.id,
                 title: group.title,
                 entries: group.domains.filter(
                     (entry) => props.domainLogs[entry.value]
@@ -89,7 +93,7 @@ const CountryChart = (props: CountryChartProps) => {
         return (
             <>
                 {visibleGroups.map((group, index) => (
-                    <div key={group.title} className={styles.chartGroup}>
+                    <div key={group.id} className={styles.chartGroup}>
                         <h3 className={styles.groupTitle}>{group.title}</h3>
                         <div className={styles.chartsGrid}>
                             {group.entries.map((entry) => (
@@ -154,13 +158,6 @@ const CountryChart = (props: CountryChartProps) => {
                     <div key={interval} className={styles.chartGroup}>
                         <div className={styles.chartsGrid}>
                             {countryGroups.map(({ countryCode, cities }) => {
-                                const country = countries.find(
-                                    (c) => c.code === countryCode
-                                );
-                                const countryName = country
-                                    ? country.name
-                                    : countryCode;
-
                                 return (
                                     <LazyMount
                                         key={countryCode}
@@ -169,7 +166,7 @@ const CountryChart = (props: CountryChartProps) => {
                                         <CountryChartItem
                                             type="country"
                                             countryCode={countryCode}
-                                            countryName={countryName}
+                                            countryName={getCountryName(countryCode)}
                                             intervalMinutes={intervalMinutes}
                                             cityLogs={
                                                 props.httpLogs[countryCode] || {}

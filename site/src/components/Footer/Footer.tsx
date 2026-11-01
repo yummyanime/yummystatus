@@ -1,18 +1,20 @@
 import React from "react";
+import { useLanguage, type Dictionary } from "../../i18n.ts";
 import styles from "./Footer.module.scss";
 
-const errorCodes = [
-    { code: 901, label: "Сбой пробы (неизвестная причина)" },
-    { code: 902, label: "Таймаут соединения" },
-    { code: 903, label: "Ошибка DNS (домен не разрешился)" },
-    { code: 904, label: "Превышен лимит запросов к сервису измерений" },
-    { code: 905, label: "Измеритель недоступен" },
-    { code: 906, label: "Соединение отклонено или сброшено" },
-    { code: 907, label: "Ошибка TLS / сертификата" },
-    { code: 908, label: "Измерение не завершилось за 3 минуты" },
+const errorCodes: { code: number; labelKey: keyof Dictionary }[] = [
+    { code: 901, labelKey: "footerCode901" },
+    { code: 902, labelKey: "footerCode902" },
+    { code: 903, labelKey: "footerCode903" },
+    { code: 904, labelKey: "footerCode904" },
+    { code: 905, labelKey: "footerCode905" },
+    { code: 906, labelKey: "footerCode906" },
+    { code: 907, labelKey: "footerCode907" },
+    { code: 908, labelKey: "footerCode908" },
 ];
 
 const Footer: React.FC = () => {
+    const { t, tf } = useLanguage();
     const currentYear = new Date().getFullYear();
     const yearText = currentYear === 2025 ? "2025" : `2025-${currentYear}`;
 
@@ -21,13 +23,13 @@ const Footer: React.FC = () => {
             <div className={styles.inner}>
                 <div className={styles.codes}>
                     <span className={styles.codesTitle}>
-                        Особые коды 9xx — сбои измерения сервиса
+                        {t("footerCodesTitle")}
                     </span>
                     <ul className={styles.codesList}>
-                        {errorCodes.map(({ code, label }) => (
+                        {errorCodes.map(({ code, labelKey }) => (
                             <li key={code} className={styles.codeItem}>
                                 <span className={styles.codeBadge}>{code}</span>
-                                <span className={styles.codeLabel}>{label}</span>
+                                <span className={styles.codeLabel}>{t(labelKey)}</span>
                             </li>
                         ))}
                     </ul>
@@ -35,7 +37,7 @@ const Footer: React.FC = () => {
             </div>
             <div className={styles.copyright}>
                 <p className={styles.text}>
-                    Yummy Status {yearText}. Создано специально для проектов Yummy.
+                    {tf("footerCopyright", { years: yearText })}
                 </p>
             </div>
         </footer>

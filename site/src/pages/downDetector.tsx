@@ -4,12 +4,12 @@ import ReportChart from "../components/ReportChart/ReportChart.tsx";
 import ReportList from "../components/ReportList/ReportList.tsx";
 import { usePageMeta } from "../hooks/usePageMeta.ts";
 import { api, type OutageData } from "../api.ts";
+import { useLanguage } from "../i18n.ts";
 
 const DownDetector: React.FC = () => {
-    usePageMeta(
-        "Работает ли сайт Ями Аниме | YummyAnime",
-        "Работает ли сейчас в данный момент сайт Ями Аниме | YummyAnime? Узнать когда починят сайт, сбои, блокировки и другие проблемы с доступом"
-    );
+    const { t } = useLanguage();
+
+    usePageMeta(t("metaDownDetectorTitle"), t("metaDownDetectorDescription"));
 
     const [data, setData] = useState<OutageData | null>(null);
     const [loading, setLoading] = useState(true);

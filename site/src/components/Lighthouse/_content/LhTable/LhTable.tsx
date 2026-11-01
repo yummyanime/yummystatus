@@ -5,11 +5,13 @@ import {
     avgOf,
     formatMetric,
     getMetric,
+    metricLabel,
     RATING_COLORS,
     rate,
     SUMMARY_KEYS,
 } from "../../lighthouseMetrics.ts";
 import type { LighthouseLog } from "../../../../api.ts";
+import { useLanguage } from "../../../../i18n.ts";
 import styles from "./LhTable.module.scss";
 
 interface LhTableProps {
@@ -19,12 +21,13 @@ interface LhTableProps {
 }
 
 const LhTable: React.FC<LhTableProps> = ({ pages, selected, onSelect }) => {
+    const { t, language } = useLanguage();
     const rows = useMemo(
         () =>
             [
                 {
                     path: null,
-                    label: "Все страницы",
+                    label: t("lhAllPages"),
                     logs: pages.flatMap((p) => p.logs),
                 },
                 ...pages.map((p) => ({ ...p, label: p.path })),
@@ -35,7 +38,7 @@ const LhTable: React.FC<LhTableProps> = ({ pages, selected, onSelect }) => {
                     avg: avgOf(row.logs, key),
                 })),
             })),
-        [pages]
+        [pages, language]
     );
 
     return (
@@ -43,9 +46,9 @@ const LhTable: React.FC<LhTableProps> = ({ pages, selected, onSelect }) => {
             <table className={styles.table}>
                 <thead>
                     <tr>
-                        <th>Страница</th>
+                        <th>{t("lhPage")}</th>
                         {SUMMARY_KEYS.map((key) => (
-                            <th key={key}>{getMetric(key).label}</th>
+                            <th key={key}>{metricLabel(getMetric(key))}</th>
                         ))}
                     </tr>
                 </thead>

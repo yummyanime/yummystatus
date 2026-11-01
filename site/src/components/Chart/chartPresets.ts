@@ -1,4 +1,5 @@
-import { cityTranslations } from "../../data/constants.ts";
+import { getCityLabel } from "../../data/constants.ts";
+import { t, type Dictionary } from "../../i18n.ts";
 import type { HttpLog } from "../../api.ts";
 import type {
     ChartLog,
@@ -7,7 +8,13 @@ import type {
     ChartTooltipContext,
 } from "./Chart.tsx";
 
-const msCell = (label: string, value: number | null | undefined, digits = 0): ChartTooltipCell => ({
+const msCell = (
+    id: string,
+    label: string,
+    value: number | null | undefined,
+    digits = 0
+): ChartTooltipCell => ({
+    id,
     label,
     value:
         value === null || value === undefined || !Number.isFinite(Number(value))
@@ -44,55 +51,60 @@ type ChartConfig<TLog extends ChartLog> = Pick<
     "getValue" | "getLabel" | "isUnreliable" | "renderTooltip"
 >;
 
-const cityLabel = (series: string) => cityTranslations[series] || series;
-
-const serverTimingLabels: Record<string, string> = {
-    db: "БД",
-    database: "БД",
-    sql: "SQL",
-    app: "Приложение",
-    php: "PHP",
-    template: "Шаблон",
-    templates: "Шаблоны",
-    render: "Рендер",
-    rendering: "Рендер",
-    data: "Данные",
-    cache: "Кеш",
-    redis: "Redis",
-    memcached: "Memcached",
-    auth: "Авторизация",
-    session: "Сессия",
-    api: "API",
-    bootstrap: "Инициализация",
-    init: "Инициализация",
-    routing: "Роутинг",
-    middleware: "Middleware",
-    queue: "Очередь",
-    total: "Общее2",
+const serverTimingKeys: Record<string, keyof Dictionary> = {
+    db: "chartTimingDb",
+    database: "chartTimingDb",
+    app: "chartTimingApp",
+    template: "chartTimingTemplate",
+    templates: "chartTimingTemplates",
+    render: "chartTimingRender",
+    rendering: "chartTimingRender",
+    data: "chartTimingData",
+    cache: "chartTimingCache",
+    auth: "chartTimingAuth",
+    session: "chartTimingSession",
+    bootstrap: "chartTimingBootstrap",
+    init: "chartTimingBootstrap",
+    routing: "chartTimingRouting",
+    queue: "chartTimingQueue",
+    total: "chartTimingTotal",
 };
 
-const serverTimingLabel = (metric: string) =>
-    serverTimingLabels[metric.toLowerCase()] || metric;
+const serverTimingNames: Record<string, string> = {
+    sql: "SQL",
+    php: "PHP",
+    redis: "Redis",
+    memcached: "Memcached",
+    api: "API",
+    middleware: "Middleware",
+};
+
+const serverTimingLabel = (metric: string): string => {
+    const name = metric.toLowerCase();
+    const key = serverTimingKeys[name];
+    return key ? t(key) : serverTimingNames[name] || metric;
+};
 
 export const httpRequestTimePreset: ChartConfig<HttpLog> = {
     getValue: (log) => log.total_time,
-    getLabel: cityLabel,
+    getLabel: getCityLabel,
     isUnreliable: (log) => Boolean(log.unreliable),
     renderTooltip: ({ point }: ChartTooltipContext<HttpLog>): ChartTooltipCell[] => {
         const log = point.representative;
         const logs = point.logs;
         const cells: ChartTooltipCell[] = [
             {
-                label: "Статус",
+                id: "status",
+                label: t("chartStatus"),
                 value: String(log.status_code ?? "N/A"),
                 bold: true,
             },
-            msCell("Общее", point.y),
-            msCell("DNS", avgOf(logs, (l) => l.dns_time)),
-            msCell("TCP", avgOf(logs, (l) => l.tcp_time)),
-            msCell("TLS", avgOf(logs, (l) => l.tls_time)),
-            msCell("TTFB", avgOf(logs, (l) => l.first_byte_time)),
-            msCell("Загрузка", avgOf(logs, (l) => l.download_time)),
+            msCell("total", t("chartTotal"), point.y),
+            msCell("dns", "DNS", avgOf(logs, (l) => l.dns_time)),
+            msCell("tcp", "TCP", avgOf(logs, (l) => l.tcp_time)),
+            msCell("tls", "TLS", avgOf(logs, (l) => l.tls_time)),
+            msCell("ttfb", "TTFB", avgOf(logs, (l) => l.first_byte_time)),
+            msCell("download", t("chartDownload"), avgOf(logs, (l) => l.download_time)),
         ];
         const serverTimingMetrics = new Set<string>();
         for (const l of logs) {
@@ -108,7 +120,7 @@ export const httpRequestTimePreset: ChartConfig<HttpLog> = {
                     ? l.server_timing[metric]
                     : undefined
             );
-            cells.push(msCell(serverTimingLabel(metric), avg));
+            cells.push(msCell(`st:${metric.toLowerCase()}`, serverTimingLabel(metric), avg));
         }
         return cells;
     },
@@ -116,15 +128,16 @@ export const httpRequestTimePreset: ChartConfig<HttpLog> = {
 
 export const pingPreset: ChartConfig<PingLog> = {
     getValue: (log) => log.total_time ?? log.rtt_avg,
-    getLabel: cityLabel,
+    getLabel: getCityLabel,
     renderTooltip: ({ point }: ChartTooltipContext<PingLog>): ChartTooltipCell[] => {
         const log = point.representative;
         return [
-            msCell("Среднее", point.y, 1),
-            msCell("Мин", log.rtt_min, 1),
-            msCell("Макс", log.rtt_max, 1),
+            msCell("avg", t("chartAverage"), point.y, 1),
+            msCell("min", t("chartMin"), log.rtt_min, 1),
+            msCell("max", t("chartMax"), log.rtt_max, 1),
             {
-                label: "Потери",
+                id: "loss",
+                label: t("chartLoss"),
                 value:
                     log.packet_loss !== undefined && log.packet_loss !== null
                         ? `${Number(log.packet_loss).toFixed(0)}%`
@@ -141,8 +154,9 @@ export interface BackendMetricPoint extends ChartLog {
 
 export const backendMetricPreset: ChartConfig<BackendMetricPoint> = {
     getValue: (log) => log.total_time,
+    getLabel: serverTimingLabel,
     renderTooltip: ({ point }: ChartTooltipContext<BackendMetricPoint>): ChartTooltipCell[] => [
-        msCell("Значение", point.y),
+        msCell("value", t("chartValue"), point.y),
     ],
 };
 
@@ -156,10 +170,10 @@ export interface LighthousePoint extends ChartLog {
 // p75 стояли в одном столбце, а их подписи (Lab/CrUX) — в строках.
 export const makeLighthousePreset = (
     digits: number,
-    valueLabel = "Значение"
+    valueLabel: string
 ): ChartConfig<LighthousePoint> => ({
     getValue: (log) => log.value,
     renderTooltip: ({ point }: ChartTooltipContext<LighthousePoint>): ChartTooltipCell[] => [
-        msCell(valueLabel, point.y, digits),
+        msCell("value", valueLabel, point.y, digits),
     ],
 });

@@ -8,6 +8,7 @@ import {
     httpRequestTimePreset,
     pingPreset,
 } from "../../../Chart/chartPresets.ts";
+import { useLanguage } from "../../../../i18n.ts";
 import styles from "./OverviewChart.module.scss";
 
 interface OverviewChartProps {
@@ -17,9 +18,12 @@ interface OverviewChartProps {
     domain?: string;
 }
 
+const AVERAGE_SERIES = "average";
+
 type OverviewTab = "loadTime" | "ping" | "backend";
 
 const OverviewChart: React.FC<OverviewChartProps> = ({ allLogs, pingLogs, timeRange, domain }) => {
+    const { t } = useLanguage();
     const [activeTab, setActiveTab] = useState<OverviewTab>(
         () => (localStorage.getItem("overviewTab") as OverviewTab) || "loadTime"
     );
@@ -40,7 +44,7 @@ const OverviewChart: React.FC<OverviewChartProps> = ({ allLogs, pingLogs, timeRa
         const avgTotal = validLogs.reduce((acc, log) => acc + (log.total_time || 0), 0) / validLogs.length;
 
         const cityLogs: Record<string, HttpLog[]> = {
-            ["Средняя"]: validLogs
+            [AVERAGE_SERIES]: validLogs
         };
 
         return { cityLogs, avgTotal };
@@ -96,7 +100,7 @@ const OverviewChart: React.FC<OverviewChartProps> = ({ allLogs, pingLogs, timeRa
                 }));
 
             return {
-                cityLogs: { ["Средняя"]: averaged } as Record<string, any[]>,
+                cityLogs: { [AVERAGE_SERIES]: averaged } as Record<string, any[]>,
                 avgPing,
             };
         }
@@ -177,13 +181,13 @@ const OverviewChart: React.FC<OverviewChartProps> = ({ allLogs, pingLogs, timeRa
             : processedPing.cityLogs;
     const currentAvg = isLoadTime ? processedLoadTime.avgTotal : processedPing.avgPing;
     const currentCities = isLoadTime
-        ? ["Средняя"]
+        ? [AVERAGE_SERIES]
         : isBackend
             ? Object.keys(processedBackend.cityLogs)
             : Object.keys(processedPing.cityLogs);
 
     const tabOptions: { value: OverviewTab; label: string }[] = [
-        { value: "loadTime", label: "Время загрузки" },
+        { value: "loadTime", label: t("overviewTabLoadTime") },
         { value: "ping", label: "Ping" },
         ...(hasBackendData
             ? [{ value: "backend" as OverviewTab, label: "Backend" }]
@@ -234,25 +238,25 @@ const OverviewChart: React.FC<OverviewChartProps> = ({ allLogs, pingLogs, timeRa
             <div className={styles.avgWrapper}>
                 {isBackend ? (
                     <>
-                        <span className={styles.avgLabel}>Среднее backend-время</span>
+                        <span className={styles.avgLabel}>{t("overviewAvgBackend")}</span>
                         <span className={styles.avgValue}>
                             {Object.values(processedBackend.metricAvgs).reduce((a, b) => a + b, 0).toFixed(0)}
-                            <small>мс</small>
+                            <small>{t("unitMs")}</small>
                         </span>
                     </>
                 ) : (
                     <>
                         <span className={styles.avgLabel}>
                             {isLoadTime
-                                ? "Среднее время загрузки"
+                                ? t("overviewAvgLoad")
                                 : domain
                                     ? "Ping"
-                                    : "Средний Ping"
+                                    : t("overviewAvgPing")
                             }
                         </span>
                         <span className={styles.avgValue}>
                             {currentAvg.toFixed(0)}
-                            <small>мс</small>
+                            <small>{t("unitMs")}</small>
                         </span>
                     </>
                 )}

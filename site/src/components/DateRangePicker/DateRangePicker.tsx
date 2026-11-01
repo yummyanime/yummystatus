@@ -5,7 +5,6 @@ import {
     useRef,
     useState,
 } from "react";
-import { ru } from "date-fns/locale";
 import {
     addMonths,
     endOfDay,
@@ -22,11 +21,10 @@ import {
     addDays,
 } from "date-fns";
 import { useDashboardSettings } from "../../context/DashboardSettingsContext.tsx";
+import { dateLocale, t, useLanguage, type Language } from "../../i18n.ts";
 import { useHashDialog } from "../../hooks/useHashDialog.ts";
 import Dialog from "../Dialog/Dialog.tsx";
 import styles from "./DateRangePicker.module.scss";
-
-const WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 const buildMonthDays = (month: Date): Date[] => {
     const gridStart = startOfWeek(startOfMonth(month), { weekStartsOn: 1 });
@@ -48,19 +46,24 @@ const isFullDayWindow = (from: Date, to: Date) =>
     to.getHours() === 23 &&
     to.getMinutes() === 59;
 
-const formatRangeLabel = (from: Date | null, to: Date | null): string => {
-    if (!from || !to) return "Выбрать период";
+const formatRangeLabel = (
+    from: Date | null,
+    to: Date | null,
+    language: Language
+): string => {
+    if (!from || !to) return t("dateRangePlaceholder");
+    const locale = dateLocale(language);
     const sameYear = from.getFullYear() === to.getFullYear();
     if (isSameDay(from, to)) {
-        const base = format(from, "d MMMM yyyy", { locale: ru });
+        const base = format(from, "d MMMM yyyy", { locale });
         return isFullDayWindow(from, to)
             ? base
             : `${base}, ${formatHm(from)}–${formatHm(to)}`;
     }
     if (sameYear) {
-        return `${format(from, "d MMM", { locale: ru })} — ${format(to, "d MMM yyyy", { locale: ru })}`;
+        return `${format(from, "d MMM", { locale })} — ${format(to, "d MMM yyyy", { locale })}`;
     }
-    return `${format(from, "d MMM yyyy", { locale: ru })} — ${format(to, "d MMM yyyy", { locale: ru })}`;
+    return `${format(from, "d MMM yyyy", { locale })} — ${format(to, "d MMM yyyy", { locale })}`;
 };
 
 interface TimeFieldProps {
@@ -69,6 +72,7 @@ interface TimeFieldProps {
 }
 
 const TimeField = ({ value, onChange }: TimeFieldProps) => {
+    const { t } = useLanguage();
     const [hRaw, mRaw] = value.split(":");
     const [localH, setLocalH] = useState(hRaw ?? "00");
     const [localM, setLocalM] = useState(mRaw ?? "00");
@@ -129,7 +133,7 @@ const TimeField = ({ value, onChange }: TimeFieldProps) => {
                 onBlur={(e) => commitHours(e.target.value)}
                 onFocus={(e) => e.target.select()}
                 onKeyDown={handleHourKeyDown}
-                aria-label="часы"
+                aria-label={t("dateRangeHours")}
             />
             <span className={styles.timeColon}>:</span>
             <input
@@ -145,7 +149,7 @@ const TimeField = ({ value, onChange }: TimeFieldProps) => {
                 onBlur={(e) => commitMinutes(e.target.value)}
                 onFocus={(e) => e.target.select()}
                 onKeyDown={handleMinuteKeyDown}
-                aria-label="минуты"
+                aria-label={t("dateRangeMinutes")}
             />
         </div>
     );
@@ -192,6 +196,9 @@ const CalendarIcon = () => (
 
 const DateRangePicker = () => {
     const { dateRange, setDateRange } = useDashboardSettings();
+    const { t, language } = useLanguage();
+    const locale = dateLocale(language);
+    const weekdays = t("dateRangeWeekdays").split("|");
     const { shown, opened, closing, open, close } = useHashDialog("date-range");
     const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
 
@@ -208,9 +215,9 @@ const DateRangePicker = () => {
     useEffect(() => {
         if (dateRange) {
             const f = new Date(dateRange.from);
-            const t = new Date(dateRange.to);
+            const to = new Date(dateRange.to);
             setPendingFrom(f);
-            setPendingTo(t);
+            setPendingTo(to);
             setViewMonth(startOfMonth(f));
         } else {
             setPendingFrom(null);
@@ -310,7 +317,8 @@ const DateRangePicker = () => {
 
     const buttonLabel = formatRangeLabel(
         dateRange ? new Date(dateRange.from) : null,
-        dateRange ? new Date(dateRange.to) : null
+        dateRange ? new Date(dateRange.to) : null,
+        language
     );
 
     const isActive = Boolean(dateRange);
@@ -330,7 +338,7 @@ const DateRangePicker = () => {
                     <span
                         className={styles.clearIcon}
                         role="button"
-                        aria-label="Сбросить период"
+                        aria-label={t("dateRangeClear")}
                         onClick={(e) => {
                             e.stopPropagation();
                             handleReset();
@@ -367,25 +375,25 @@ const DateRangePicker = () => {
                             type="button"
                             className={styles.navButton}
                             onClick={handlePrevMonth}
-                            aria-label="Предыдущий месяц"
+                            aria-label={t("dateRangePrevMonth")}
                         >
                             ‹
                         </button>
                         <span className={styles.monthLabel}>
-                            {format(viewMonth, "LLLL yyyy", { locale: ru })}
+                            {format(viewMonth, "LLLL yyyy", { locale })}
                         </span>
                         <button
                             type="button"
                             className={styles.navButton}
                             onClick={handleNextMonth}
-                            aria-label="Следующий месяц"
+                            aria-label={t("dateRangeNextMonth")}
                         >
                             ›
                         </button>
                     </div>
 
                     <div className={styles.weekdays}>
-                        {WEEKDAYS.map((d) => (
+                        {weekdays.map((d) => (
                             <span key={d} className={styles.weekday}>
                                 {d}
                             </span>
@@ -440,14 +448,14 @@ const DateRangePicker = () => {
                     {isSingleDay && pendingFrom && pendingTo && (
                         <div className={styles.timeRow}>
                             <div className={styles.timeField}>
-                                <span className={styles.timeLabel}>с</span>
+                                <span className={styles.timeLabel}>{t("dateRangeFrom")}</span>
                                 <TimeField
                                     value={formatHm(pendingFrom)}
                                     onChange={handleFromTimeChange}
                                 />
                             </div>
                             <div className={styles.timeField}>
-                                <span className={styles.timeLabel}>до</span>
+                                <span className={styles.timeLabel}>{t("dateRangeTo")}</span>
                                 <TimeField
                                     value={formatHm(pendingTo)}
                                     onChange={handleToTimeChange}
@@ -459,19 +467,19 @@ const DateRangePicker = () => {
                     <div className={styles.footer}>
                         <span className={styles.footerHint}>
                             {pendingFrom && !pendingTo
-                                ? "Выберите конечную дату"
+                                ? t("dateRangePickEnd")
                                 : pendingFrom && pendingTo
                                   ? isSingleDay
-                                      ? `${format(pendingFrom, "d MMM yyyy", { locale: ru })}, ${formatHm(pendingFrom)}–${formatHm(pendingTo)}`
-                                      : `${format(pendingFrom, "d MMM yyyy", { locale: ru })} — ${format(pendingTo, "d MMM yyyy", { locale: ru })}`
-                                  : "Выберите начальную дату"}
+                                      ? `${format(pendingFrom, "d MMM yyyy", { locale })}, ${formatHm(pendingFrom)}–${formatHm(pendingTo)}`
+                                      : `${format(pendingFrom, "d MMM yyyy", { locale })} — ${format(pendingTo, "d MMM yyyy", { locale })}`
+                                  : t("dateRangePickStart")}
                         </span>
                         <button
                             type="button"
                             className={styles.resetButton}
                             onClick={handleReset}
                         >
-                            Сбросить
+                            {t("dateRangeReset")}
                         </button>
                     </div>
                 </Dialog>

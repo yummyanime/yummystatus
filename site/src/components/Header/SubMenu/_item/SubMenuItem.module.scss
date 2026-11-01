@@ -16,3 +16,21 @@
         background: var(--head-hover);
     }
 }
+
+.container > svg {
+    width: 15px;
+    fill: #fff;
+    flex-shrink: 0;
+}
+
+.title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.content {
+    margin-left: auto;
+    display: flex;
+    flex-shrink: 0;
+}

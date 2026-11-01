@@ -1,6 +1,7 @@
 import React from "react";
 import type { BucketStatus, HealthReport } from "../../../../api.ts";
 import { HEALTH_LABEL } from "../../../../data/constants.ts";
+import { useLanguage } from "../../../../i18n.ts";
 import styles from "./OverviewStatus.module.scss";
 
 interface OverviewStatusProps {
@@ -17,16 +18,6 @@ const COLOR_VALUE: Record<BucketStatus, string> = {
     CAPTCHA: "var(--color-blue)",
 };
 
-const COLOR_LABEL: Record<BucketStatus, string> = {
-    UP: "В норме",
-    DEGRADED_LOW: "1 город с проблемой",
-    DEGRADED_MEDIUM: "2 города с проблемами",
-    DEGRADED_HIGH: "3+ городов с проблемами",
-    DOWN: "Полная недоступность",
-    CAPTCHA: "Капча",
-    PROBE_ERROR: "Сбой измерителя",
-};
-
 const COLOR_ORDER: BucketStatus[] = [
     "UP",
     "DEGRADED_LOW",
@@ -38,6 +29,16 @@ const COLOR_ORDER: BucketStatus[] = [
 ];
 
 const OverviewStatus: React.FC<OverviewStatusProps> = ({ health }) => {
+    const { t, tn } = useLanguage();
+    const colorLabel: Record<BucketStatus, string> = {
+        UP: t("overviewStatusUp"),
+        DEGRADED_LOW: tn("overviewCitiesIssues", 1),
+        DEGRADED_MEDIUM: tn("overviewCitiesIssues", 2),
+        DEGRADED_HIGH: t("overviewCitiesIssuesMany"),
+        DOWN: t("overviewStatusDown"),
+        CAPTCHA: t("overviewStatusCaptcha"),
+        PROBE_ERROR: t("overviewStatusProbeError"),
+    };
     const counts = health.statusCounts;
     const total = COLOR_ORDER.reduce((sum, c) => sum + counts[c], 0);
 
@@ -52,7 +53,7 @@ const OverviewStatus: React.FC<OverviewStatusProps> = ({ health }) => {
     return (
         <div className={styles.container}>
             <div className={`${styles.statusBadge} ${styles[health.health]}`}>
-                {HEALTH_LABEL[health.health]}
+                {t(HEALTH_LABEL[health.health])}
             </div>
 
             <div className={styles.chartArea}>
@@ -75,14 +76,14 @@ const OverviewStatus: React.FC<OverviewStatusProps> = ({ health }) => {
                             strokeDashoffset={s.offset}
                             style={{ stroke: COLOR_VALUE[s.color] }}
                         >
-                            <title>{`${COLOR_LABEL[s.color]}: ${counts[s.color]}`}</title>
+                            <title>{`${colorLabel[s.color]}: ${counts[s.color]}`}</title>
                         </circle>
                     ))}
                     <text className={styles.donutTotal} x="18" y="16">
                         {total}
                     </text>
                     <text className={styles.donutCaption} x="18" y="23">
-                        замеров
+                        {t("overviewSamples")}
                     </text>
                 </svg>
             </div>

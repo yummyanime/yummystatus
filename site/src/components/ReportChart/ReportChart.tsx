@@ -10,9 +10,9 @@ import {
     type TooltipItem,
 } from "chart.js";
 import "chartjs-adapter-date-fns";
-import { ru } from "date-fns/locale";
+import { dateLocale, useLanguage } from "../../i18n.ts";
 import type { OutageData } from "../../api.ts";
-import { REASON_LABELS } from "../../data/outage.ts";
+import { getReasonLabel } from "../../data/outage.ts";
 import ReportChartPlug from "./_plug/ReportChartPlug.tsx";
 import styles from "./ReportChart.module.scss";
 
@@ -24,13 +24,14 @@ interface ReportChartProps {
 }
 
 const ReportChart: React.FC<ReportChartProps> = ({ data, loading }) => {
+    const { t, tf, language } = useLanguage();
     const chartData = useMemo(() => {
         const buckets = data?.buckets ?? [];
         return {
             labels: buckets.map((b) => new Date(b.time)),
             datasets: [
                 {
-                    label: "Жалобы",
+                    label: t("reportChartComplaints"),
                     data: buckets.map((b) => b.count),
                     backgroundColor: "#ff6666",
                     borderRadius: 2,
@@ -39,7 +40,7 @@ const ReportChart: React.FC<ReportChartProps> = ({ data, loading }) => {
                 },
             ],
         };
-    }, [data]);
+    }, [data, language]);
 
     const chartOptions = useMemo(
         () => ({
@@ -53,14 +54,14 @@ const ReportChart: React.FC<ReportChartProps> = ({ data, loading }) => {
                         title: (items: TooltipItem<"bar">[]) =>
                             items[0]?.label ?? "",
                         label: (item: TooltipItem<"bar">) =>
-                            `Жалоб: ${item.parsed.y ?? 0}`,
+                            tf("reportChartComplaintsCount", { n: item.parsed.y ?? 0 }),
                     },
                 },
             },
             scales: {
                 x: {
                     type: "time" as const,
-                    adapters: { date: { locale: ru } },
+                    adapters: { date: { locale: dateLocale(language) } },
                     time: {
                         unit: "hour" as const,
                         displayFormats: { hour: "HH:mm" },
@@ -81,7 +82,7 @@ const ReportChart: React.FC<ReportChartProps> = ({ data, loading }) => {
                 },
             },
         }),
-        []
+        [language]
     );
 
     if (loading) return <ReportChartPlug />;
@@ -93,11 +94,11 @@ const ReportChart: React.FC<ReportChartProps> = ({ data, loading }) => {
             <div className={styles.chartCard}>
                 <div className={styles.chartHeader}>
                     <span className={styles.chartLabel}>
-                        График жалоб за 24 часа
+                        {t("reportChartTitle")}
                     </span>
                     {data && (
                         <span className={styles.totalBadge}>
-                            Всего: {data.total}
+                            {tf("reportChartTotal", { n: data.total })}
                         </span>
                     )}
                 </div>
@@ -107,17 +108,19 @@ const ReportChart: React.FC<ReportChartProps> = ({ data, loading }) => {
             </div>
 
             <div className={styles.reasonsCard}>
-                <span className={styles.reasonsTitle}>Популярные причины</span>
+                <span className={styles.reasonsTitle}>
+                    {t("reportPopularReasons")}
+                </span>
                 {reasons.length === 0 ? (
                     <div className={styles.noReasons}>
-                        За последние 24 часа жалоб не поступало
+                        {t("reportNone")}
                     </div>
                 ) : (
                     <ul className={styles.reasonsList}>
                         {reasons.map((r) => (
                             <li key={r.reason} className={styles.reasonItem}>
                                 <span className={styles.reasonName}>
-                                    {REASON_LABELS[r.reason] ?? r.reason}
+                                    {getReasonLabel(r.reason)}
                                 </span>
                                 <span className={styles.reasonCount}>
                                     {r.count}

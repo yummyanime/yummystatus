@@ -10,6 +10,7 @@ import {
     LIGHTHOUSE_METRICS,
     avgOf,
     getMetric,
+    metricLabel,
     rate,
     RATING_COLORS,
     formatMetric,
@@ -17,6 +18,7 @@ import {
     type LighthouseMetricKey,
 } from "../../lighthouseMetrics.ts";
 import type { LighthouseLog } from "../../../../api.ts";
+import { useLanguage } from "../../../../i18n.ts";
 import styles from "./LhChart.module.scss";
 
 interface LhChartProps {
@@ -24,10 +26,11 @@ interface LhChartProps {
     timeRange: string;
 }
 
-const LAB_SERIES = "Status сервис";
+const LAB_SERIES = "lab";
 const FIELD_SERIES = "Google";
 
 const LhChart: React.FC<LhChartProps> = ({ logs, timeRange }) => {
+    const { t, tf, language } = useLanguage();
     const [activeMetric, setActiveMetric] = useState<LighthouseMetricKey>(
         () =>
             (localStorage.getItem("lighthouseMetric") as LighthouseMetricKey) ||
@@ -73,7 +76,14 @@ const LhChart: React.FC<LhChartProps> = ({ logs, timeRange }) => {
         return { cityLogs, cities, avg: avgOf(logs, metric.key) };
     }, [logs, metric.key, metric.fieldKey, metric.fieldOnly]);
 
-    const preset = useMemo(() => makeLighthousePreset(digits, metric.label), [digits, metric.label]);
+    const preset = useMemo(
+        () => ({
+            ...makeLighthousePreset(digits, metricLabel(metric)),
+            getLabel: (series: string) =>
+                series === LAB_SERIES ? t("lhSeriesLab") : series,
+        }),
+        [digits, metric, language]
+    );
 
     const avgRating = rate(metric, avg);
     const unit = metricUnitLabel(metric);
@@ -87,7 +97,7 @@ const LhChart: React.FC<LhChartProps> = ({ logs, timeRange }) => {
                         active={activeMetric === m.key}
                         onClick={() => handleMetricChange(m.key)}
                     >
-                        {m.label}
+                        {metricLabel(m)}
                     </Button>
                 ))}
             </div>
@@ -103,7 +113,7 @@ const LhChart: React.FC<LhChartProps> = ({ logs, timeRange }) => {
                 </LazyMount>
             </div>
             <div className={styles.avgWrapper}>
-                <span className={styles.avgLabel}>Среднее {metric.label}</span>
+                <span className={styles.avgLabel}>{tf("lhAverage", { metric: metricLabel(metric) })}</span>
 
                 <span
                     className={styles.avgValue}

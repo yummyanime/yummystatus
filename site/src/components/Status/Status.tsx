@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { HealthReport } from "../../api.ts";
 import { domains } from "../../data/constants.ts";
+import { useLanguage } from "../../i18n.ts";
 import DomainStatus from "../DomainStatus/DomainStatus.tsx";
 import StatusPlug from "./_plug/StatusPlug.tsx";
 import styles from "./Status.module.scss";
@@ -12,6 +13,7 @@ interface StatusProps {
 }
 
 const Status: React.FC<StatusProps> = ({ domain, health, loading }) => {
+    const { t } = useLanguage();
     const rows = useRef<Map<string, HTMLDivElement>>(new Map());
     const leftBtn = useRef<HTMLButtonElement>(null);
     const rightBtn = useRef<HTMLButtonElement>(null);
@@ -78,7 +80,7 @@ const Status: React.FC<StatusProps> = ({ domain, health, loading }) => {
                     type="button"
                     className={`${styles.scrollBtn} ${styles.scrollLeft}`}
                     onClick={() => scrollAll(-1)}
-                    aria-label="Прокрутить влево"
+                    aria-label={t("statusScrollLeft")}
                 >
                     <span>‹</span>
                 </button>
@@ -99,7 +101,7 @@ const Status: React.FC<StatusProps> = ({ domain, health, loading }) => {
                     type="button"
                     className={`${styles.scrollBtn} ${styles.scrollRight}`}
                     onClick={() => scrollAll(1)}
-                    aria-label="Прокрутить вправо"
+                    aria-label={t("statusScrollRight")}
                 >
                     <span>›</span>
                 </button>

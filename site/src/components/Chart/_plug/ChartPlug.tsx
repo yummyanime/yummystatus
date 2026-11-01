@@ -2,6 +2,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import Button from "../../Button/Button.tsx";
 import { getDomainLabel } from "../../../data/constants.ts";
+import { useLanguage } from "../../../i18n.ts";
 import styles from "./ChartPlug.module.scss";
 
 interface ChartPlugProps {
@@ -9,6 +10,7 @@ interface ChartPlugProps {
 }
 
 const ChartPlug: React.FC<ChartPlugProps> = ({ domainName }) => {
+    const { t } = useLanguage();
     return (
         <div className={styles.countryChart}>
             <div className={styles.header}>
@@ -18,7 +20,7 @@ const ChartPlug: React.FC<ChartPlugProps> = ({ domainName }) => {
                             {getDomainLabel(domainName)}
                         </p>
                         <NavLink to={`${domainName}`}>
-                            <Button>Подробнее</Button>
+                            <Button>{t("commonMore")}</Button>
                         </NavLink>
                     </>
                 ) : (

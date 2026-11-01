@@ -2,10 +2,11 @@ import React, { useEffect, useState, useMemo } from "react";
 import LhChart from "./_content/LhChart/LhChart.tsx";
 import LhTable from "./_content/LhTable/LhTable.tsx";
 import LighthousePlug from "./_plug/LighthousePlug.tsx";
-import ToggleSwitch from "../ToggleSwitch/ToggleSwitch.tsx";
+import Toggle from "../Toggle/Toggle.tsx";
 import { useDashboardSettings } from "../../context/DashboardSettingsContext.tsx";
 import { averageByHour, groupLogs } from "./lighthouseMetrics.ts";
 import { api, timeQuery, withCreatedAt, type LighthouseLog } from "../../api.ts";
+import { useLanguage } from "../../i18n.ts";
 import styles from "./Lighthouse.module.scss";
 
 interface LighthouseProps {
@@ -16,6 +17,7 @@ type Strategy = "mobile" | "desktop";
 
 const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
     const { timeRange, dateRange, effectiveTimeRange } = useDashboardSettings();
+    const { t } = useLanguage();
     const [strategy, setStrategy] = useState<Strategy>(
         () => (localStorage.getItem("lighthouseStrategy") as Strategy) || "mobile"
     );
@@ -76,12 +78,18 @@ const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
     return (
         <div className={styles.lighthouse}>
             <div className={styles.header}>
-                <ToggleSwitch
-                    label={strategy === "desktop" ? "ПК" : "Телефон"}
-                    checked={strategy === "desktop"}
-                    onChange={(checked) => handleStrategy(checked ? "desktop" : "mobile")}
-                    labelLeft
-                />
+                <button
+                    type="button"
+                    className={styles.strategy}
+                    role="switch"
+                    aria-checked={strategy === "desktop"}
+                    onClick={() => handleStrategy(strategy === "desktop" ? "mobile" : "desktop")}
+                >
+                    <span className={styles.strategyLabel}>
+                        {strategy === "desktop" ? t("lhDesktop") : t("lhMobile")}
+                    </span>
+                    <Toggle active={strategy === "desktop"} />
+                </button>
             </div>
 
             <LhTable pages={pages} selected={page?.path ?? null} onSelect={setSelected} />

@@ -13,7 +13,7 @@ import {
     TimeSeriesScale,
 } from "chart.js";
 import "chartjs-adapter-date-fns";
-import { ru } from "date-fns/locale";
+import { dateLocale, useLanguage } from "../../i18n.ts";
 import CrosshairPlugin from "chartjs-plugin-crosshair";
 import { CHART_COLORS } from "../../data/constants.ts";
 
@@ -56,6 +56,7 @@ export interface ChartTooltipContext<TLog extends ChartLog> {
 }
 
 export interface ChartTooltipCell {
+    id: string;
     label: string;
     value: string;
     bold?: boolean;
@@ -71,6 +72,15 @@ export interface ChartProps<TLog extends ChartLog> {
     isUnreliable?: (representative: TLog) => boolean;
     renderTooltip: (ctx: ChartTooltipContext<TLog>) => ChartTooltipCell[];
 }
+
+interface ChartColumn {
+    id: string;
+    label: string;
+}
+
+const STANDALONE_IDS = new Set(["status"]);
+const METRIC_IDS = new Set(["total", "dns", "tcp", "tls", "ttfb", "download"]);
+const SERVER_TOTAL_ID = "st:total";
 
 const escapeHtml = (s: string) =>
     s
@@ -91,6 +101,7 @@ function Chart<TLog extends ChartLog>({
     isUnreliable,
     renderTooltip,
 }: ChartProps<TLog>) {
+    const { t, tf, language } = useLanguage();
     const [width, setWidth] = useState(window.innerWidth);
 
     useEffect(() => {
@@ -338,14 +349,14 @@ function Chart<TLog extends ChartLog>({
                             const firstPoint = tooltipModel.dataPoints[0];
                             const formattedDate = new Date(
                                 firstPoint.parsed.x
-                            ).toLocaleDateString("ru-RU", {
+                            ).toLocaleDateString(language, {
                                 weekday: "short",
                                 day: "numeric",
                                 month: "long",
                             });
                             const formattedTime = new Date(
                                 firstPoint.parsed.x
-                            ).toLocaleTimeString("ru-RU", {
+                            ).toLocaleTimeString(language, {
                                 hour: "2-digit",
                                 minute: "2-digit",
                             });
@@ -382,13 +393,13 @@ function Chart<TLog extends ChartLog>({
                                 });
                             }
 
-                            const columnLabels: string[] = [];
+                            const columns: ChartColumn[] = [];
                             const seenColumns = new Set<string>();
                             for (const row of rows) {
                                 for (const cell of row.cells) {
-                                    if (!seenColumns.has(cell.label)) {
-                                        seenColumns.add(cell.label);
-                                        columnLabels.push(cell.label);
+                                    if (!seenColumns.has(cell.id)) {
+                                        seenColumns.add(cell.id);
+                                        columns.push({ id: cell.id, label: cell.label });
                                     }
                                 }
                             }
@@ -402,29 +413,17 @@ function Chart<TLog extends ChartLog>({
                             const groupThStyle =
                                 `padding:4px 8px;text-align:center;font-weight:600;color:#fff;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.15);white-space:nowrap;${vDivider}`;
 
-                            const METRIC_LABELS = new Set([
-                                "Общее",
-                                "DNS",
-                                "TCP",
-                                "TLS",
-                                "TTFB",
-                                "Загрузка",
-                            ]);
-                            const STANDALONE_LABELS = new Set(["Статус"]);
-
-                            const standaloneCols: string[] = [];
-                            const metricCols: string[] = [];
-                            const backendCols: string[] = [];
-                            for (const col of columnLabels) {
-                                if (STANDALONE_LABELS.has(col)) standaloneCols.push(col);
-                                else if (METRIC_LABELS.has(col)) metricCols.push(col);
+                            const standaloneCols: ChartColumn[] = [];
+                            const metricCols: ChartColumn[] = [];
+                            const backendCols: ChartColumn[] = [];
+                            for (const col of columns) {
+                                if (STANDALONE_IDS.has(col.id)) standaloneCols.push(col);
+                                else if (METRIC_IDS.has(col.id)) metricCols.push(col);
                                 else backendCols.push(col);
                             }
-                            // "Общее2" (server_timing.total) ставим первым в backend-группе
-                            const totalIdx = backendCols.indexOf("Общее2");
+                            const totalIdx = backendCols.findIndex((c) => c.id === SERVER_TOTAL_ID);
                             if (totalIdx > 0) {
-                                backendCols.splice(totalIdx, 1);
-                                backendCols.unshift("Общее2");
+                                backendCols.unshift(...backendCols.splice(totalIdx, 1));
                             }
                             const orderedColumns = [
                                 ...standaloneCols,
@@ -436,38 +435,38 @@ function Chart<TLog extends ChartLog>({
                             let innerHtml = "<thead>";
                             if (showGroups) {
                                 innerHtml += `<tr><th rowspan="2" style="${dateThStyle}">${escapeHtml(
-                                    `${formattedDate} в ${formattedTime}`
+                                    tf("chartDateTime", { date: formattedDate, time: formattedTime })
                                 )}</th>`;
                                 for (const col of standaloneCols) {
                                     innerHtml += `<th rowspan="2" style="${thStyle}">${escapeHtml(
-                                        col
+                                        col.label
                                     )}</th>`;
                                 }
                                 if (metricCols.length > 0) {
-                                    innerHtml += `<th colspan="${metricCols.length}" style="${groupThStyle}">Метрики в мс</th>`;
+                                    innerHtml += `<th colspan="${metricCols.length}" style="${groupThStyle}">${escapeHtml(t("chartGroupMetrics"))}</th>`;
                                 }
                                 if (backendCols.length > 0) {
-                                    innerHtml += `<th colspan="${backendCols.length}" style="${groupThStyle}">Backend в мс</th>`;
+                                    innerHtml += `<th colspan="${backendCols.length}" style="${groupThStyle}">${escapeHtml(t("chartGroupBackend"))}</th>`;
                                 }
                                 innerHtml += "</tr><tr>";
                                 for (const col of metricCols) {
                                     innerHtml += `<th style="${thStyle}">${escapeHtml(
-                                        col
+                                        col.label
                                     )}</th>`;
                                 }
                                 for (const col of backendCols) {
                                     innerHtml += `<th style="${thStyle}">${escapeHtml(
-                                        col
+                                        col.label
                                     )}</th>`;
                                 }
                                 innerHtml += "</tr>";
                             } else {
                                 innerHtml += `<tr><th style="${dateThStyle}">${escapeHtml(
-                                    `${formattedDate} в ${formattedTime}`
+                                    tf("chartDateTime", { date: formattedDate, time: formattedTime })
                                 )}</th>`;
                                 for (const col of orderedColumns) {
                                     innerHtml += `<th style="${thStyle}">${escapeHtml(
-                                        col
+                                        col.label
                                     )}</th>`;
                                 }
                                 innerHtml += "</tr>";
@@ -480,15 +479,15 @@ function Chart<TLog extends ChartLog>({
                                     `position:sticky;left:0;background:${stickyBg};z-index:1;` +
                                     `box-shadow:inset 0 -2px 0 ${row.color};${vDivider}`;
                                 const cityLabelHtml = row.unreliable
-                                    ? `${escapeHtml(row.label)} <span style="color:#ff6b6b;font-size:11px;" title="Недостоверный замер">●</span>`
+                                    ? `${escapeHtml(row.label)} <span style="color:#ff6b6b;font-size:11px;" title="${escapeHtml(t("chartUnreliable"))}">●</span>`
                                     : escapeHtml(row.label);
                                 innerHtml += `<tr><th scope="row" style="${cityStyle}">${cityLabelHtml}</th>`;
 
-                                const byLabel = new Map(
-                                    row.cells.map((c) => [c.label, c])
+                                const byId = new Map(
+                                    row.cells.map((c) => [c.id, c])
                                 );
                                 for (const col of orderedColumns) {
-                                    const cell = byLabel.get(col);
+                                    const cell = byId.get(col.id);
                                     const v = cell?.value ?? "";
                                     const weight = cell?.bold ? "700" : "400";
                                     innerHtml += `<td style="padding:4px 8px;text-align:right;color:#e0e0e0;font-variant-numeric:tabular-nums;font-weight:${weight};${vDivider}">${escapeHtml(
@@ -654,7 +653,7 @@ function Chart<TLog extends ChartLog>({
                     },
                     adapters: {
                         date: {
-                            locale: ru,
+                            locale: dateLocale(language),
                         },
                     },
                     grid: {
