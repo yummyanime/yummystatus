@@ -1,5 +1,5 @@
 import { Line } from "react-chartjs-2";
-import { useRef, useEffect, useState, useId } from "react";
+import { useRef, useEffect, useState, useId, useMemo } from "react";
 import {
     Chart as ChartJS,
     LinearScale,
@@ -166,7 +166,7 @@ function Chart<TLog extends ChartLog>({
         };
     }, []);
 
-    const datasets = cities.map((city, index) => {
+    const datasets = useMemo(() => cities.map((city, index) => {
         const logs = cityLogs[city] || [];
         const colorIndex = index % CHART_COLORS.length;
         const color = CHART_COLORS[colorIndex] || "#c9cbcf";
@@ -229,9 +229,9 @@ function Chart<TLog extends ChartLog>({
             fill: true,
             spanGaps: false,
         };
-    });
+    }), [cities, cityLogs, getValue, getLabel, isUnreliable]);
 
-    const sortedDatasets = [...datasets].sort((a, b) => {
+    const chartData = useMemo(() => ({ datasets: [...datasets].sort((a, b) => {
         const aData = a.data
             .map((d) => d.y)
             .filter((v): v is number => v !== null);
@@ -247,11 +247,7 @@ function Chart<TLog extends ChartLog>({
                 ? bData.reduce((acc, val) => acc + val, 0) / bData.length
                 : 0;
         return bAvg - aAvg;
-    });
-
-    const chartData = {
-        datasets: sortedDatasets,
-    };
+    }) }), [datasets]);
 
     const getOptions = (timeRange: string, width: number) => {
         const timeSettings: {
@@ -668,10 +664,15 @@ function Chart<TLog extends ChartLog>({
         };
     };
 
+    const options = useMemo(
+        () => getOptions(timeRange, width),
+        [timeRange, width, language, hideLegend, isUnreliable, renderTooltip]
+    );
+
     return (
         <Line
             ref={chartRef as any}
-            options={getOptions(timeRange, width) as any}
+            options={options as any}
             data={chartData as any}
         />
     );

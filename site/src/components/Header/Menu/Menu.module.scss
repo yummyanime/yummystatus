@@ -16,3 +16,17 @@
         width: 100%;
     }
 }
+
+.guestIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--block-inner);
+    border-radius: 10px;
+
+    svg {
+        color: #fff;
+    }
+}

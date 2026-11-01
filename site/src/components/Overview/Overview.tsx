@@ -29,4 +29,4 @@ const Overview: React.FC<OverviewProps> = ({ allLogs, pingLogs, health, loading,
     );
 };
 
-export default Overview;
+export default React.memo(Overview);

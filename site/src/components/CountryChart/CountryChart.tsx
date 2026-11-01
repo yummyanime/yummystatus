@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { HttpLog, LocationGroups } from "../../api.ts";
 import { countryCodes, getCountryName, getDomainGroups } from "../../data/constants.ts";
 import { useLanguage } from "../../i18n.ts";
@@ -188,4 +189,4 @@ const CountryChart = (props: CountryChartProps) => {
     );
 };
 
-export default CountryChart;
+export default memo(CountryChart);

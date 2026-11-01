@@ -11,6 +11,7 @@
     text-decoration: none;
     white-space: nowrap;
     border-radius: 10px;
+    cursor: pointer;
 
     @include desktopHover(true, 0.1s, 0.2s) {
         background: var(--head-hover);

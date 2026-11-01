@@ -15,7 +15,8 @@
 }
 
 .container hr {
-    margin: 5px 0;
+    height: 3px;
+    margin: 5px 10px;
     border: 0;
-    border-top: 1px solid var(--head-hover);
+    background: var(--border);
 }

@@ -55,7 +55,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
                 {icon}
                 {!iconOnly && <span className={styles.title}>{title}</span>}
             </Link>
-            {items && !iconOnly && (
+            {items && (
                 <span className={styles.arrow}>
                     <FlatArrowIcon size={8} />
                 </span>

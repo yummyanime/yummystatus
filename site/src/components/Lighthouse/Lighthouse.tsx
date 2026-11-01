@@ -78,18 +78,15 @@ const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
     return (
         <div className={styles.lighthouse}>
             <div className={styles.header}>
-                <button
-                    type="button"
-                    className={styles.strategy}
-                    role="switch"
-                    aria-checked={strategy === "desktop"}
-                    onClick={() => handleStrategy(strategy === "desktop" ? "mobile" : "desktop")}
-                >
+                <label className={styles.strategy}>
                     <span className={styles.strategyLabel}>
                         {strategy === "desktop" ? t("lhDesktop") : t("lhMobile")}
                     </span>
-                    <Toggle active={strategy === "desktop"} />
-                </button>
+                    <Toggle
+                        active={strategy === "desktop"}
+                        onToggle={(active) => handleStrategy(active ? "desktop" : "mobile")}
+                    />
+                </label>
             </div>
 
             <LhTable pages={pages} selected={page?.path ?? null} onSelect={setSelected} />
@@ -101,4 +98,4 @@ const Lighthouse: React.FC<LighthouseProps> = ({ domain }) => {
     );
 };
 
-export default Lighthouse;
+export default React.memo(Lighthouse);

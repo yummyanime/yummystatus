@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import type { HealthReport } from "../../api.ts";
 import { domains } from "../../data/constants.ts";
 import { useLanguage } from "../../i18n.ts";
@@ -110,4 +110,4 @@ const Status: React.FC<StatusProps> = ({ domain, health, loading }) => {
     );
 };
 
-export default Status;
+export default memo(Status);

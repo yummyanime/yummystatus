@@ -43,13 +43,13 @@ const Menu: React.FC<MenuProps> = ({ variant, isSticky }) => {
         {
             title: t("settingsAutoRefresh"),
             href: "#",
-            content: <Toggle active={autoRefresh} />,
+            content: <Toggle active={autoRefresh} onToggle={setAutoRefresh} ariaLabel={t("settingsAutoRefresh")} />,
             onClick: () => setAutoRefresh(!autoRefresh),
         },
         {
             title: t("settingsHideUnreliable"),
             href: "#",
-            content: <Toggle active={hideUnreliable} />,
+            content: <Toggle active={hideUnreliable} onToggle={setHideUnreliable} ariaLabel={t("settingsHideUnreliable")} />,
             onClick: () => setHideUnreliable(!hideUnreliable),
         },
     ];
@@ -84,7 +84,11 @@ const Menu: React.FC<MenuProps> = ({ variant, isSticky }) => {
                 isSticky={isSticky}
                 href="#"
                 title={t("navSettings")}
-                icon={<SettingsIcon size={iconSize} color={iconColor} />}
+                icon={
+                    <div className={styles.guestIcon}>
+                        <SettingsIcon size={18} color={iconColor} />
+                    </div>
+                }
                 iconOnly
                 items={settingsItems}
                 sheetKey="settings"

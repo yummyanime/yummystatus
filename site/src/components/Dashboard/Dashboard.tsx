@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useDeferredValue } from "react";
 import { useParams } from "react-router-dom";
 import styles from "./Dashboard.module.scss";
 import Menu from "../Menu/Menu.tsx";
@@ -211,23 +211,25 @@ const Dashboard = () => {
         }
     };
 
+    const deferredHideUnreliable = useDeferredValue(hideUnreliable);
+
     const httpLogs = useMemo(() => {
-        if (!hideUnreliable) return rawHttpLogs;
+        if (!deferredHideUnreliable) return rawHttpLogs;
         const result: CountryLogs = {};
         for (const country in rawHttpLogs) {
             result[country] = processCityLogs(rawHttpLogs[country]);
         }
         return result;
-    }, [rawHttpLogs, hideUnreliable]);
+    }, [rawHttpLogs, deferredHideUnreliable]);
 
     const domainLogs = useMemo(() => {
-        if (!hideUnreliable) return rawDomainLogs;
+        if (!deferredHideUnreliable) return rawDomainLogs;
         const result: { [domain: string]: CityLogs } = {};
         for (const domainKey in rawDomainLogs) {
             result[domainKey] = processCityLogs(rawDomainLogs[domainKey]);
         }
         return result;
-    }, [rawDomainLogs, hideUnreliable]);
+    }, [rawDomainLogs, deferredHideUnreliable]);
 
     useEffect(() => {
         setLoading(true);

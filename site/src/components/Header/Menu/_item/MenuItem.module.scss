@@ -33,8 +33,12 @@
         }
     }
 
-    &[data-icon-only] .link svg {
-        margin-right: 0;
+    &[data-icon-only] {
+        flex-shrink: 0;
+
+        .link svg {
+            margin-right: 0;
+        }
     }
 
     .title {
@@ -110,6 +114,10 @@
             }
         }
 
+        &[data-icon-only] .link {
+            margin-top: 0;
+        }
+
         .title {
             font-size: 9px;
             font-weight: 600;
@@ -128,7 +136,8 @@
 }
 
 .separator {
-    margin: 5px 0;
+    height: 3px;
+    margin: 5px 10px;
     border: 0;
-    border-top: 1px solid var(--head-hover);
+    background: var(--border);
 }

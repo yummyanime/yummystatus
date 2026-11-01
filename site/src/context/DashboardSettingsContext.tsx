@@ -123,21 +123,31 @@ export const DashboardSettingsProvider = ({
         };
     }, [dateRange, timeRange]);
 
+    const value = useMemo(
+        () => ({
+            timeRange,
+            setTimeRange,
+            autoRefresh,
+            setAutoRefresh,
+            hideUnreliable,
+            setHideUnreliable,
+            dateRange,
+            setDateRange,
+            effectiveSpanMs,
+            effectiveTimeRange,
+        }),
+        [
+            timeRange,
+            autoRefresh,
+            hideUnreliable,
+            dateRange,
+            effectiveSpanMs,
+            effectiveTimeRange,
+        ]
+    );
+
     return (
-        <DashboardSettingsContext.Provider
-            value={{
-                timeRange,
-                setTimeRange,
-                autoRefresh,
-                setAutoRefresh,
-                hideUnreliable,
-                setHideUnreliable,
-                dateRange,
-                setDateRange,
-                effectiveSpanMs,
-                effectiveTimeRange,
-            }}
-        >
+        <DashboardSettingsContext.Provider value={value}>
             {children}
         </DashboardSettingsContext.Provider>
     );
