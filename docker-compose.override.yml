@@ -1,72 +1,55 @@
-name: yummystatus
-
 services:
     db:
-        image: postgres:13
-        environment:
-            - POSTGRES_USER=${DB_USER}
-            - POSTGRES_PASSWORD=${DB_PASSWORD}
-            - POSTGRES_DB=yummystatus
-        volumes:
-            - pgdata:/var/lib/postgresql/data
+        restart: "no"
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d yummystatus"]
             interval: 3s
-            timeout: 3s
-            retries: 10
-        ports:
-            - "127.0.0.1:5432:5432"
+        ports: !override
+            - "127.0.0.1:15432:5432"
 
     api:
+        image: yummystatus-dev-api
         build:
             context: .
             dockerfile: api/Dockerfile
             target: dev
-        env_file: .env
+        restart: "no"
         ports:
-            - "3000:3000"
+            - "127.0.0.1:13000:3000"
         volumes:
             - ./api:/app/api
             - ./db:/app/db
             - ./domains.ts:/app/domains.ts
             - /app/api/node_modules
             - /app/db/node_modules
-        depends_on:
-            db:
-                condition: service_healthy
         healthcheck:
-            test: ["CMD", "bun", "-e", "fetch('http://localhost:3000/api/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
             interval: 3s
-            timeout: 5s
             retries: 20
 
     collector:
+        image: yummystatus-dev-collector
         build:
             context: .
             dockerfile: collector/Dockerfile
             target: dev
-        env_file: .env
+        restart: "no"
         volumes:
             - ./collector:/app/collector
             - ./db:/app/db
             - ./domains.ts:/app/domains.ts
             - /app/collector/node_modules
             - /app/db/node_modules
-        depends_on:
-            db:
-                condition: service_healthy
-            api:
-                condition: service_healthy
 
     site:
+        image: yummystatus-dev-site
         build:
             context: .
             dockerfile: site/Dockerfile
             target: dev
+        restart: "no"
         environment:
             - API_URL=http://api:3000
         ports:
-            - "5173:5173"
+            - "127.0.0.1:15173:5173"
         volumes:
             - ./site:/app/site
             - ./domains.ts:/app/domains.ts
@@ -75,5 +58,8 @@ services:
             api:
                 condition: service_healthy
 
-volumes:
-    pgdata:
+    bot:
+        profiles: [prod]
+
+    caddy:
+        profiles: [prod]

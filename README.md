@@ -49,4 +49,6 @@ The service collects statistics on response time, status codes, and other parame
     bun run dev
     ```
 
-The site will then be available at `http://localhost:5173` (API on `http://localhost:3000`).
+    Equivalent to `docker compose up -d --build --wait --remove-orphans`: `docker-compose.override.yml` is applied on top of `docker-compose.yml` automatically, and the `bot` and `caddy` services (profile `prod`) are not started locally.
+
+The site will then be available at `http://localhost:15173` (API on `http://localhost:13000`, Postgres on `127.0.0.1:15432`).
