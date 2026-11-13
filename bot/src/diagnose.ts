@@ -26,19 +26,7 @@ export interface Diagnosis {
         reason: string;
     }[];
     cause: CauseInfo;
-    stats: {
-        measurements: number;
-        failRate: number;
-        countries: string[];
-        localizedTo: string | null;
-    };
-}
-
-interface AlertUpdate {
-    kind: "ongoing" | "resolved";
-    at: Date;
-    durationMs: number;
-    changed?: boolean;
+    localizedTo: string | null;
 }
 
 const SITE_DOMAINS: string[] = DOMAINS.filter(
@@ -47,7 +35,6 @@ const SITE_DOMAINS: string[] = DOMAINS.filter(
 const OK_CODES = [200, 202];
 const MAX_LISTED_DOMAINS = 6;
 const CAPTION_LIMIT = 1024;
-const DIVIDER = "━━━━━━━━━━━━━━";
 
 const ERROR_CLASSES: { label: string; match: (code: number) => boolean }[] = [
     {
@@ -148,14 +135,7 @@ export const diagnose = (report: HealthReport): Diagnosis => {
     return {
         affected,
         cause: pickCause(new Set(affected.map((entry) => entry.domain))),
-        stats: {
-            measurements: report.measurements,
-            failRate: report.measurements
-                ? report.failures / report.measurements
-                : 0,
-            countries: report.countries,
-            localizedTo,
-        },
+        localizedTo,
     };
 };
 
@@ -167,8 +147,8 @@ export const formatDuration = (ms: number): string => {
     return rest ? `${hours} ч ${rest} мин` : `${hours} ч`;
 };
 
-export const buildAlert = (diagnosis: Diagnosis, startedAt: Date): string => {
-    const { affected, cause, stats } = diagnosis;
+export const buildBody = (diagnosis: Diagnosis): string => {
+    const { affected, cause, localizedTo } = diagnosis;
 
     const listed = affected.slice(0, MAX_LISTED_DOMAINS);
     const hidden = affected.length - listed.length;
@@ -178,38 +158,39 @@ export const buildAlert = (diagnosis: Diagnosis, startedAt: Date): string => {
     );
     if (hidden > 0) lines.push(`• и ещё ${hidden}`);
 
-    const geo = stats.localizedTo
-        ? `\n<i>Сбои сосредоточены в ${stats.localizedTo} — вероятна блокировка или маршрутизация у операторов.</i>`
+    const geo = localizedTo
+        ? `\n<i>Сбои сосредоточены в ${localizedTo} — вероятна блокировка или маршрутизация у операторов.</i>`
         : "";
 
-    const caption = [
-        `🔴 <b>Возникли неполадки</b>`,
-        `<i>${moscow(startedAt, true)} МСК · окно 3 часа</i>`,
-        ``,
+    return [
         `<b>Затронуто</b>`,
         lines.join("\n") || "• нет данных",
         ``,
         `${cause.emoji} <b>${cause.title}</b>`,
         `<i>${cause.detail}</i>${geo}`,
-        ``,
-        `<i>${stats.measurements} замеров · ${percent(stats.failRate)} сбойных · ${stats.countries.join(", ")}</i>`,
     ].join("\n");
-
-    return caption.slice(0, CAPTION_LIMIT);
 };
 
-export const withUpdate = (alert: string, update: AlertUpdate): string => {
-    const header =
-        update.kind === "resolved"
-            ? `✅ <b>Восстановлено</b> · ${moscow(update.at, false)} МСК`
-            : `🕒 <b>Обновление</b> · ${moscow(update.at, false)} МСК`;
-    const body =
-        update.kind === "resolved"
-            ? `Инцидент длился ${formatDuration(update.durationMs)}`
-            : `Длится ${formatDuration(update.durationMs)} · ${update.changed ? "состав сбоя изменился" : "сбой сохраняется"}`;
+export const buildAlert = (
+    body: string,
+    startedAt: Date,
+    { at, resolved = false }: { at: Date; resolved?: boolean }
+): string => {
+    const duration = formatDuration(at.getTime() - startedAt.getTime());
+    const header = resolved
+        ? [
+              `✅ <b>Восстановлено</b>`,
+              `Начало: ${moscow(startedAt)} МСК`,
+              `Конец: ${moscow(at)} МСК`,
+              `Инцидент длился ${duration}`,
+          ]
+        : [
+              `🔴 <b>Неполадки</b>`,
+              `Начало: ${moscow(startedAt)} МСК`,
+              `Инцидент длится ${duration}`,
+          ];
 
-    const block = `\n\n${DIVIDER}\n${header}\n${body}`;
-    return `${alert.slice(0, CAPTION_LIMIT - block.length)}${block}`;
+    return `${header.join("\n")}\n\n${body}`.slice(0, CAPTION_LIMIT);
 };
 
 function classifyFailure(code: number): string {
@@ -284,15 +265,17 @@ function pickCause(names: Set<string>): CauseInfo {
     return { key: "partial", ...CAUSES.partial };
 }
 
-function moscow(date: Date, withDate: boolean): string {
+function moscow(date: Date): string {
     return date
         .toLocaleString("ru-RU", {
             timeZone: "Europe/Moscow",
-            ...(withDate && { day: "2-digit", month: "2-digit" }),
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
             hour: "2-digit",
             minute: "2-digit",
         })
-        .replace(", ", " · ");
+        .replace(", ", " ");
 }
 
 function percent(value: number): string {
@@ -377,32 +360,34 @@ if (import.meta.main) {
     assert.equal(slow.affected[0]?.reason, "медленные ответы");
 
     const mixedGeo = build([API_DOMAIN], { extraCountries: ["UA"] });
-    assert.equal(diagnose(mixedGeo).stats.localizedTo, "RU");
+    assert.equal(diagnose(mixedGeo).localizedTo, "RU");
 
-    const alert = buildAlert(
-        diagnose(build([...SITE_DOMAINS, WAF_DOMAIN])),
-        start
+    const body = buildBody(diagnose(build([...SITE_DOMAINS, WAF_DOMAIN])));
+    assert.ok(body.includes("Серьёзная DDoS-атака"));
+    assert.ok(!body.includes("замеров"));
+
+    const ongoing = buildAlert(body, start, {
+        at: new Date(start.getTime() + 25 * 60000),
+    });
+    assert.ok(
+        ongoing.startsWith(
+            "🔴 <b>Неполадки</b>\nНачало: 16.08.2026 13:00 МСК\nИнцидент длится 25 мин\n\n<b>Затронуто</b>"
+        )
     );
-    assert.ok(alert.includes("Серьёзная DDoS-атака"));
-    assert.ok(alert.length <= CAPTION_LIMIT);
+    assert.ok(ongoing.endsWith("</i>"));
 
-    const resolved = withUpdate(alert, {
-        kind: "resolved",
-        at: new Date(start.getTime() + 49 * 60000),
-        durationMs: 49 * 60000,
+    const resolved = buildAlert(body, start, {
+        at: new Date(start.getTime() + 90 * 60000),
+        resolved: true,
     });
-    assert.ok(resolved.includes("Восстановлено"));
-    assert.ok(resolved.includes("49 мин"));
-    assert.ok(resolved.length <= CAPTION_LIMIT);
+    assert.ok(
+        resolved.startsWith(
+            "✅ <b>Восстановлено</b>\nНачало: 16.08.2026 13:00 МСК\nКонец: 16.08.2026 14:30 МСК\nИнцидент длился 1 ч 30 мин\n\n<b>Затронуто</b>"
+        )
+    );
 
-    const long = withUpdate("x".repeat(CAPTION_LIMIT), {
-        kind: "ongoing",
-        at: start,
-        durationMs: 90 * 60000,
-        changed: true,
-    });
-    assert.ok(long.length <= CAPTION_LIMIT);
-    assert.ok(long.includes("1 ч 30 мин"));
+    const long = buildAlert("x".repeat(CAPTION_LIMIT), start, { at: start });
+    assert.equal(long.length, CAPTION_LIMIT);
 
     console.log("diagnose: все проверки пройдены");
 }

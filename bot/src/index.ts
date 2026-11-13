@@ -4,11 +4,17 @@ import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { API_URL, client, type HealthReport } from "./api.ts";
 import {
     buildAlert,
+    buildBody,
     type Diagnosis,
     diagnose,
     formatDuration,
-    withUpdate,
 } from "./diagnose.ts";
+
+type PendingIncident = {
+    messageId?: never;
+    startedAt: string;
+    alertChecks: number;
+};
 
 interface Incident {
     messageId: number;
@@ -16,7 +22,7 @@ interface Incident {
     startedAt: string;
     updatedAt: string;
     signature: string;
-    alert: string;
+    body: string;
     okChecks: number;
 }
 
@@ -43,6 +49,7 @@ const INTERVAL_MS = Number(process.env.BOT_INTERVAL_MS ?? 2 * 60 * 1000);
 const UPDATE_INTERVAL_MS = Number(
     process.env.BOT_UPDATE_INTERVAL_MS ?? 15 * 60 * 1000
 );
+const ALERT_CHECKS = Number(process.env.BOT_ALERT_CHECKS ?? 2);
 const RECOVERY_CHECKS = Number(process.env.BOT_RECOVERY_CHECKS ?? 2);
 const STATE_FILE =
     process.env.BOT_STATE_FILE ?? new URL("../.state.json", import.meta.url);
@@ -74,16 +81,25 @@ async function tick(): Promise<void> {
     if (health === "critical") {
         const diagnosis = diagnose(report);
         const signature = signatureOf(diagnosis);
+        const body = buildBody(diagnosis);
 
-        if (!state) {
-            const alert = buildAlert(diagnosis, now);
-            const sent = await sendAlert(alert);
+        if (!state || state.messageId === undefined) {
+            const startedAt = state?.startedAt ?? now.toISOString();
+            const alertChecks = (state?.alertChecks ?? 0) + 1;
+            if (alertChecks < ALERT_CHECKS) {
+                writeState({ startedAt, alertChecks });
+                return;
+            }
+
+            const sent = await sendAlert(
+                buildAlert(body, new Date(startedAt), { at: now })
+            );
             writeState({
                 ...sent,
-                startedAt: now.toISOString(),
+                startedAt,
                 updatedAt: now.toISOString(),
                 signature,
-                alert,
+                body,
                 okChecks: 0,
             });
             console.log(`Инцидент открыт: ${diagnosis.cause.title}`);
@@ -99,14 +115,7 @@ async function tick(): Promise<void> {
             return;
         }
 
-        const startedAt = new Date(state.startedAt);
-        const alert = buildAlert(diagnosis, startedAt);
-        const update = withUpdate(alert, {
-            kind: "ongoing",
-            at: now,
-            durationMs: now.getTime() - startedAt.getTime(),
-            changed,
-        });
+        const update = buildAlert(body, new Date(state.startedAt), { at: now });
         const edited = await editAlert(state, update);
         const resent = edited ? null : await sendAlert(update);
         writeState({
@@ -114,7 +123,7 @@ async function tick(): Promise<void> {
             ...resent,
             updatedAt: now.toISOString(),
             signature,
-            alert,
+            body,
             okChecks: 0,
         });
         console.log(`Инцидент обновлён: ${diagnosis.cause.title}`);
@@ -122,6 +131,10 @@ async function tick(): Promise<void> {
     }
 
     if (!state) return;
+    if (state.messageId === undefined) {
+        writeState(null);
+        return;
+    }
 
     const okChecks = state.okChecks + 1;
     if (okChecks < RECOVERY_CHECKS) {
@@ -129,13 +142,15 @@ async function tick(): Promise<void> {
         return;
     }
 
-    const durationMs = now.getTime() - new Date(state.startedAt).getTime();
+    const startedAt = new Date(state.startedAt);
     await editAlert(
         state,
-        withUpdate(state.alert, { kind: "resolved", at: now, durationMs })
+        buildAlert(state.body, startedAt, { at: now, resolved: true })
     );
     writeState(null);
-    console.log(`Инцидент закрыт, длительность: ${formatDuration(durationMs)}`);
+    console.log(
+        `Инцидент закрыт, длительность: ${formatDuration(now.getTime() - startedAt.getTime())}`
+    );
 }
 
 function run(): Promise<void> {
@@ -153,15 +168,17 @@ function errorMessage(error: unknown): string {
     return error instanceof Error ? error.message : String(error);
 }
 
-function readState(): Incident | null {
+function readState(): Incident | PendingIncident | null {
     try {
-        return JSON.parse(readFileSync(STATE_FILE, "utf8")) as Incident;
+        return JSON.parse(readFileSync(STATE_FILE, "utf8")) as
+            | Incident
+            | PendingIncident;
     } catch {
         return null;
     }
 }
 
-function writeState(state: Incident | null): void {
+function writeState(state: Incident | PendingIncident | null): void {
     if (state) writeFileSync(STATE_FILE, JSON.stringify(state));
     else rmSync(STATE_FILE, { force: true });
 }
