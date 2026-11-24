@@ -12,7 +12,6 @@ export const LANGUAGES: { id: Language; title: string }[] = [
 export type Dictionary = {
     navHome: string;
     navOutages: string;
-    navDomains: string;
     navSettings: string;
     navLanguage: string;
     navSites: string;
@@ -162,7 +161,6 @@ const dictionaries: Record<Language, Dictionary> = {
     ru: {
         navHome: "ГЛАВНАЯ",
         navOutages: "СБОИ",
-        navDomains: "ДОМЕНЫ",
         navSettings: "Настройки",
         navLanguage: "Язык",
         navSites: "САЙТЫ",
@@ -310,7 +308,6 @@ const dictionaries: Record<Language, Dictionary> = {
     en: {
         navHome: "HOME",
         navOutages: "OUTAGES",
-        navDomains: "DOMAINS",
         navSettings: "Settings",
         navLanguage: "Language",
         navSites: "SITES",
@@ -458,7 +455,6 @@ const dictionaries: Record<Language, Dictionary> = {
     uk: {
         navHome: "ГОЛОВНА",
         navOutages: "ЗБОЇ",
-        navDomains: "ДОМЕНИ",
         navSettings: "Налаштування",
         navLanguage: "Мова",
         navSites: "САЙТИ",

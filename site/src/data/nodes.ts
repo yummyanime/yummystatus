@@ -84,7 +84,11 @@ export const averageByTime = (logs: PingLog[]) =>
         })
     );
 
-export const nodeBuckets = (logs: PingLog[], count: number): BucketStatus[] => {
+export const nodeBuckets = (
+    allLogs: PingLog[],
+    count: number
+): BucketStatus[] => {
+    const logs = allLogs.filter((log) => !isLocal(log));
     const start = Date.parse(logs[0]?.created_at);
     const width =
         (Date.parse(logs[logs.length - 1]?.created_at) - start) / count || 1;
@@ -140,16 +144,10 @@ function latestCycle(logs: PingLog[]) {
 }
 
 function nodeLevel({ inDns }: NodeItem, logs: PingLog[]): HealthLevel {
-    const cycles = [
-        latestCycle(logs.filter(isLocal)),
-        latestCycle(logs.filter((log) => !isLocal(log))),
-    ];
-    const failed = cycles.some(
-        (cycle) =>
-            cycle.length > 0 &&
-            cycle.filter(isLost).length >=
-                Math.min(cycle.length, RU_FAIL_PROBES)
-    );
+    const cycle = latestCycle(logs.filter((log) => !isLocal(log)));
+    const failed =
+        cycle.length > 0 &&
+        cycle.filter(isLost).length >= Math.min(cycle.length, RU_FAIL_PROBES);
     if (inDns === false || failed) return "critical";
-    return cycles.some((cycle) => cycle.some(hasLoss)) ? "warning" : "stable";
+    return cycle.some(hasLoss) ? "warning" : "stable";
 }

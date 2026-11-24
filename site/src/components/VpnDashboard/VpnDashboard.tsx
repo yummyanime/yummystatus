@@ -3,6 +3,7 @@ import { getCountryName, HEALTH_LABEL } from "../../data/constants.ts";
 import {
     aggregateLevel,
     groupBy,
+    isLocal,
     levelSegments,
     loadNodes,
 } from "../../data/nodes.ts";
@@ -75,7 +76,7 @@ const VpnDashboard = () => {
                     {members.map((node) => (
                         <LazyMount key={node.key} placeholder={<ChartPlug />}>
                             <NodeChart
-                                logs={node.logs}
+                                logs={node.logs.filter((log) => !isLocal(log))}
                                 timeRange={effectiveTimeRange}
                                 header={{ node }}
                             />

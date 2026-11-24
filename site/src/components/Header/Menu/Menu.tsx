@@ -3,12 +3,10 @@ import styles from "./Menu.module.scss";
 import MenuItem from "./_item/MenuItem.tsx";
 import { type SubMenuEntry } from "../SubMenu/SubMenu.tsx";
 import Toggle from "../../Toggle/Toggle.tsx";
-import { getDomainGroups, getDomainLabel } from "../../../data/constants.ts";
 import { useDashboardSettings } from "../../../context/DashboardSettingsContext.tsx";
 import { useLanguage } from "../../../i18n.ts";
 import {
     HomeIcon,
-    ListIcon,
     ErrorIcon,
     GlobeIcon,
     ShieldIcon,
@@ -28,11 +26,6 @@ const Menu: React.FC<MenuProps> = ({ variant, isSticky }) => {
     const { language, t } = useLanguage();
     const { autoRefresh, setAutoRefresh, hideUnreliable, setHideUnreliable } =
         useDashboardSettings();
-
-    const domainItems: SubMenuEntry[] = getDomainGroups().flatMap(({ domains }, index) => [
-        ...(index ? [{ type: "hr" as const }] : []),
-        ...domains.map(({ value }) => ({ title: getDomainLabel(value), href: `/${value}` })),
-    ]);
 
     const settingsItems: SubMenuEntry[] = [
         {
@@ -85,15 +78,6 @@ const Menu: React.FC<MenuProps> = ({ variant, isSticky }) => {
                 href="/downdetector"
                 title={t("navOutages")}
                 icon={<ErrorIcon size={iconSize} color={iconColor} />}
-            />
-            <MenuItem
-                variant={variant}
-                isSticky={isSticky}
-                href="#"
-                title={t("navDomains")}
-                icon={<ListIcon size={iconSize} color={iconColor} />}
-                items={domainItems}
-                sheetKey="domains"
             />
             <MenuItem
                 variant={variant}
