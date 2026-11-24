@@ -8,7 +8,7 @@ import {
     getDomainLabel,
 } from "../../data/constants.ts";
 import type { DomainHealthReport } from "../../api.ts";
-import ReactCountryFlag from "react-country-flag";
+import StatusTooltip from "../StatusTooltip/StatusTooltip.tsx";
 import { useLanguage } from "../../i18n.ts";
 
 interface DomainStatusProps {
@@ -24,7 +24,7 @@ const DomainStatus: React.FC<DomainStatusProps> = ({
     registerRow,
     onScroll,
 }) => {
-    const { t, tf, language } = useLanguage();
+    const { t, tf } = useLanguage();
     const requestsRef = useRef<HTMLDivElement>(null);
     const [isBig, setIsBig] = useState(false);
     const buckets = report?.buckets ?? [];
@@ -65,61 +65,29 @@ const DomainStatus: React.FC<DomainStatusProps> = ({
                     <Tippy
                         key={`${bucket.time}-${index}`}
                         content={
-                            <div>
-                                <div className={styles.tooltipHeader}>
-                                    {tf("chartDateTime", {
-                                        date: new Date(bucket.time).toLocaleDateString(language, {
-                                            weekday: "long",
-                                            day: "numeric",
-                                            month: "long",
-                                        }),
-                                        time: new Date(bucket.time).toLocaleTimeString(language, {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        }),
-                                    })}
-                                </div>
-                                <div className={styles.tooltipBody}>
-                                    <div>
-                                        {tf("domainAvgTime", {
-                                            value: `${bucket.totalTimeAvg.toFixed(2)} ${t("unitMs")}`,
-                                        })}
-                                    </div>
-                                    {bucket.problems.length > 0 ? (
-                                        <div>
-                                            <div>{t("domainProblemCities")}</div>
-                                            {bucket.problems.map((r, i) => (
-                                                <div key={i}>
-                                                    -{" "}
-                                                    <ReactCountryFlag
-                                                        countryCode={
-                                                            r.country || "US"
-                                                        }
-                                                        svg
-                                                        style={{
-                                                            marginRight: "5px",
-                                                        }}
-                                                    />{" "}
-                                                    {r.city
-                                                        ? getCityLabel(r.city)
-                                                        : t("domainUnknownCity")}
-                                                    :{" "}
-                                                    {r.statusCode !== null
-                                                        ? tf("domainStatusCode", {
-                                                              code: r.statusCode,
-                                                          })
-                                                        : t("domainUnknownStatus")}
-                                                    {r.totalTime !== null
-                                                        ? `; ${tf("domainTime", { value: `${r.totalTime} ${t("unitMs")}` })}`
-                                                        : ""}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div>{t("domainAllNormal")}</div>
-                                    )}
-                                </div>
-                            </div>
+                            <StatusTooltip
+                                time={bucket.time}
+                                summary={tf("domainAvgTime", {
+                                    value: `${bucket.totalTimeAvg.toFixed(2)} ${t("unitMs")}`,
+                                })}
+                                lines={bucket.problems.map((r, i) => ({
+                                    key: String(i),
+                                    country: r.country,
+                                    label: r.city
+                                        ? getCityLabel(r.city)
+                                        : t("domainUnknownCity"),
+                                    result:
+                                        r.statusCode !== null
+                                            ? tf("domainStatusCode", {
+                                                  code: r.statusCode,
+                                              })
+                                            : t("domainUnknownStatus"),
+                                    value:
+                                        r.totalTime !== null
+                                            ? `${r.totalTime} ${t("unitMs")}`
+                                            : null,
+                                }))}
+                            />
                         }
                     >
                         <div

@@ -20,10 +20,6 @@
         width: 4px;
         background-color: var(--status-color);
     }
-
-    @include desktopHover {
-        background-color: color-mix(in srgb, var(--color-dark-bg-1) 92%, white 8%);
-    }
 }
 
 .header {

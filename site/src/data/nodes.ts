@@ -84,15 +84,12 @@ export const averageByTime = (logs: PingLog[]) =>
         })
     );
 
-export const nodeBuckets = (
-    allLogs: PingLog[],
-    count: number
-): BucketStatus[] => {
+export const nodeBuckets = (allLogs: PingLog[], count: number) => {
     const logs = allLogs.filter((log) => !isLocal(log));
     const start = Date.parse(logs[0]?.created_at);
     const width =
         (Date.parse(logs[logs.length - 1]?.created_at) - start) / count || 1;
-    return Object.values(
+    return Object.entries(
         groupBy(logs, ({ created_at }) =>
             String(
                 Math.min(
@@ -101,10 +98,31 @@ export const nodeBuckets = (
                 )
             )
         )
-    ).map((rows) => {
+    ).map(([index, rows]) => {
         const lossy = rows.filter(hasLoss).length;
-        if (lossy === 0) return "UP";
-        return lossy === rows.length ? "DOWN" : "DEGRADED_MEDIUM";
+        const status: BucketStatus =
+            lossy === 0
+                ? "UP"
+                : lossy === rows.length
+                  ? "DOWN"
+                  : "DEGRADED_MEDIUM";
+        return {
+            time: start + Number(index) * width,
+            status,
+            rtt: meanRtt(rows),
+            problems: Object.values(
+                groupBy(
+                    rows.filter(hasLoss),
+                    ({ city, network }) => `${city ?? ""}|${network ?? ""}`
+                )
+            ).map((probeRows) => ({
+                country: probeRows[0].country,
+                city: probeRows[0].city,
+                network: probeRows[0].network,
+                loss: mean(probeRows.map(lossOf)) ?? 100,
+                rtt: meanRtt(probeRows),
+            })),
+        };
     });
 };
 

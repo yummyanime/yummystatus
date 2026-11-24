@@ -155,6 +155,10 @@
     }
 }
 
+.requests.static .requestBlock {
+    transform: none;
+}
+
 .green {
     background-color: var(--color-green);
 }

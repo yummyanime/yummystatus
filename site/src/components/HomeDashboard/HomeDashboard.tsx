@@ -143,7 +143,9 @@ const HomeDashboard = () => {
                         country={node.country}
                         name={node.name}
                         ms={node.ms}
-                        buckets={nodeBuckets(node.logs, TILE_BLOCKS)}
+                        buckets={nodeBuckets(node.logs, TILE_BLOCKS).map(
+                            ({ status }) => status
+                        )}
                         label={nodeLabel(node.level)}
                     />
                 ))}

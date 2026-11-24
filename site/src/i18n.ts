@@ -24,6 +24,8 @@ export type Dictionary = {
     overviewAvgPingDe: string;
     nodePartialLoss: string;
     nodeNoReply: string;
+    nodeAvgPing: string;
+    nodeProbeLoss: string;
     nodeEventsTitle: string;
     nodeEventsNone: string;
     nodeEventFailed: string;
@@ -173,6 +175,8 @@ const dictionaries: Record<Language, Dictionary> = {
         overviewAvgPingDe: "Средний Ping из Германии",
         nodePartialLoss: "Потери с части проб",
         nodeNoReply: "Нет ответа",
+        nodeAvgPing: "Средний пинг из России: {value}",
+        nodeProbeLoss: "потери {n}%",
         nodeEventsTitle: "События ноды за 24 часа",
         nodeEventsNone: "За последние 24 часа событий не было",
         nodeEventFailed: "Нет ответа: {cities}",
@@ -320,6 +324,8 @@ const dictionaries: Record<Language, Dictionary> = {
         overviewAvgPingDe: "Average ping from Germany",
         nodePartialLoss: "Partial probe loss",
         nodeNoReply: "No reply",
+        nodeAvgPing: "Average ping from Russia: {value}",
+        nodeProbeLoss: "loss {n}%",
         nodeEventsTitle: "Node events in the last 24 hours",
         nodeEventsNone: "No events in the last 24 hours",
         nodeEventFailed: "No reply: {cities}",
@@ -467,6 +473,8 @@ const dictionaries: Record<Language, Dictionary> = {
         overviewAvgPingDe: "Середній Ping з Німеччини",
         nodePartialLoss: "Втрати з частини проб",
         nodeNoReply: "Немає відповіді",
+        nodeAvgPing: "Середній пінг з Росії: {value}",
+        nodeProbeLoss: "втрати {n}%",
         nodeEventsTitle: "Події ноди за 24 години",
         nodeEventsNone: "За останні 24 години подій не було",
         nodeEventFailed: "Немає відповіді: {cities}",

@@ -1,7 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { pingHourlyLogs, pingLogs } from "@yummystatus/db";
 import { db } from "@yummystatus/db/client";
-import { and, asc, eq, isNotNull } from "drizzle-orm";
+import { and, asc, eq, isNotNull, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { resolveTimeRange, timeRangeSchema } from "../services/timeRange.ts";
@@ -24,6 +24,10 @@ export const pingLogsRoute = new Hono().get(
                 domain: t.domain,
                 country: t.country,
                 city: t.city,
+                network:
+                    query.kind === "node" && !hourly
+                        ? pingLogs.network
+                        : sql<null>`null`,
                 rtt_avg: t.rttAvg,
                 rtt_min: t.rttMin,
                 rtt_max: t.rttMax,
