@@ -10,6 +10,8 @@ import {
     HomeIcon,
     ListIcon,
     ErrorIcon,
+    GlobeIcon,
+    ShieldIcon,
     SettingsIcon,
     LanguageIcon,
     FlagIcon,
@@ -62,6 +64,20 @@ const Menu: React.FC<MenuProps> = ({ variant, isSticky }) => {
                 href="/"
                 title={t("navHome")}
                 icon={<HomeIcon size={iconSize} color={iconColor} />}
+            />
+            <MenuItem
+                variant={variant}
+                isSticky={isSticky}
+                href="/sites"
+                title={t("navSites")}
+                icon={<GlobeIcon size={iconSize} color={iconColor} />}
+            />
+            <MenuItem
+                variant={variant}
+                isSticky={isSticky}
+                href="/vpn"
+                title={t("navVpn")}
+                icon={<ShieldIcon size={iconSize} color={iconColor} />}
             />
             <MenuItem
                 variant={variant}

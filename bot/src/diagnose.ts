@@ -265,7 +265,7 @@ function pickCause(names: Set<string>): CauseInfo {
     return { key: "partial", ...CAUSES.partial };
 }
 
-function moscow(date: Date): string {
+export function moscow(date: Date): string {
     return date
         .toLocaleString("ru-RU", {
             timeZone: "Europe/Moscow",

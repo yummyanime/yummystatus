@@ -15,6 +15,30 @@ export type Dictionary = {
     navDomains: string;
     navSettings: string;
     navLanguage: string;
+    navSites: string;
+    navVpn: string;
+    homeSites: string;
+    homeResources: string;
+    vpnNodes: string;
+    vpnSingles: string;
+    overviewAvgPingRu: string;
+    overviewAvgPingDe: string;
+    nodePartialLoss: string;
+    nodeNoReply: string;
+    nodeEventsTitle: string;
+    nodeEventsNone: string;
+    nodeEventFailed: string;
+    nodeEventDnsRemoved: string;
+    nodeEventDnsRestored: string;
+    nodeEventGroupDown: string;
+    nodeEventDown: string;
+    nodeEventUp: string;
+    metaOverviewTitle: string;
+    metaOverviewDescription: string;
+    metaVpnTitle: string;
+    metaVpnDescription: string;
+    metaNodeTitle: string;
+    metaNodeDescription: string;
     settingsAutoRefresh: string;
     settingsHideUnreliable: string;
     unitMs: string;
@@ -141,6 +165,30 @@ const dictionaries: Record<Language, Dictionary> = {
         navDomains: "ДОМЕНЫ",
         navSettings: "Настройки",
         navLanguage: "Язык",
+        navSites: "САЙТЫ",
+        navVpn: "VPN",
+        homeSites: "Сайты",
+        homeResources: "ресурсов",
+        vpnNodes: "нод",
+        vpnSingles: "Одиночные ноды",
+        overviewAvgPingRu: "Средний Ping из России",
+        overviewAvgPingDe: "Средний Ping из Германии",
+        nodePartialLoss: "Потери с части проб",
+        nodeNoReply: "Нет ответа",
+        nodeEventsTitle: "События ноды за 24 часа",
+        nodeEventsNone: "За последние 24 часа событий не было",
+        nodeEventFailed: "Нет ответа: {cities}",
+        nodeEventDnsRemoved: "Убрана из DNS",
+        nodeEventDnsRestored: "Добавлена в DNS",
+        nodeEventGroupDown: "Группа недоступна целиком",
+        nodeEventDown: "Недоступна",
+        nodeEventUp: "Восстановлена",
+        metaOverviewTitle: "YummyStatus — состояние сайтов и VPN-нод Ями Аниме | YummyAnime",
+        metaOverviewDescription: "Сводка по доступности сайтов Ями Аниме | YummyAnime и VPN-нод: статус, время отклика и ping в реальном времени.",
+        metaVpnTitle: "VPN-ноды — YummyStatus",
+        metaVpnDescription: "Доступность и ping VPN-нод из России и Германии: статус каждой ноды и графики в реальном времени.",
+        metaNodeTitle: "VPN-нода — YummyStatus",
+        metaNodeDescription: "Доступность VPN-ноды: ping из России и Германии, статус и события за последние 24 часа.",
         settingsAutoRefresh: "Автообновление",
         settingsHideUnreliable: "Скрывать недостоверные данные",
         unitMs: "мс",
@@ -265,6 +313,30 @@ const dictionaries: Record<Language, Dictionary> = {
         navDomains: "DOMAINS",
         navSettings: "Settings",
         navLanguage: "Language",
+        navSites: "SITES",
+        navVpn: "VPN",
+        homeSites: "Sites",
+        homeResources: "resources",
+        vpnNodes: "nodes",
+        vpnSingles: "Single nodes",
+        overviewAvgPingRu: "Average ping from Russia",
+        overviewAvgPingDe: "Average ping from Germany",
+        nodePartialLoss: "Partial probe loss",
+        nodeNoReply: "No reply",
+        nodeEventsTitle: "Node events in the last 24 hours",
+        nodeEventsNone: "No events in the last 24 hours",
+        nodeEventFailed: "No reply: {cities}",
+        nodeEventDnsRemoved: "Removed from DNS",
+        nodeEventDnsRestored: "Added to DNS",
+        nodeEventGroupDown: "Whole group unavailable",
+        nodeEventDown: "Unavailable",
+        nodeEventUp: "Recovered",
+        metaOverviewTitle: "YummyStatus — status of Yummy Anime sites and VPN nodes | YummyAnime",
+        metaOverviewDescription: "Overview of Yummy Anime | YummyAnime sites and VPN nodes availability: status, response time and ping in real time.",
+        metaVpnTitle: "VPN nodes — YummyStatus",
+        metaVpnDescription: "Availability and ping of VPN nodes from Russia and Germany: status of each node and real-time charts.",
+        metaNodeTitle: "VPN node — YummyStatus",
+        metaNodeDescription: "VPN node availability: ping from Russia and Germany, status and events for the last 24 hours.",
         settingsAutoRefresh: "Auto-refresh",
         settingsHideUnreliable: "Hide unreliable data",
         unitMs: "ms",
@@ -389,6 +461,30 @@ const dictionaries: Record<Language, Dictionary> = {
         navDomains: "ДОМЕНИ",
         navSettings: "Налаштування",
         navLanguage: "Мова",
+        navSites: "САЙТИ",
+        navVpn: "VPN",
+        homeSites: "Сайти",
+        homeResources: "ресурсів",
+        vpnNodes: "нод",
+        vpnSingles: "Поодинокі ноди",
+        overviewAvgPingRu: "Середній Ping з Росії",
+        overviewAvgPingDe: "Середній Ping з Німеччини",
+        nodePartialLoss: "Втрати з частини проб",
+        nodeNoReply: "Немає відповіді",
+        nodeEventsTitle: "Події ноди за 24 години",
+        nodeEventsNone: "За останні 24 години подій не було",
+        nodeEventFailed: "Немає відповіді: {cities}",
+        nodeEventDnsRemoved: "Прибрано з DNS",
+        nodeEventDnsRestored: "Додано до DNS",
+        nodeEventGroupDown: "Уся група недоступна",
+        nodeEventDown: "Недоступна",
+        nodeEventUp: "Відновлена",
+        metaOverviewTitle: "YummyStatus — стан сайтів і VPN-нод Ямі Аніме | YummyAnime",
+        metaOverviewDescription: "Зведення щодо доступності сайтів Ямі Аніме | YummyAnime та VPN-нод: статус, час відгуку та ping у реальному часі.",
+        metaVpnTitle: "VPN-ноди — YummyStatus",
+        metaVpnDescription: "Доступність і ping VPN-нод з Росії та Німеччини: статус кожної ноди та графіки в реальному часі.",
+        metaNodeTitle: "VPN-нода — YummyStatus",
+        metaNodeDescription: "Доступність VPN-ноди: ping з Росії та Німеччини, статус і події за останні 24 години.",
         settingsAutoRefresh: "Автооновлення",
         settingsHideUnreliable: "Приховувати недостовірні дані",
         unitMs: "мс",

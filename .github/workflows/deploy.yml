@@ -95,8 +95,10 @@ jobs:
                       GLOBALPING_API_KEY4=${{ secrets.GLOBALPING_API_KEY4 }}
                       GLOBALPING_API_KEY5=${{ secrets.GLOBALPING_API_KEY5 }}
                       GLOBALPING_API_KEY6=${{ secrets.GLOBALPING_API_KEY6 }}
+                      GLOBALPING_API_KEY7=${{ secrets.GLOBALPING_API_KEY7 }}
                       GLOBALPING_SECRET_KEY=${{ secrets.GLOBALPING_SECRET_KEY }}
                       PSI_API_KEY=${{ secrets.PSI_API_KEY }}
+                      PROVISIONER_TOKEN=${{ secrets.PROVISIONER_TOKEN }}
                       TG_BOT_TOKEN=${{ secrets.TG_BOT_TOKEN }}
                       TG_CHAT_ID=${{ secrets.TG_CHAT_ID }}
                       ENVEOF

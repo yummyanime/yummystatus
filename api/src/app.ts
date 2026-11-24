@@ -3,6 +3,8 @@ import { healthRoute } from "./routes/health.ts";
 import { httpLogsRoute } from "./routes/httpLogs.ts";
 import { lighthouseLogsRoute } from "./routes/lighthouseLogs.ts";
 import { locationsRoute } from "./routes/locations.ts";
+import { nodeEventsRoute } from "./routes/nodeEvents.ts";
+import { nodesRoute } from "./routes/nodes.ts";
 import { outageReportsRoute } from "./routes/outageReports.ts";
 import { pingLogsRoute } from "./routes/pingLogs.ts";
 import { statusSummaryRoute } from "./routes/statusSummary.ts";
@@ -17,6 +19,8 @@ export const app = new Hono()
     .route("/", statusSummaryRoute)
     .route("/", outageReportsRoute)
     .route("/", healthRoute)
+    .route("/", nodesRoute)
+    .route("/", nodeEventsRoute)
     .onError((err, c) => {
         console.error("request failed", c.req.method, c.req.path, err);
         return c.text("Server Error", 500);

@@ -46,6 +46,7 @@ export const DOMAIN_GROUP_TITLES = {
 } as const;
 
 export const API_DOMAIN = "api.yani.tv";
+export const PROVISIONER_URL = "https://edge-k4.yummyshop.me";
 export const WAF_DOMAIN = "waf.valtrix.org";
 export const ZONES = ["yummy-ani.me", "yummyani.me"] as const;
 

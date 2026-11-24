@@ -81,6 +81,7 @@ export const pingLogs = pgTable(
     "ping_logs",
     {
         id: serial("id").primaryKey(),
+        kind: varchar("kind", { length: 8 }).notNull().default("site"),
         probeId: varchar("probe_id", { length: 255 }),
         domain: varchar("domain", { length: 255 }),
         country: varchar("country", { length: 2 }),
@@ -94,7 +95,12 @@ export const pingLogs = pgTable(
         createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
     },
     (t) => [
-        index("idx_ping_logs_domain_created_at").on(t.domain, t.createdAt),
+        index("idx_ping_logs_kind_domain_created_at").on(
+            t.kind,
+            t.domain,
+            t.createdAt
+        ),
+        index("idx_ping_logs_kind_created_at").on(t.kind, t.createdAt),
         index("idx_ping_logs_created_at").on(t.createdAt),
     ]
 );
@@ -103,6 +109,7 @@ export const pingHourlyLogs = pgTable(
     "ping_hourly_logs",
     {
         id: serial("id").primaryKey(),
+        kind: varchar("kind", { length: 8 }).notNull().default("site"),
         domain: varchar("domain", { length: 255 }),
         country: varchar("country", { length: 2 }),
         city: varchar("city", { length: 255 }),
@@ -113,13 +120,16 @@ export const pingHourlyLogs = pgTable(
         createdAt: timestamp("created_at"),
     },
     (t) => [
-        index("idx_ping_hourly_logs_domain_created_at").on(
+        index("idx_ping_hourly_logs_kind_domain_created_at").on(
+            t.kind,
             t.domain,
             t.createdAt
         ),
+        index("idx_ping_hourly_logs_kind_created_at").on(t.kind, t.createdAt),
         index("idx_ping_hourly_logs_created_at").on(t.createdAt),
         uniqueIndex("uq_ping_hourly_logs_key").on(
             t.createdAt,
+            t.kind,
             t.domain,
             t.country,
             t.city
@@ -211,3 +221,32 @@ export const outageReports = pgTable(
     },
     (t) => [index("idx_outage_reports_created_at").on(t.createdAt)]
 );
+
+export const nodeEvents = pgTable(
+    "node_events",
+    {
+        id: serial("id").primaryKey(),
+        nodeKey: varchar("node_key", { length: 32 }).notNull(),
+        type: varchar("type", { length: 16 })
+            .$type<
+                "dns_removed" | "dns_restored" | "group_down" | "down" | "up"
+            >()
+            .notNull(),
+        source: varchar("source", { length: 8 })
+            .$type<"ru" | "local">()
+            .notNull(),
+        details: jsonb("details")
+            .$type<{ failed: string[]; total: number }>()
+            .notNull(),
+        createdAt: timestamp("created_at", { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (t) => [
+        index("idx_node_events_node_key_created_at").on(t.nodeKey, t.createdAt),
+        index("idx_node_events_created_at").on(t.createdAt),
+    ]
+);
+
+export type NodeEvent = typeof nodeEvents.$inferSelect;
+export type NewNodeEvent = typeof nodeEvents.$inferInsert;

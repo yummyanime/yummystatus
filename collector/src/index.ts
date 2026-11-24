@@ -6,6 +6,7 @@ import {
     aggregateHourlyLighthouse,
     lighthouseCheckAndSave,
 } from "./lighthouse.ts";
+import { localNodeCheck, ruNodeCheck } from "./nodes.ts";
 import { aggregateHourlyPing, pingCheckAndSave } from "./ping.ts";
 import {
     every,
@@ -36,6 +37,8 @@ every(
     false
 );
 every("ping", 2 * MINUTE_MS, () => pingCheckAndSave(2 * MINUTE_MS));
+every("node-local", MINUTE_MS, localNodeCheck);
+every("node-ru", 10 * MINUTE_MS, ruNodeCheck);
 loop("lighthouse", MINUTE_MS, lighthouseCheckAndSave);
 everyClockHour("aggregate-http", () =>
     aggregateHourlyHttp(lastCompletedHour())

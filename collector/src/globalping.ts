@@ -4,27 +4,28 @@ const CREATE_RETRY_MAX_DELAY = 15000;
 const CREATE_RETRY_MAX_WINDOW = 60000;
 const POLL_DELAY = 2000;
 
-export interface Location {
+export type Location = {
     country: string;
     city: string;
-}
+    tags?: string[];
+};
 
-export interface Probe extends Location {
+export type Probe = Pick<Location, "country" | "city"> & {
     asn: number;
     network: string;
-}
+};
 
-export interface MeasurementResponse<R> {
+export type MeasurementResponse<R> = {
     status: string;
     results: { probe: Probe; result: R }[];
-}
+};
 
-export interface MeasurementRequest {
+export type MeasurementRequest = {
     target: string;
     type: "http" | "ping";
-    locations: (Location & { limit: number })[];
+    locations: (Location & { limit: number })[] | string;
     measurementOptions: Record<string, unknown>;
-}
+};
 
 export class MeasurementTimeoutError extends Error {}
 

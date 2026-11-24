@@ -4,6 +4,8 @@ import { getLanguage, t, type Dictionary, type Language } from "../i18n.ts";
 
 export const SITE_URL = "https://yummystatus.me";
 
+export const ALLOWED_COUNTRIES = ["RU", "UA", "BY"];
+
 export const countryCodes = [
     "RU",
     "UA",
@@ -82,6 +84,9 @@ const CITY_NAMES: Record<Language, Record<string, string>> = {
         Yerevan: "Ереван",
         Novosibirsk: "Новосибирск",
         Aktau: "Актау",
+        Kostroma: "Кострома",
+        Yekaterinburg: "Екатеринбург",
+        Kazan: "Казань",
     },
     uk: {
         average: "Середня",
@@ -113,6 +118,9 @@ const CITY_NAMES: Record<Language, Record<string, string>> = {
         Yerevan: "Єреван",
         Novosibirsk: "Новосибірськ",
         Aktau: "Актау",
+        Kostroma: "Кострома",
+        Yekaterinburg: "Єкатеринбург",
+        Kazan: "Казань",
     },
     en: { average: "Average" },
 };

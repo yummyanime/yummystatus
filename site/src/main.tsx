@@ -4,6 +4,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./main.scss";
 import Footer from "./components/Footer/Footer.tsx";
 import Home from "./pages/home.tsx";
+import Sites from "./pages/sites.tsx";
+import Vpn from "./pages/vpn.tsx";
+import VpnNode from "./pages/node.tsx";
 import Domain from "./pages/domain.tsx";
 import DownDetector from "./pages/downDetector.tsx";
 import Header from "./components/Header/Header.tsx";
@@ -28,6 +31,9 @@ function App() {
                 )}
                 <Routes>
                     <Route path="/" element={<Home />} />
+                    <Route path="/sites" element={<Sites />} />
+                    <Route path="/vpn" element={<Vpn />} />
+                    <Route path="/vpn/:key" element={<VpnNode />} />
                     <Route path="/downdetector" element={<DownDetector />} />
                     <Route path="/:domain" element={<Domain />} />
                 </Routes>

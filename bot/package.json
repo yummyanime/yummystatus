@@ -9,6 +9,7 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
+        "@yummystatus/db": "workspace:*",
         "hono": "^4.9.0"
     },
     "devDependencies": {

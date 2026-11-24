@@ -15,6 +15,13 @@ export type HttpLog = WithCreatedAt<HttpRow> & { unreliable?: boolean };
 export type PingLog = WithCreatedAt<
     InferResponseType<(typeof api)["ping-logs"]["$get"]>[number]
 >;
+export type NodeItem = InferResponseType<
+    typeof api.nodes.$get,
+    200
+>["items"][number];
+export type NodeEvent = InferResponseType<
+    (typeof api)["node-events"]["$get"]
+>["items"][number];
 export type LighthouseLog = WithCreatedAt<
     InferResponseType<(typeof api)["lighthouse-logs"]["$get"]>[number]
 >;
@@ -30,6 +37,8 @@ export type BucketStatus = DomainHealthReport["buckets"][number]["status"];
 type TimeRange = NonNullable<
     Parameters<typeof api.health.$get>[0]
 >["query"]["timeRange"];
+
+export type TimeQuery = ReturnType<typeof timeQuery>;
 
 export const timeQuery = (
     timeRange: string,

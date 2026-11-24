@@ -19,6 +19,10 @@
     }
 }
 
+.statusContainer.nodes {
+    --label-col: 290px;
+}
+
 .domainSection {
     display: grid;
     grid-template-columns: var(--label-col) 1fr;

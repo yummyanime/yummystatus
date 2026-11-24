@@ -3,6 +3,7 @@ import {
     httpLogs,
     lighthouseHourlyLogs,
     lighthouseLogs,
+    nodeEvents,
     pingHourlyLogs,
     pingLogs,
 } from "@yummystatus/db";
@@ -19,6 +20,7 @@ const TABLES = [
     { table: pingHourlyLogs, createdAt: pingHourlyLogs.createdAt },
     { table: lighthouseLogs, createdAt: lighthouseLogs.createdAt },
     { table: lighthouseHourlyLogs, createdAt: lighthouseHourlyLogs.createdAt },
+    { table: nodeEvents, createdAt: nodeEvents.createdAt },
 ];
 
 export async function cleanupOldLogs(): Promise<void> {

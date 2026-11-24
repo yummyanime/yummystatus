@@ -8,7 +8,7 @@ import { useDataStatus } from "../../context/DataStatusContext.tsx";
 import { useDashboardSettings } from "../../context/DashboardSettingsContext.tsx";
 import CountryChart from "../CountryChart/CountryChart.tsx";
 import Lighthouse from "../Lighthouse/Lighthouse.tsx";
-import { CHART_SPIKE_MS, isBareView } from "../../data/constants.ts";
+import { ALLOWED_COUNTRIES, CHART_SPIKE_MS, isBareView } from "../../data/constants.ts";
 import {
     api,
     timeQuery,
@@ -26,8 +26,6 @@ interface CityLogs {
 interface CountryLogs {
     [country: string]: CityLogs;
 }
-
-const allowedCountries = ["RU", "UA", "BY"];
 
 const processCityLogs = (cityLogsMap: CityLogs): CityLogs => {
     const filteredLogs: CityLogs = {};
@@ -121,7 +119,7 @@ const Dashboard = () => {
                     api.health.$get({
                         query: domain
                             ? { ...query, domain }
-                            : { ...query, countries: allowedCountries.join(",") },
+                            : { ...query, countries: ALLOWED_COUNTRIES.join(",") },
                     }),
                     domain ? api.locations.$get() : null,
                 ]);
@@ -149,7 +147,7 @@ const Dashboard = () => {
                         log.domain &&
                         log.city &&
                         log.country &&
-                        allowedCountries.includes(log.country)
+                        ALLOWED_COUNTRIES.includes(log.country)
                     ) {
                         const domainLogs = (domainLogsData[log.domain] ??= {});
                         (domainLogs[log.city] ??= []).push(log);

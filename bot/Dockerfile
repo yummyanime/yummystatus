@@ -10,6 +10,7 @@ COPY site/package.json ./site/
 
 FROM base AS dev
 RUN --mount=type=cache,target=/root/.bun/install/cache,sharing=locked bun install --frozen-lockfile
+COPY db ./db
 COPY bot ./bot
 COPY domains.ts ./
 WORKDIR /app/bot
@@ -17,6 +18,7 @@ CMD ["bun", "--hot", "src/index.ts"]
 
 FROM base AS prod
 RUN --mount=type=cache,target=/root/.bun/install/cache,sharing=locked bun install --production --frozen-lockfile --ignore-scripts
+COPY db ./db
 COPY bot ./bot
 COPY domains.ts ./
 WORKDIR /app/bot

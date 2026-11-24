@@ -29,7 +29,7 @@ type CountryChartItemProps = {
       }
 );
 
-const CountryItemHeader = ({
+export const CountryItemHeader = ({
     countryCode,
     countryName,
     intervalMinutes,

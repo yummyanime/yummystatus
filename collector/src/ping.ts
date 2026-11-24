@@ -12,7 +12,7 @@ import {
 const PING_LOCATION: Location = { country: "RU", city: "Moscow" };
 const POLL_TIMEOUT = 60000;
 
-type PingProbeResult =
+export type PingProbeResult =
     | {
           status: "finished";
           stats: {
@@ -51,9 +51,10 @@ export async function aggregateHourlyPing(hourStart: Date): Promise<void> {
     );
     const result = await db.execute(sql`
         INSERT INTO ping_hourly_logs (
-            domain, country, city, rtt_min, rtt_avg, rtt_max, packet_loss, created_at
+            kind, domain, country, city, rtt_min, rtt_avg, rtt_max, packet_loss, created_at
         )
         SELECT
+            kind,
             domain,
             country,
             city,
@@ -65,8 +66,8 @@ export async function aggregateHourlyPing(hourStart: Date): Promise<void> {
         FROM ping_logs
         WHERE created_at >= ${start}::timestamp
           AND created_at < ${start}::timestamp + INTERVAL '1 hour'
-        GROUP BY domain, country, city
-        ON CONFLICT (created_at, domain, country, city) DO UPDATE SET
+        GROUP BY kind, domain, country, city
+        ON CONFLICT (created_at, kind, domain, country, city) DO UPDATE SET
             rtt_min = EXCLUDED.rtt_min,
             rtt_avg = EXCLUDED.rtt_avg,
             rtt_max = EXCLUDED.rtt_max,

@@ -1,0 +1,65 @@
+.tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px 10px 12px;
+    overflow: hidden;
+    color: #fff;
+    text-decoration: none;
+    background-color: var(--color-dark-bg-1);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow);
+
+    &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 4px;
+        background-color: var(--status-color);
+    }
+
+    @include desktopHover {
+        background-color: color-mix(in srgb, var(--color-dark-bg-1) 92%, white 8%);
+    }
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.name {
+    min-width: 0;
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ms {
+    margin-left: auto;
+    font-size: 13px;
+    color: #bdbdbd;
+    white-space: nowrap;
+}
+
+.footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+    font-size: 12px;
+    color: #8a8a8a;
+
+    span:first-child {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}

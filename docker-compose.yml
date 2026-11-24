@@ -49,6 +49,7 @@ services:
         environment:
             - API_URL=http://api:3000/
             - BOT_STATE_FILE=/data/state.json
+            - BOT_NODES_STATE_FILE=/data/nodes-state.json
         volumes:
             - botstate:/data
         depends_on:

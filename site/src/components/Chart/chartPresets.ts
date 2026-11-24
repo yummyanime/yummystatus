@@ -1,4 +1,5 @@
 import { getCityLabel } from "../../data/constants.ts";
+import { getProbeLabel } from "../../data/nodes.ts";
 import { t, type Dictionary } from "../../i18n.ts";
 import type { HttpLog } from "../../api.ts";
 import type {
@@ -146,6 +147,11 @@ export const pingPreset: ChartConfig<PingLog> = {
             },
         ];
     },
+};
+
+export const nodePingPreset: ChartConfig<PingLog> = {
+    ...pingPreset,
+    getLabel: getProbeLabel,
 };
 
 export interface BackendMetricPoint extends ChartLog {

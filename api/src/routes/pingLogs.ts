@@ -8,6 +8,7 @@ import { resolveTimeRange, timeRangeSchema } from "../services/timeRange.ts";
 
 const querySchema = timeRangeSchema.extend({
     domain: z.string().optional(),
+    kind: z.enum(["site", "node"]).default("site"),
 });
 
 export const pingLogsRoute = new Hono().get(
@@ -33,6 +34,7 @@ export const pingLogsRoute = new Hono().get(
             .where(
                 and(
                     filter(t.createdAt),
+                    eq(t.kind, query.kind),
                     isNotNull(t.city),
                     query.domain ? eq(t.domain, query.domain) : undefined
                 )

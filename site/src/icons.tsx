@@ -101,6 +101,27 @@ export function ErrorIcon({ size, color }: IconProps) {
     );
 }
 
+export function GlobeIcon({ size, color }: IconProps) {
+    return (
+        <Svg size={size} fill="none" style={{ stroke: color, strokeWidth: 1.8 }}>
+            <circle cx="10" cy="10" r="8" />
+            <path d="M2 10h16M10 2c2.5 2.3 3.8 5 3.8 8s-1.3 5.7-3.8 8c-2.5-2.3-3.8-5-3.8-8S7.5 4.3 10 2Z" />
+        </Svg>
+    );
+}
+
+export function ShieldIcon({ size, color }: IconProps) {
+    return (
+        <Svg
+            size={size}
+            fill="none"
+            style={{ stroke: color, strokeWidth: 1.8, strokeLinejoin: "round" }}
+        >
+            <path d="M10 1.8 3.5 4.3v5.2c0 4 2.7 7.2 6.5 8.7 3.8-1.5 6.5-4.7 6.5-8.7V4.3L10 1.8Z" />
+        </Svg>
+    );
+}
+
 export function FlatArrowIcon({ size, color }: IconProps) {
     return (
         <Svg

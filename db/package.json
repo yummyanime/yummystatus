@@ -5,7 +5,8 @@
     "type": "module",
     "exports": {
         ".": "./src/schema.ts",
-        "./client": "./src/client.ts"
+        "./client": "./src/client.ts",
+        "./node-key": "./src/nodeKey.ts"
     },
     "scripts": {
         "db:generate": "drizzle-kit generate",
