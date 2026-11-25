@@ -25,8 +25,11 @@ export function errorMessage(error: unknown): string {
     return error instanceof Error ? error.message : String(error);
 }
 
-export async function sendAlert(caption: string): Promise<SentMessage> {
-    const image = await fetchScreenshot();
+export async function sendAlert(
+    caption: string,
+    given?: Uint8Array<ArrayBuffer>
+): Promise<SentMessage> {
+    const image = given ?? (await fetchScreenshot());
 
     if (DRY_RUN) {
         console.log(
@@ -71,9 +74,14 @@ export async function sendText(text: string): Promise<SentMessage> {
 
 export async function editAlert(
     state: SentMessage,
-    caption: string
+    caption: string,
+    given?: Uint8Array<ArrayBuffer> | null
 ): Promise<boolean> {
-    const image = state.hasPhoto ? await fetchScreenshot() : null;
+    const image = state.hasPhoto
+        ? given === undefined
+            ? await fetchScreenshot()
+            : given
+        : null;
 
     if (DRY_RUN) {
         console.log(
@@ -150,7 +158,7 @@ async function telegram(
     return data.result;
 }
 
-async function fetchScreenshot(): Promise<Uint8Array | null> {
+async function fetchScreenshot(): Promise<Uint8Array<ArrayBuffer> | null> {
     try {
         const response = await fetch(
             SCREENSHOT_URL.replace("{url}", SCREENSHOT_TARGET),

@@ -4,7 +4,8 @@ import type { InferResponseType } from "hono/client";
 import { PROVISIONER_URL } from "../../domains.ts";
 import { client } from "./api.ts";
 import { formatDuration, moscow } from "./diagnose.ts";
-import { editAlert, errorMessage, sendText } from "./telegram.ts";
+import { renderNodeImage } from "./nodeImage.ts";
+import { editAlert, errorMessage, sendAlert, sendText } from "./telegram.ts";
 
 type NodeEvent = InferResponseType<
     (typeof client.api)["node-events"]["$get"]
@@ -13,12 +14,21 @@ type NodeInfo = {
     ip: string;
     host: string;
     label: string;
+    countryCode: string;
+    countryName: string;
+    order: number | null;
 };
+type Bucket = Parameters<typeof renderNodeImage>[0]["buckets"][number];
 type NodesState = {
     lastId: number;
     messages: Record<
         string,
-        { messageId: number; startedAt: string; text: string }
+        {
+            messageId: number;
+            startedAt: string;
+            body: string;
+            hasPhoto?: boolean;
+        }
     >;
 };
 
@@ -30,13 +40,15 @@ const OPENING_TYPES: NodeEvent["type"][] = [
     "down",
     "group_down",
 ];
+const BUCKET_COUNT = 36;
+const BUCKET_MS = 5 * 60 * 1000;
 const COUNTRY_NAMES = new Intl.DisplayNames(["ru"], { type: "region" });
 
 export async function runNodes(): Promise<void> {
     try {
         await tick();
     } catch (error) {
-        console.error("Цикл нод упал:", errorMessage(error));
+        console.error("Цикл серверов упал:", errorMessage(error));
     }
 }
 
@@ -55,7 +67,7 @@ async function tick(): Promise<void> {
     for (const event of events) {
         const node = nodes.get(event.key);
         if (node) await handleEvent(state, event, node);
-        else console.error(`Нода ${event.key} не найдена, событие пропущено`);
+        else console.error(`Сервер ${event.key} не найден, событие пропущено`);
         state.lastId = event.id;
         writeState(state);
     }
@@ -70,51 +82,42 @@ async function handleEvent(
     const stored = state.messages[event.key];
 
     if (OPENING_TYPES.includes(event.type)) {
-        const text = buildAlert(event, node);
-        const sent = await sendText(text);
+        const body = buildBody(event, node);
+        const caption = buildAlert(body, at, event);
+        const image =
+            event.type === "down" || event.type === "group_down"
+                ? await renderImage(node, event, at, event.type)
+                : null;
+        const sent = image
+            ? await sendAlert(caption, image)
+            : await sendText(caption);
         state.messages[event.key] = {
             messageId: sent.messageId,
             startedAt: event.createdAt,
-            text,
+            body,
+            hasPhoto: sent.hasPhoto,
         };
-        console.log(`Нода ${node.ip}: ${event.type}`);
+        console.log(`Сервер ${node.ip}: ${event.type}`);
         return;
     }
 
     delete state.messages[event.key];
-    const edited =
-        stored &&
-        (await editAlert(
-            { messageId: stored.messageId, hasPhoto: false },
-            `${stored.text}\n\n✅ <b>Восстановлена</b> ${moscow(at)} МСК, простой ${formatDuration(at.getTime() - new Date(stored.startedAt).getTime())}`
-        ));
-    if (!edited) {
+    if (stored?.body) {
+        const startedAt = new Date(stored.startedAt);
+        const text = buildAlert(stored.body, startedAt, event);
+        const hasPhoto = stored.hasPhoto ?? false;
+        const edited = await editAlert(
+            { messageId: stored.messageId, hasPhoto },
+            text,
+            hasPhoto ? await renderImage(node, event, startedAt) : null
+        );
+        if (!edited) await sendText(text);
+    } else {
         await sendText(
-            `✅ <b>${node.label}</b> восстановлена\nIP: <code>${node.ip}</code>\n${moscow(at)} МСК`
+            `✅ <b>Сервер VPN восстановлен</b>\n${node.label}\nIP: <code>${node.ip}</code>\n${moscow(at)} МСК`
         );
     }
-    console.log(`Нода ${node.ip}: ${event.type}`);
-}
-
-function buildAlert(event: NodeEvent, node: NodeInfo): string {
-    const { failed, total } = event.details;
-    const reason =
-        event.source === "ru"
-            ? `не отвечает с ${failed.length} из ${total} домашних провайдеров РФ (${escapeHtml(failed.join(", "))})`
-            : "не отвечает TCP 443 с сервера yummystatus";
-    const action = {
-        dns_removed: `убрана из DNS ${node.host}`,
-        group_down: `вся группа ${node.host} недоступна, убрать нельзя — последний IP`,
-        down: "одиночная нода, только оповещение",
-    }[event.type as "dns_removed" | "group_down" | "down"];
-
-    return [
-        `🔴 <b>${node.label}</b>`,
-        `IP: <code>${node.ip}</code>`,
-        `Хост: <code>${node.host}</code>`,
-        `Причина: ${reason}`,
-        `Действие: ${action}`,
-    ].join("\n");
+    console.log(`Сервер ${node.ip}: ${event.type}`);
 }
 
 async function fetchEvents(afterId?: number): Promise<NodeEvent[]> {
@@ -145,7 +148,10 @@ async function fetchNodeInfo(): Promise<Map<string, NodeInfo>> {
         info.set(key, {
             ip,
             host,
-            label: node.order ? `${country} #${node.order}` : country,
+            label: `${flagEmoji(node.country)} ${country}${node.order ? ` #${node.order}` : ""}`,
+            countryCode: node.country,
+            countryName: country,
+            order: node.order,
         });
     }
     return info;
@@ -184,4 +190,109 @@ function writeState(state: NodesState): void {
 
 function escapeHtml(text: string): string {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+}
+
+function flagEmoji(country: string): string {
+    return String.fromCodePoint(
+        ...[...country.toUpperCase()].map(
+            (char) => 0x1f1a5 + char.charCodeAt(0)
+        )
+    );
+}
+
+function buildBody(event: NodeEvent, node: NodeInfo): string {
+    const { failed, total } = event.details;
+    const reason =
+        event.source === "ru"
+            ? `Не отвечает с ${failed.length} из ${total} домашних провайдеров РФ (${escapeHtml(failed.join(", "))})`
+            : "Не отвечает TCP 443 с сервера yummystatus";
+    const action = {
+        dns_removed: `Убран из DNS <code>${node.host}</code>, дублёр в группе остался`,
+        group_down: `Последний IP в группе <code>${node.host}</code>: дублёра нет, убрать из DNS нельзя`,
+        down: "Одиночный сервер, дублёра нет: только оповещение",
+    }[event.type as "dns_removed" | "group_down" | "down"];
+
+    return [
+        `<b>Затронуто</b>`,
+        `• ${node.label}`,
+        `IP: <code>${node.ip}</code>`,
+        `Хост: <code>${node.host}</code>`,
+        ``,
+        `<b>Причина</b>`,
+        `<i>${reason}</i>`,
+        ``,
+        `<b>Действие</b>`,
+        `<i>${action}</i>`,
+    ].join("\n");
+}
+
+function buildAlert(body: string, startedAt: Date, event: NodeEvent): string {
+    const at = new Date(event.createdAt);
+    const duration = formatDuration(at.getTime() - startedAt.getTime());
+    const header = OPENING_TYPES.includes(event.type)
+        ? [
+              `🔴 <b>Сервер VPN ${event.source === "ru" ? "заблокирован" : "недоступен"}</b>`,
+              `Начало: ${moscow(startedAt)} МСК`,
+              `Инцидент длится ${duration}`,
+          ]
+        : [
+              `✅ <b>Сервер VPN восстановлен</b>`,
+              `Начало: ${moscow(startedAt)} МСК`,
+              `Конец: ${moscow(at)} МСК`,
+              `Инцидент длился ${duration}`,
+          ];
+
+    return `${header.join("\n")}\n\n${body}`;
+}
+
+async function renderImage(
+    node: NodeInfo,
+    event: NodeEvent,
+    startedAt: Date,
+    kind?: "group_down" | "down"
+): Promise<Uint8Array<ArrayBuffer> | null> {
+    const resolved = !OPENING_TYPES.includes(event.type);
+    try {
+        return await renderNodeImage({
+            countryCode: node.countryCode,
+            countryName: node.countryName,
+            order: node.order,
+            cause: event.source,
+            resolved,
+            kind,
+            startedAt,
+            endedAt: resolved ? new Date(event.createdAt) : undefined,
+            buckets: await fetchBuckets(event.key),
+        });
+    } catch (error) {
+        console.error("Картинка сервера не создана:", errorMessage(error));
+        return null;
+    }
+}
+
+async function fetchBuckets(key: string): Promise<Bucket[]> {
+    const lost: boolean[][] = Array.from({ length: BUCKET_COUNT }, () => []);
+    try {
+        const response = await client.api["ping-logs"].$get(
+            { query: { timeRange: "3hour", kind: "node", domain: key } },
+            { init: { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) } }
+        );
+        if (!response.ok) throw new Error(`ping-logs: ${response.status}`);
+        const start = Date.now() - BUCKET_COUNT * BUCKET_MS;
+        for (const log of await response.json()) {
+            if (log.city === "yummystatus" || log.created_at === null) continue;
+            const index = Math.floor(
+                (Date.parse(log.created_at) - start) / BUCKET_MS
+            );
+            if (index < 0) continue;
+            lost[Math.min(BUCKET_COUNT - 1, index)].push(
+                (log.packet_loss ?? 100) > 0
+            );
+        }
+    } catch (error) {
+        console.error("Логи сервера не получены:", errorMessage(error));
+    }
+    return lost.map((rows) =>
+        rows.length === 0 ? "empty" : rows.includes(true) ? "down" : "up"
+    );
 }
