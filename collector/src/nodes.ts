@@ -316,15 +316,21 @@ async function evaluateNode(node: ProvisionerNode): Promise<void> {
     const recoveryDetails = (source: NodeEventInsert["source"]) =>
         source === "ru" ? ruCycles[0] : { failed: [], total: 1 };
 
+    const failure:
+        | { source: NodeEventInsert["source"]; details: EventDetails }
+        | undefined = ruDown
+        ? { source: "ru", details: ruCycles[0] }
+        : localDown
+          ? { source: "local", details: { failed: [LOCAL_CITY], total: 1 } }
+          : undefined;
+
     if (!isDown) {
-        if (ruDown) {
-            await takeDown(node, key, "ru", ruCycles[0], events[0]?.type);
-        } else if (localDown) {
+        if (failure) {
             await takeDown(
                 node,
                 key,
-                "local",
-                { failed: [LOCAL_CITY], total: 1 },
+                failure.source,
+                failure.details,
                 events[0]?.type
             );
         } else if (groupDown && recovered(groupDown.source)) {
@@ -336,6 +342,16 @@ async function evaluateNode(node: ProvisionerNode): Promise<void> {
                 node.ip
             );
         }
+        return;
+    }
+    if (state.type === "down" && node.groupSize > 1 && failure) {
+        await takeDown(
+            node,
+            key,
+            failure.source,
+            failure.details,
+            events[0]?.type
+        );
         return;
     }
     if (recovered(state.source)) {

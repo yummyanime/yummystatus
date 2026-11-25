@@ -80,9 +80,7 @@ const NodeDashboard = ({ nodeKey }: { nodeKey: string }) => {
                     ],
                 }}
             />
-            <NodeStatus
-                nodes={data.nodes.filter(({ group }) => group === node.group)}
-            />
+            <NodeStatus nodes={[node]} />
             <Group grid="charts" divider>
                 {[
                     {
