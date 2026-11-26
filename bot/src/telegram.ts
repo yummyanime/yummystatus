@@ -18,7 +18,7 @@ const SCREENSHOT_URL =
     process.env.SCREENSHOT_URL ??
     "https://image.thum.io/get/viewportWidth/1400/width/1370/crop/590/refresh/60/wait/12/noanimate/{url}";
 const SCREENSHOT_TARGET =
-    process.env.SCREENSHOT_TARGET ?? `${SITE_URL}/?bare=1`;
+    process.env.SCREENSHOT_TARGET ?? `${SITE_URL}/sites?bare=1`;
 const SCREENSHOT_TIMEOUT_MS = 90 * 1000;
 
 export function errorMessage(error: unknown): string {
