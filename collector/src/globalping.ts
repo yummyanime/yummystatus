@@ -7,6 +7,8 @@ const POLL_DELAY = 2000;
 export type Location = {
     country: string;
     city: string;
+    asn?: number;
+    network?: string;
     tags?: string[];
 };
 

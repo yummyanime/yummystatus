@@ -5,11 +5,22 @@ import { DOMAINS, type DomainConfig } from "../../domains.ts";
 import {
     createMeasurementWithRetry,
     type Location,
+    type MeasurementResponse,
     pollMeasurement,
     toNonNegativeNumberOrNull,
 } from "./globalping.ts";
+import {
+    applyStrikes,
+    commitPin,
+    loadPin,
+    type Pin,
+    replaceSuspect,
+    runPinned,
+    syncSlots,
+} from "./probePins.ts";
 
 const PING_LOCATION: Location = { country: "RU", city: "Moscow" };
+const PING_SET = "ping";
 const POLL_TIMEOUT = 60000;
 
 export type PingProbeResult =
@@ -23,6 +34,10 @@ export type PingProbeResult =
           };
       }
     | { status: "failed" | "offline" };
+
+export type PingMeasurement = MeasurementResponse<PingProbeResult> & {
+    id: string;
+};
 
 interface PingRecord {
     probeId: string;
@@ -41,7 +56,21 @@ export async function pingCheckAndSave(intervalMs: number): Promise<void> {
     console.log(
         `--- Starting ping check cycle at ${new Date().toISOString()} for ${DOMAINS.length} domains ---`
     );
-    await Promise.all(DOMAINS.map((domain) => pingDomain(domain, intervalMs)));
+    const pin = syncSlots(await loadPin(PING_SET), [PING_LOCATION]);
+    const measurements = await Promise.all(
+        DOMAINS.map((domain) => pingDomain(domain, pin, intervalMs))
+    );
+    const finished = measurements.filter(
+        (measurement): measurement is PingMeasurement => measurement !== null
+    );
+    if (!finished.length) return;
+    const offline = finished.some(
+        ({ results }) => results[0]?.result.status === "offline"
+    );
+    const suspects = applyStrikes(pin, [offline]);
+    if (!suspects.length || !(await replaceSuspect(pin, suspects, [], false))) {
+        await commitPin(pin, finished[0]);
+    }
 }
 
 export async function aggregateHourlyPing(hourStart: Date): Promise<void> {
@@ -80,37 +109,58 @@ export async function aggregateHourlyPing(hourStart: Date): Promise<void> {
 
 async function pingDomain(
     domain: DomainConfig,
+    pin: Pin,
     intervalMs: number
-): Promise<void> {
+): Promise<PingMeasurement | null> {
     const target = domain.name;
     const apiKey = process.env[domain.apiKeyEnv];
 
     if (!apiKey) {
         console.error(`${domain.apiKeyEnv} is not set for ping.`);
-        return;
+        return null;
     }
 
     const { country, city } = PING_LOCATION;
     const failed = { domain: target, country, city, packetLoss: 100 };
 
     try {
-        const createResponse = await createMeasurementWithRetry(
-            {
-                target,
-                locations: [{ ...PING_LOCATION, limit: 1 }],
-                type: "ping",
-                measurementOptions: { packets: 3 },
-            },
-            apiKey,
-            intervalMs
-        );
-
-        if (!createResponse.ok) {
-            const errorBody = await createResponse.text();
-            console.error(
-                `Failed to create ping measurement for ${target}: ${createResponse.status}. Body: ${errorBody}`
+        let rejected = 0;
+        const measurement = await runPinned(pin, [], async (locations) => {
+            const createResponse = await createMeasurementWithRetry(
+                {
+                    target,
+                    locations,
+                    type: "ping",
+                    measurementOptions: { packets: 3 },
+                },
+                apiKey,
+                intervalMs
             );
-            if (createResponse.status === 429) {
+
+            if (!createResponse.ok) {
+                console.error(
+                    `Failed to create ping measurement for ${target}: ${createResponse.status}. Body: ${await createResponse.text()}`
+                );
+                rejected = createResponse.status;
+                return null;
+            }
+
+            const { id } = (await createResponse.json()) as { id: string };
+            console.log(
+                `[PING] Measurement created for ${target} with ID: ${id}`
+            );
+            return {
+                ...(await pollMeasurement<PingProbeResult>(
+                    id,
+                    target,
+                    POLL_TIMEOUT
+                )),
+                id,
+            };
+        });
+
+        if (!measurement) {
+            if (rejected === 429) {
                 await saveResult({
                     probeId: "api_limit",
                     domain: target,
@@ -119,19 +169,10 @@ async function pingDomain(
                     packetLoss: null,
                 });
             }
-            return;
+            return null;
         }
 
-        const { id } = (await createResponse.json()) as { id: string };
-        console.log(`[PING] Measurement created for ${target} with ID: ${id}`);
-
-        const resultData = await pollMeasurement<PingProbeResult>(
-            id,
-            target,
-            POLL_TIMEOUT
-        );
-
-        const entry = resultData.results[0];
+        const entry = measurement.results[0];
         if (entry && entry.result.status === "finished") {
             const { probe } = entry;
             const { stats } = entry.result;
@@ -141,7 +182,7 @@ async function pingDomain(
             );
 
             await saveResult({
-                probeId: id,
+                probeId: measurement.id,
                 domain: target,
                 country: probe.country,
                 city: probe.city,
@@ -154,14 +195,16 @@ async function pingDomain(
             });
         } else {
             console.log(`[FAILURE] Ping to ${city}, ${country} for ${target}`);
-            await saveResult({ ...failed, probeId: id });
+            await saveResult({ ...failed, probeId: measurement.id });
         }
+        return measurement;
     } catch (err) {
         console.error(
             `Failed ping measurement for ${target}:`,
             err instanceof Error ? err.message : err
         );
         await saveResult({ ...failed, probeId: "failed" });
+        return null;
     }
 }
 

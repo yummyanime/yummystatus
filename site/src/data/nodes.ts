@@ -2,6 +2,7 @@ import {
     api,
     type BucketStatus,
     type HealthLevel,
+    type NodeEvent,
     type NodeItem,
     type PingLog,
     type TimeQuery,
@@ -30,6 +31,15 @@ export const hasLoss = (log: PingLog) => lossOf(log) > 0;
 
 export const getProbeLabel = (city: string) =>
     city === LOCAL_CITY ? getCountryName("DE") : getCityLabel(city);
+
+export const formatFailedProbe = ({
+    city,
+    network,
+    asn,
+}: NodeEvent["details"]["failed"][number]) =>
+    city === LOCAL_CITY
+        ? getProbeLabel(city)
+        : `${getProbeLabel(city)} (${network}, AS${asn})`;
 
 export const levelLabel = (level: HealthLevel) => t(LEVEL_LABEL[level]);
 

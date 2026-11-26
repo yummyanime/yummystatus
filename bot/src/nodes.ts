@@ -192,6 +192,14 @@ function escapeHtml(text: string): string {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 }
 
+function formatProbe({
+    city,
+    network,
+    asn,
+}: NodeEvent["details"]["failed"][number]): string {
+    return `${city} (${network}, AS${asn})`;
+}
+
 function flagEmoji(country: string): string {
     return String.fromCodePoint(
         ...[...country.toUpperCase()].map(
@@ -204,7 +212,7 @@ function buildBody(event: NodeEvent, node: NodeInfo): string {
     const { failed, total } = event.details;
     const reason =
         event.source === "ru"
-            ? `Не отвечает с ${failed.length} из ${total} домашних провайдеров РФ (${escapeHtml(failed.join(", "))})`
+            ? `Не отвечает с ${failed.length} из ${total} домашних провайдеров РФ (${escapeHtml(failed.map(formatProbe).join(", "))})`
             : "Не отвечает TCP 443 с сервера yummystatus";
     const action = {
         dns_removed: `Убран из DNS <code>${node.host}</code>, дублёр в группе остался`,

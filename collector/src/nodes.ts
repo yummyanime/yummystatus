@@ -6,13 +6,21 @@ import { and, desc, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import { PROVISIONER_URL } from "../../domains.ts";
 import {
     createMeasurementWithRetry,
-    type Location,
     type MeasurementRequest,
-    type MeasurementResponse,
     pollMeasurement,
     toNonNegativeNumberOrNull,
 } from "./globalping.ts";
-import type { PingProbeResult } from "./ping.ts";
+import type { PingMeasurement, PingProbeResult } from "./ping.ts";
+import {
+    commitPin,
+    loadPin,
+    matchSlots,
+    type Pin,
+    pickSlots,
+    replaceSuspect,
+    runPinned,
+    type Slot,
+} from "./probePins.ts";
 
 type ProvisionerNode = { ip: string; groupSize: number };
 type NodeEventInsert = typeof nodeEvents.$inferInsert;
@@ -23,7 +31,7 @@ const LOCAL_CITY = "yummystatus";
 const LOCAL_TIMEOUT = 5000;
 const NODE_PORT = 443;
 const CONTROL_TARGET = "ya.ru";
-const PROBES_URL = "https://api.globalping.io/v1/probes";
+const RU_SET = "ru-nodes";
 const RU_TAG = "eyeball-network";
 const RU_CITIES = 3;
 const RU_INTERVAL = 10 * 60 * 1000;
@@ -98,7 +106,7 @@ export async function ruNodeCheck(): Promise<void> {
                     city: probe.city,
                     asn: probe.asn,
                     network: probe.network,
-                    probeId: "globalping",
+                    probeId: measurement.id,
                     rttMin:
                         result.status === "finished"
                             ? toNonNegativeNumberOrNull(result.stats.min)
@@ -176,33 +184,33 @@ function tcpConnectTime(ip: string): Promise<number | null> {
 
 async function createControl(apiKey: string): Promise<string | null> {
     try {
-        const cities = await pickRuCities();
-        if (cities.length < RU_CITIES) {
+        const pin = await syncRuPin();
+        if (pin.slots.length < RU_CITIES) {
             console.error(
-                `[NODE] Not enough RU eyeball cities (${cities.length}), skipping cycle`
+                `[NODE] Not enough RU eyeball cities (${pin.slots.length}), skipping cycle`
             );
             return null;
         }
-        const control = await runPing(
-            CONTROL_TARGET,
-            cities.map((city) => ({
-                country: "RU",
-                city,
-                tags: [RU_TAG],
-                limit: 1,
-            })),
-            apiKey
-        );
+        const runControl = () =>
+            runPinned(pin, [RU_TAG], (locations) =>
+                runPing(CONTROL_TARGET, locations, apiKey)
+            );
+        let control = await runControl();
+        let failed = failedSlots(control, pin.slots);
         if (
-            !control ||
-            control.results.length < RU_CITIES ||
-            control.results.some(({ result }) => lossOf(result) === 100)
+            failed.length &&
+            (await replaceSuspect(pin, failed, [RU_TAG], true))
         ) {
+            control = await runControl();
+            failed = failedSlots(control, pin.slots);
+        }
+        if (!control || failed.length) {
             console.error(
                 "[NODE] Control measurement failed, skipping RU cycle"
             );
             return null;
         }
+        await commitPin(pin, control);
         return control.id;
     } catch (err) {
         console.error(
@@ -213,32 +221,11 @@ async function createControl(apiKey: string): Promise<string | null> {
     }
 }
 
-async function pickRuCities(): Promise<string[]> {
-    const response = await fetch(PROBES_URL);
-    if (!response.ok) {
-        throw new Error(`probes list responded ${response.status}`);
-    }
-    const probes = (await response.json()) as {
-        location: Pick<Location, "country" | "city">;
-        tags: string[];
-    }[];
-    const counts = new Map<string, number>();
-    for (const { location, tags } of probes) {
-        if (location.country === "RU" && tags.includes(RU_TAG)) {
-            counts.set(location.city, (counts.get(location.city) ?? 0) + 1);
-        }
-    }
-    return [...counts]
-        .sort(([nameA, a], [nameB, b]) => b - a || nameA.localeCompare(nameB))
-        .slice(0, RU_CITIES)
-        .map(([city]) => city);
-}
-
 async function runPing(
     target: string,
     locations: MeasurementRequest["locations"],
     apiKey: string
-): Promise<(MeasurementResponse<PingProbeResult> & { id: string }) | null> {
+): Promise<PingMeasurement | null> {
     const response = await createMeasurementWithRetry(
         {
             target,
@@ -266,6 +253,33 @@ async function runPing(
         POLL_TIMEOUT
     );
     return { ...data, id };
+}
+
+async function syncRuPin(): Promise<Pin> {
+    const pin = await loadPin(RU_SET);
+    const kept = pin.slots.slice(0, RU_CITIES);
+    const slots =
+        kept.length < RU_CITIES
+            ? [
+                  ...kept,
+                  ...(await pickSlots(
+                      "RU",
+                      [RU_TAG],
+                      RU_CITIES - kept.length,
+                      kept.map(({ city }) => city)
+                  )),
+              ]
+            : kept;
+    return slots.length === pin.slots.length
+        ? pin
+        : { ...pin, slots, measurementId: "" };
+}
+
+function failedSlots(control: PingMeasurement | null, slots: Slot[]): number[] {
+    if (!control) return slots.map((_, index) => index);
+    return matchSlots(slots, control.results).flatMap((entry, index) =>
+        !entry || lossOf(entry.result) === 100 ? [index] : []
+    );
 }
 
 function lossOf(result: PingProbeResult): number {
@@ -321,7 +335,13 @@ async function evaluateNode(node: ProvisionerNode): Promise<void> {
         | undefined = ruDown
         ? { source: "ru", details: ruCycles[0] }
         : localDown
-          ? { source: "local", details: { failed: [LOCAL_CITY], total: 1 } }
+          ? {
+                source: "local",
+                details: {
+                    failed: [{ city: LOCAL_CITY, asn: 0, network: "" }],
+                    total: 1,
+                },
+            }
           : undefined;
 
     if (!isDown) {
@@ -447,7 +467,7 @@ async function saveEvent(
 ): Promise<void> {
     await db.insert(nodeEvents).values({ nodeKey: key, type, source, details });
     console.log(
-        `[NODE] ${type} (${source}) for ${ip}: failed=[${details.failed.join(", ")}], total=${details.total}`
+        `[NODE] ${type} (${source}) for ${ip}: failed=[${details.failed.map(({ city, asn, network }) => `${city} AS${asn} ${network}`).join(", ")}], total=${details.total}`
     );
 }
 
@@ -492,6 +512,8 @@ async function ruCycleResults(key: string): Promise<EventDetails[]> {
     const rows = await db
         .select({
             city: pingLogs.city,
+            asn: pingLogs.asn,
+            network: pingLogs.network,
             packetLoss: pingLogs.packetLoss,
             createdAt: pingLogs.createdAt,
         })
@@ -499,13 +521,18 @@ async function ruCycleResults(key: string): Promise<EventDetails[]> {
         .where(and(ruRows, inArray(pingLogs.createdAt, recent)))
         .orderBy(desc(pingLogs.createdAt));
     const cycles = new Map<number | undefined, EventDetails>();
-    for (const { city, packetLoss, createdAt } of rows) {
+    for (const { city, asn, network, packetLoss, createdAt } of rows) {
         const cycle = cycles.get(createdAt?.getTime()) ?? {
             failed: [],
             total: 0,
         };
         cycle.total += 1;
-        if ((packetLoss ?? 100) >= 100) cycle.failed.push(city ?? "");
+        if ((packetLoss ?? 100) >= 100)
+            cycle.failed.push({
+                city: city ?? "",
+                asn: asn ?? 0,
+                network: network ?? "",
+            });
         cycles.set(createdAt?.getTime(), cycle);
     }
     return [...cycles.values()];

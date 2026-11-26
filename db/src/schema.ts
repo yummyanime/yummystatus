@@ -236,7 +236,10 @@ export const nodeEvents = pgTable(
             .$type<"ru" | "local">()
             .notNull(),
         details: jsonb("details")
-            .$type<{ failed: string[]; total: number }>()
+            .$type<{
+                failed: { city: string; asn: number; network: string }[];
+                total: number;
+            }>()
             .notNull(),
         createdAt: timestamp("created_at", { withTimezone: true })
             .notNull()
@@ -248,5 +251,25 @@ export const nodeEvents = pgTable(
     ]
 );
 
+export const probePins = pgTable("probe_pins", {
+    set: varchar("set").primaryKey(),
+    measurementId: varchar("measurement_id").notNull(),
+    slots: jsonb("slots")
+        .$type<
+            {
+                country: string;
+                city: string;
+                asn: number;
+                network: string;
+                strikes: number;
+                replacements: number[];
+            }[]
+        >()
+        .notNull(),
+    updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 export type NodeEvent = typeof nodeEvents.$inferSelect;
 export type NewNodeEvent = typeof nodeEvents.$inferInsert;
+export type ProbePin = typeof probePins.$inferSelect;
+export type NewProbePin = typeof probePins.$inferInsert;

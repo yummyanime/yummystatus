@@ -29,6 +29,13 @@
       "when": 1795557749417,
       "tag": "0003_soft_polaris",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795703151514,
+      "tag": "0004_probe_pins",
+      "breakpoints": true
     }
   ]
 }

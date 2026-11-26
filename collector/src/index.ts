@@ -28,12 +28,12 @@ const server = Bun.serve({
 console.log(`Collector health endpoint listening on :${server.port}`);
 
 every("http-2min", 2 * MINUTE_MS, () =>
-    httpCheckAndSave(locationGroups["2min"], 2 * MINUTE_MS)
+    httpCheckAndSave("http-2min", locationGroups["2min"], 2 * MINUTE_MS)
 );
 every(
     "http-6min",
     6 * MINUTE_MS,
-    () => httpCheckAndSave(locationGroups["6min"], 6 * MINUTE_MS),
+    () => httpCheckAndSave("http-6min", locationGroups["6min"], 6 * MINUTE_MS),
     false
 );
 every("ping", 2 * MINUTE_MS, () => pingCheckAndSave(2 * MINUTE_MS));

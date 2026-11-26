@@ -10,13 +10,27 @@ import {
 import {
     createMeasurementWithRetry,
     type Location,
+    type MeasurementResponse,
     MeasurementTimeoutError,
     pollMeasurement,
     toNonNegativeNumberOrNull,
 } from "./globalping.ts";
+import {
+    applyStrikes,
+    commitPin,
+    loadPin,
+    matchSlots,
+    type Pin,
+    replaceSuspect,
+    runPinned,
+    type Slot,
+    syncSlots,
+} from "./probePins.ts";
 
 const MAX_TOTAL_TIME = 6000;
 const POLL_TIMEOUT = 180000;
+const PROBE_CHECK_HOST = "www.google.com";
+const PROBE_CHECK_PATH = "/generate_204";
 
 type ServerTiming = Record<string, number>;
 type ResponseHeaders = Record<string, string | string[]>;
@@ -39,6 +53,8 @@ type HttpProbeResult =
       }
     | { status: "failed" | "offline"; rawOutput?: string | null };
 
+type HttpMeasurement = MeasurementResponse<HttpProbeResult> & { id: string };
+
 interface HttpRecord {
     probeId: string;
     domain: string;
@@ -58,17 +74,32 @@ interface HttpRecord {
 }
 
 export async function httpCheckAndSave(
+    set: Pin["set"],
     locations: readonly Location[],
     intervalMs: number
 ): Promise<void> {
     console.log(
         `--- Starting HTTP check cycle at ${new Date().toISOString()} for ${locations.length} locations across ${DOMAINS.length} domains ---`
     );
-    await Promise.all(
-        DOMAINS.map((domain) =>
-            checkAndSaveDomain(domain, locations, intervalMs)
-        )
+    const pin = syncSlots(await loadPin(set), locations);
+    const measurements = await Promise.all(
+        DOMAINS.map((domain) => checkAndSaveDomain(domain, pin, intervalMs))
     );
+    try {
+        await evaluateGroup(
+            pin,
+            measurements.filter(
+                (measurement): measurement is HttpMeasurement =>
+                    measurement !== null
+            ),
+            intervalMs
+        );
+    } catch (err) {
+        console.error(
+            `Failed pin evaluation for ${set}:`,
+            err instanceof Error ? err.message : err
+        );
+    }
 }
 
 export async function aggregateHourlyHttp(hourStart: Date): Promise<void> {
@@ -141,51 +172,69 @@ export async function aggregateHourlyHttp(hourStart: Date): Promise<void> {
 
 async function checkAndSaveDomain(
     domain: DomainConfig,
-    locations: readonly Location[],
+    pin: Pin,
     intervalMs: number
-): Promise<void> {
+): Promise<HttpMeasurement | null> {
     const target = domain.name;
     const apiKey = process.env[domain.apiKeyEnv];
     const secretKey = process.env.GLOBALPING_SECRET_KEY;
 
     if (!apiKey) {
         console.error(`${domain.apiKeyEnv} is not set.`);
-        return;
+        return null;
     }
 
     try {
-        const createResponse = await createMeasurementWithRetry(
-            {
-                target,
-                locations: locations.map((location) => ({
-                    country: location.country,
-                    city: location.city,
-                    limit: 1,
-                })),
-                type: "http",
-                measurementOptions: {
-                    protocol: domain.protocol ?? "HTTPS",
-                    ...((domain.path || secretKey) && {
-                        request: {
-                            ...(domain.path && { path: domain.path }),
-                            ...(secretKey && {
-                                headers: { "X-Secret-Key": secretKey },
-                            }),
-                        },
-                    }),
+        let rejected = null as { status: number; body: string } | null;
+        const measurement = await runPinned(pin, [], async (locations) => {
+            const createResponse = await createMeasurementWithRetry(
+                {
+                    target,
+                    locations,
+                    type: "http",
+                    measurementOptions: {
+                        protocol: domain.protocol ?? "HTTPS",
+                        ...((domain.path || secretKey) && {
+                            request: {
+                                ...(domain.path && { path: domain.path }),
+                                ...(secretKey && {
+                                    headers: { "X-Secret-Key": secretKey },
+                                }),
+                            },
+                        }),
+                    },
                 },
-            },
-            apiKey,
-            intervalMs
-        );
-
-        if (!createResponse.ok) {
-            const errorBody = await createResponse.text();
-            console.error(
-                `Failed to create measurement for ${target}: ${createResponse.status} ${createResponse.statusText}. Body: ${errorBody}`
+                apiKey,
+                intervalMs
             );
-            for (const { country, city } of locations) {
-                if (createResponse.status === 429) {
+
+            if (!createResponse.ok) {
+                const errorBody = await createResponse.text();
+                console.error(
+                    `Failed to create measurement for ${target}: ${createResponse.status} ${createResponse.statusText}. Body: ${errorBody}`
+                );
+                rejected = { status: createResponse.status, body: errorBody };
+                return null;
+            }
+
+            const { id } = (await createResponse.json()) as { id: string };
+            console.log(
+                `[HTTP] Measurement created for ${target} with ID: ${id}`
+            );
+            return {
+                ...(await pollMeasurement<HttpProbeResult>(
+                    id,
+                    target,
+                    POLL_TIMEOUT
+                )),
+                id,
+            };
+        });
+
+        if (!measurement) {
+            if (!rejected) return null;
+            for (const { country, city } of pin.slots) {
+                if (rejected.status === 429) {
                     await saveResult({
                         probeId: "api_limit",
                         domain: target,
@@ -200,37 +249,20 @@ async function checkAndSaveDomain(
                         country,
                         city,
                         statusCode: INTERNAL_STATUS.PROBE_FAIL,
-                        failureReason: `create ${createResponse.status}: ${errorBody.slice(0, 200)}`,
+                        failureReason: `create ${rejected.status}: ${rejected.body.slice(0, 200)}`,
                     });
                 }
             }
-            return;
+            return null;
         }
 
-        const { id } = (await createResponse.json()) as { id: string };
-        console.log(`[HTTP] Measurement created for ${target} with ID: ${id}`);
-
-        const resultData = await pollMeasurement<HttpProbeResult>(
-            id,
-            target,
-            POLL_TIMEOUT
-        );
-
-        const resultsByLocation = new Map(
-            resultData.results.map((r) => [
-                `${r.probe.city}-${r.probe.country}`,
-                r,
-            ])
-        );
-
-        for (const location of locations) {
-            const entry = resultsByLocation.get(
-                `${location.city}-${location.country}`
-            );
+        const entries = matchSlots(pin.slots, measurement.results);
+        for (const [index, location] of pin.slots.entries()) {
+            const entry = entries[index];
             const probe = entry?.probe;
             const result = entry?.result;
             const base = {
-                probeId: id,
+                probeId: measurement.id,
                 domain: target,
                 country: probe?.country || location.country,
                 city: probe?.city || location.city,
@@ -279,8 +311,9 @@ async function checkAndSaveDomain(
             await saveResult({ ...base, statusCode, failureReason });
         }
         console.log(
-            `--- HTTP check cycle for measurement ${id} completed. ---`
+            `--- HTTP check cycle for measurement ${measurement.id} completed. ---`
         );
+        return measurement;
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         console.error(
@@ -291,7 +324,7 @@ async function checkAndSaveDomain(
             err instanceof MeasurementTimeoutError
                 ? INTERNAL_STATUS.MEASUREMENT_TIMEOUT
                 : INTERNAL_STATUS.PROBE_FAIL;
-        for (const { country, city } of locations) {
+        for (const { country, city } of pin.slots) {
             await saveResult({
                 probeId: "failed",
                 domain: target,
@@ -301,6 +334,90 @@ async function checkAndSaveDomain(
                 failureReason: message,
             });
         }
+        return null;
+    }
+}
+
+async function evaluateGroup(
+    pin: Pin,
+    measurements: HttpMeasurement[],
+    intervalMs: number
+): Promise<void> {
+    if (!measurements.length) return;
+    const matched = measurements.map(({ results }) =>
+        matchSlots(pin.slots, results)
+    );
+    const statuses = pin.slots.map((_, index) =>
+        matched.map((entries) => entries[index]?.result.status ?? "offline")
+    );
+    const offline = statuses.map((slotStatuses) =>
+        slotStatuses.includes("offline")
+    );
+    const succeeded = statuses.map((slotStatuses) =>
+        slotStatuses.includes("finished")
+    );
+    const failed = pin.slots.map(
+        (_, index) =>
+            offline[index] ||
+            (!succeeded[index] &&
+                succeeded.some((ok, other) => ok && other !== index))
+    );
+    const dead: number[] = [];
+    for (const index of applyStrikes(pin, failed)) {
+        const slot = pin.slots[index];
+        if (offline[index] || !(await isGoogleReachable(slot, intervalMs))) {
+            dead.push(index);
+        } else {
+            slot.strikes = 0;
+            console.log(
+                `[PIN] Slot ${index} of ${pin.set} (${slot.city}) reaches google, regional block kept`
+            );
+        }
+    }
+    if (!dead.length || !(await replaceSuspect(pin, dead, [], false))) {
+        await commitPin(pin, measurements[0]);
+    }
+}
+
+async function isGoogleReachable(
+    { country, city, asn, network }: Slot,
+    intervalMs: number
+): Promise<boolean> {
+    const apiKey = process.env[DOMAINS[0].apiKeyEnv];
+    if (!apiKey) return true;
+    try {
+        const response = await createMeasurementWithRetry(
+            {
+                target: PROBE_CHECK_HOST,
+                locations: [{ country, city, asn, network, limit: 1 }],
+                type: "http",
+                measurementOptions: {
+                    protocol: "HTTPS",
+                    request: { path: PROBE_CHECK_PATH },
+                },
+            },
+            apiKey,
+            intervalMs
+        );
+        if (!response.ok) {
+            console.error(
+                `[PIN] Google check for ${city} AS${asn} not created: ${response.status}`
+            );
+            return response.status !== 422;
+        }
+        const { id } = (await response.json()) as { id: string };
+        const { results } = await pollMeasurement<HttpProbeResult>(
+            id,
+            PROBE_CHECK_HOST,
+            POLL_TIMEOUT
+        );
+        return results[0]?.result.status === "finished";
+    } catch (err) {
+        console.error(
+            `[PIN] Google check for ${city} AS${asn} failed:`,
+            err instanceof Error ? err.message : err
+        );
+        return true;
     }
 }
 

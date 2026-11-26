@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import type { NodeEvent } from "../../api.ts";
-import { getProbeLabel } from "../../data/nodes.ts";
+import { formatFailedProbe } from "../../data/nodes.ts";
 import { dateLocale, useLanguage } from "../../i18n.ts";
 import styles from "../ReportList/ReportList.module.scss";
 
@@ -37,7 +37,7 @@ const NodeEvents = ({ events }: { events: NodeEvent[] }) => {
                                     <span className={styles.reason}>
                                         {tf("nodeEventFailed", {
                                             cities: details.failed
-                                                .map(getProbeLabel)
+                                                .map(formatFailedProbe)
                                                 .join(", "),
                                         })}
                                     </span>
